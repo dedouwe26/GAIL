@@ -1,4 +1,4 @@
-![Logo](https://raw.githubusercontent.com/dedouwe26/GAIL/main/Logo.svg) \
+<img src="https://raw.githubusercontent.com/dedouwe26/GAIL/main/Logo.svg" alt="logo" width="800"/> <br/>
 `Graphics Audio Input Library`
 This library is built using OpenGL bindings from C++ 
 ported over to C#.
