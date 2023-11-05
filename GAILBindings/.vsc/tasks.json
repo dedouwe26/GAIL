@@ -2,24 +2,23 @@
     "tasks": [
         {
             "type": "cppbuild",
-            "label": "cppbuild",
+            "label": "bindingsbuild",
             "command": "cl.exe",
             "args": [
                 "/Zi",
                 "/EHsc",
                 "/nologo",
                 "/MT",
-                "/Fe${workspaceRoot}\\bin\\main.exe",
-                "..\\main.cpp",
-                "..\\Mesh.cpp",
-                "${workspaceFolder}\\lib\\glfw\\lib\\glfw3_mt.lib",
-                "${workspaceFolder}\\lib\\glad\\lib\\glad.c",
+                "/Fe${workspaceFolder}\\GAILBindings\\bin\\main.exe",
+                "/I ${workspaceFolder}\\GAILBindings",
+                "${workspaceFolder}\\GAILBindings\\lib\\glfw\\lib\\glfw3_mt.lib",
+                "${workspaceFolder}\\GAILBindings\\lib\\glad\\lib\\glad.c",
                 "User32.lib",
                 "Gdi32.lib",
                 "Shell32.lib"
             ],
             "options": {
-                "cwd": "${workspaceRoot}/bin"
+                "cwd": "${workspaceFolder}/GAILBindings/bin"
             },
             "problemMatcher": [
                 "$msCompile"

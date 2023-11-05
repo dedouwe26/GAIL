@@ -1,4 +1,5 @@
 {
+    "cmake.sourceDirectory": "D:/github/GAIL/GAILBindings",
     "files.associations": {
         "algorithm": "cpp",
         "array": "cpp",

@@ -1,7 +1,7 @@
 #include <iostream>
 #include "lib/glad/glad.h"
 #include "lib/glfw/glfw3.h"
-#include "Mesh.cpp"
+#include "Mesh.hpp"
 
 void processInput(GLFWwindow *window)
 {
@@ -44,7 +44,6 @@ int main(int, char**){
         // check and call events and swap the buffers
         glfwPollEvents();
         glfwSwapBuffers(window); 
-        ogl::Mesh obj1(); 
     }
     
     glfwTerminate();

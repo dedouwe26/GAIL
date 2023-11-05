@@ -7,7 +7,7 @@
         {
             "name": "C/C++: Run",
             "type": "cppvsdbg",
-            "preLaunchTask": "cppbuild",
+            "preLaunchTask": "bindingsbuild",
             "request": "launch",
             "cwd": "${workspaceRoot}",
             "program": "${workspaceRoot}/bin/main.exe"
