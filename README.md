@@ -1,4 +1,4 @@
-<img src="https://raw.githubusercontent.com/dedouwe26/GAIL/main/Logo.svg" alt="logo" width="500"/> <br/>
+<img src="https://raw.githubusercontent.com/dedouwe26/GAIL/main/docs/Logo.svg" alt="logo" width="500"/> <br/>
 `Graphics Audio Input Library` <br/>
 This library is built using OpenGL bindings from C++ 
 ported over to C#. <br/>

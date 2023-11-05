@@ -1,0 +1,11 @@
+{
+    "configurations": [
+    {
+        "name": "C#: GAIL Test",
+        "type": "dotnet",
+        "preLaunchTask": "cppbuild",
+        "request": "launch",
+        "projectPath": "${workspaceFolder}/GAIL/GAIL.csproj"
+    },
+    ]
+}
