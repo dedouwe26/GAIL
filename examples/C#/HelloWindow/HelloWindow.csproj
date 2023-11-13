@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\GAIL\GAIL.csproj" />
+    <ProjectReference Include="..\..\..\GAIL.NET\GAIL.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

@@ -1,11 +1,20 @@
 {
     "configurations": [
-    {
-        "name": "C#: GAIL Test",
-        "type": "dotnet",
-        "preLaunchTask": "cppbuild",
-        "request": "launch",
-        "projectPath": "${workspaceFolder}/GAIL/GAIL.csproj"
-    },
+        {
+            "name": "C++: GAIL Example Window",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/examples/C++/tool/tool.py",
+            "args": ["HelloWindow"],
+            "console": "integratedTerminal",
+            "preLaunchTask": "cppbuild"
+        },
+        {
+            "name": "C#: GAIL Example Window",
+            "type": "dotnet",
+            "preLaunchTask": "dotnetbuild",
+            "request": "launch",
+            "projectPath": "${workspaceFolder}/examples/C#/HelloWindow/HelloWindow.csproj"
+        },
     ]
 }

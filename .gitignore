@@ -479,3 +479,6 @@ $RECYCLE.BIN/
 # CMake
 
 build
+
+# buildtool
+compilerpath
