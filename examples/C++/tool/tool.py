@@ -45,6 +45,8 @@ def main(args):
     print("Build location: examples/C++/"+args[1]+"/bin/main.exe")
     print("Build Successful" if returncode==0 else "Build Failed")
     print("========== END BUILD =========\n")
+    if not returncode == 0:
+        exit()
     print("Running Example executable...")
     print("\n----- Example -----\n")
     subprocess.run([examplePath+"/bin/main.exe"], cwd=examplePath)

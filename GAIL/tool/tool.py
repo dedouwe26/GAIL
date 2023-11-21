@@ -57,7 +57,7 @@ def main(args):
     elif args[1] == "dotnet":
         print("Creating DLL (for GAIL.NET).\n")
         print("------- G++ -------")
-        gppproc = subprocess.run([compilerpath+"/g++", "-I"+includePath, "-I"+vulkanSDKPath+"/Include", "-I"+projectPath,  "-L", vulkanSDKPath+"/Lib/vulkan-1.lib", "-L",libPath+"/glfw3.lib", projectPath+"/*.cpp", "-o"+projectPath+"/bin/GAIL.exe"], cwd=compilerpath) # >>> TODO <<< Export to dll file
+        gppproc = subprocess.run([compilerpath+"/g++", "-I"+includePath, "-I"+vulkanSDKPath+"/Include", "-I"+projectPath,  "-L", vulkanSDKPath+"/Lib/vulkan-1.lib", "-L",libPath+"/glfw3.lib", projectPath+"/*.cpp", projectPath+"/bindings/*.cpp", "-o"+projectPath+"/bin/GAIL.exe"], cwd=compilerpath) # >>> TODO <<< Export to dll file
         returncode = gppproc.returncode
         print("-------------------\n")
     else:
