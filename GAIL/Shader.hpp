@@ -8,10 +8,17 @@ using string = std::string;
 namespace GAIL
 {
 
-    // A per-vertex data struct, like color or a normal (accessed in shader).
+    // A attribute (vertex buffer) in the shader, changes per vertex, from CPU to GPU.
     struct VertexAttribute
     {
+        // The data of a attribute
         char data[];
+        // All the types of a attribute;
+        struct AttributeType {Double, Float, Vector2, Vector3, Vector4, Vector2Int, Vector4UInt};
+        // The type of this attribute.
+        AttributeType type;
+        // The location of the attribute (vertex buffer) in the shader.
+        int location;
     };
 
     // Contains code for the GPU on how everything is drawn (instanced).
