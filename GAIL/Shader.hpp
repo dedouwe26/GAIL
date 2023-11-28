@@ -1,24 +1,76 @@
 #pragma once
 
-#include <string>
 #include "GAIL.hpp"
-
-using string = std::string;
+#include <vulkan/vulkan.hpp>
 
 namespace GAIL
 {
+    // The type of the attribute. (Double = 64-bit, U = unsigned (no negative numbers), Int = signed int, 2,3,4 = with 2,3,4 components).
+    enum AttributeType {
+        Float = VK_FORMAT_R32_SFLOAT, 
+        Int = VK_FORMAT_R32_SINT,
+        Double = VK_FORMAT_R64_SFLOAT, 
+        DoubleInt = VK_FORMAT_R64_SINT,
+        UInt = VK_FORMAT_R32_UINT,
+        UDoubleInt = VK_FORMAT_R64_UINT,
 
-    // A attribute (vertex buffer) in the shader, changes per vertex, from CPU to GPU.
-    struct VertexAttribute
+        Float2 = VK_FORMAT_R32G32_SFLOAT, 
+        Int2 = VK_FORMAT_R32G32_SINT, 
+        Double2 = VK_FORMAT_R64G64_SFLOAT,
+        DoubleInt2 = VK_FORMAT_R64G64_SINT, 
+        UInt2 = VK_FORMAT_R32G32_UINT, 
+        UDoubleInt2 = VK_FORMAT_R64G64_UINT, 
+
+        Float3 = VK_FORMAT_R32G32B32_SFLOAT, 
+        Int3 = VK_FORMAT_R32G32B32_SINT, 
+        Double3 = VK_FORMAT_R64G64B64_SFLOAT, 
+        DoubleInt3 = VK_FORMAT_R64G64B64_SINT, 
+        UInt3 = VK_FORMAT_R32G32B32_UINT, 
+        UDoubleInt3 = VK_FORMAT_R64G64B64_UINT, 
+
+        Float4 = VK_FORMAT_R32G32B32A32_SFLOAT, 
+        Int4 = VK_FORMAT_R32G32B32A32_SINT, 
+        Double4 = VK_FORMAT_R64G64B64A64_SFLOAT, 
+        DoubleInt4 = VK_FORMAT_R64G64B64A64_SINT, 
+        UInt4 = VK_FORMAT_R32G32B32A32_UINT, 
+        UDoubleInt4 = VK_FORMAT_R64G64B64A64_UINT, 
+    };
+
+    // A attribute (vertex buffer) in the shader, changes per vertex, from CPU to GPU (extend to use).
+    // The location in the shader is based on the list order in a vertex.
+    class VertexAttribute
     {
-        // The data of a attribute
-        char data[];
-        // All the types of a attribute;
-        struct AttributeType {Double, Float, Vector2, Vector3, Vector4, Vector2Int, Vector4UInt};
-        // The type of this attribute.
-        AttributeType type;
-        // The location of the attribute (vertex buffer) in the shader.
-        int location;
+        public:
+            // The type of this attribute.
+            AttributeType type;
+            VertexAttribute(AttributeType type);
+            // Returns the data for the vertex input attributes.
+            void* Use();
+            ~VertexAttribute();
+    };
+
+    // A basic (per vertex) color attribute.
+    class ColorAttribute : VertexAttribute
+    {
+        public:
+            ColorAttribute(Color color);
+            ~ColorAttribute();
+    };
+    
+    // A basic (per vertex) normal attribute.
+    class NormalAttribute : VertexAttribute
+    {
+        public:
+            NormalAttribute(Vector3 color);
+            ~NormalAttribute();
+    };
+
+    // A A basic (per vertex) Texture coordinates attribute.
+    class UVAttribute : VertexAttribute
+    {
+        public:
+            UVAttribute(Vector2 uv);
+            ~UVAttribute();
     };
 
     // Contains code for the GPU on how everything is drawn (instanced).
@@ -28,7 +80,12 @@ namespace GAIL
             Shader(string vert, string frag);
             ~Shader();
             // Sets a shader uniform.
-            void SetUniform();
+            // Returns true if successful.
+            bool SetUniform();
+            // Sets all the attributes (per vertex) in the shader (vertex buffer).
+            // Returns true if successful.
+            bool SetAttributes(std::vector<VertexAttribute> attributes);
+            
     };
 
     // Contains the shader and shader data (instanced).
@@ -40,7 +97,7 @@ namespace GAIL
             BaseMaterial(Shader shader);
             ~BaseMaterial();
             // Sets all the uniforms (used before rendering).
-            void Use(std::list<VertexAttribute> attributes);
+            void Use(std::map<string, VertexAttribute> attributes);
             // Returns the Shader.
             Shader& GetShader() {return *shader;};
 

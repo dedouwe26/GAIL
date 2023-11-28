@@ -1,6 +1,5 @@
 #pragma once
 
-#include <list>
 #include <string>
 
 using string = std::string;
@@ -27,7 +26,7 @@ namespace GAIL
             Adds sound effects to this sound.
             Applied in the order from 0 to the end of the list.
             */
-            void SetSoundEffects(std::list<SoundEffect> soundEffects);
+            void SetSoundEffects(std::vector<SoundEffect> soundEffects);
             
             // 
             /*
@@ -45,7 +44,7 @@ namespace GAIL
         public:
             static int GetDefaultDevice();
             // Returns all the capture devices' names.
-            static std::list<string> GetCaptureDevices();
+            static std::vector<string> GetCaptureDevices();
 
             SoundCapture(int captureDevice);
             ~SoundCapture();

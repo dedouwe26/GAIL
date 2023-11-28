@@ -9,17 +9,6 @@
 
 namespace GAIL
 {
-
-    /*
-        Defines how it's rendered.
-        RENDER: Can contain 3D, uses rendering. Recommended for games.
-        NONRENDER: Only 2D, doesn't use rendering or shaders.
-    */
-    enum ApplicationType {
-        RENDER, // Can contain 3D, uses rendering. Recommended for games.
-        NONRENDER // Only 2D, doesn't use rendering or shaders.
-    };
-    
     // The central part of GAIL. Includes all the Managers.
     class Application
     {
@@ -29,11 +18,11 @@ namespace GAIL
             AudioManager audioManager;
             Window window;
         public:
-            Application(ApplicationType type, Window window);
+            Application(Window window);
             ~Application();
 
-            // Sets the Update function (calls every frame).
-            void SetUpdate(void (*updateFunction)());
+            // Sets the Update function, with delta time (in seconds): CurrentTime - PreviousFrameTime (calls every frame).
+            void SetUpdate(void (*updateFunction)(double deltaTime));
             // Sets the Load function (calls at the start).
             void SetLoad(void (*loadFunction)());
             // Sets the Stop function (calls at close).

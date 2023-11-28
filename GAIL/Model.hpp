@@ -1,6 +1,5 @@
 #pragma once
 
-#include <list>
 #include <map>
 #include "Shader.hpp"
 
@@ -12,6 +11,8 @@ namespace GAIL
     {
     public:
         Vector3 position;
+        // Attributes for this vertex shown in shader.
+        // Name and VertexAttribute.
         std::map<string, VertexAttribute> attributes;
         Vertex() {this->position={0,0,0};};
         Vertex(double x, double y, double z) {this->position={x,y,z};};
@@ -43,10 +44,10 @@ namespace GAIL
     class Mesh
     {
         private:
-            std::list<Face> Faces;
-            std::list<Index> Indices;
+            std::vector<Face> Faces;
+            std::vector<Index> Indices;
         public:
-            Mesh(std::list<Face> faces, std::list<Index> indices);
+            Mesh(std::vector<Face> faces, std::vector<Index> indices);
             ~Mesh();
             static Mesh FromObj(string path);
     };
