@@ -5,7 +5,12 @@
 
 namespace GAIL
 {
-    // The type of the attribute. (Double = 64-bit, U = unsigned (no negative numbers), Int = signed int, 2,3,4 = with 2,3,4 components).
+    // The type of the attribute. 
+    //
+    // Double = 64-bit (default: floating-point number), Short = 16-bit (default: int), Byte = 8-bit (default: int), 
+    // U = unsigned (no negative numbers), 
+    // Int = signed int, 
+    // 2,3,4 = with 2,3,4 components.
     enum AttributeType {
         Float = VK_FORMAT_R32_SFLOAT, 
         Int = VK_FORMAT_R32_SINT,
@@ -13,13 +18,23 @@ namespace GAIL
         DoubleInt = VK_FORMAT_R64_SINT,
         UInt = VK_FORMAT_R32_UINT,
         UDoubleInt = VK_FORMAT_R64_UINT,
+        ShortFloat = VK_FORMAT_R16_SFLOAT, 
+        Short = VK_FORMAT_R16_SINT,
+        UShort = VK_FORMAT_R16_UINT,
+        Byte = VK_FORMAT_R8_SINT,
+        UByte = VK_FORMAT_R8_UINT,
 
         Float2 = VK_FORMAT_R32G32_SFLOAT, 
         Int2 = VK_FORMAT_R32G32_SINT, 
         Double2 = VK_FORMAT_R64G64_SFLOAT,
         DoubleInt2 = VK_FORMAT_R64G64_SINT, 
         UInt2 = VK_FORMAT_R32G32_UINT, 
-        UDoubleInt2 = VK_FORMAT_R64G64_UINT, 
+        UDoubleInt2 = VK_FORMAT_R64G64_UINT,
+        ShortFloat2 = VK_FORMAT_R16G16_SFLOAT, 
+        Short2 = VK_FORMAT_R16G16_SINT, 
+        UShort2 = VK_FORMAT_R16G16_UINT, 
+        Byte2 = VK_FORMAT_R8G8_SINT, 
+        UByte2 = VK_FORMAT_R8G8_UINT,
 
         Float3 = VK_FORMAT_R32G32B32_SFLOAT, 
         Int3 = VK_FORMAT_R32G32B32_SINT, 
@@ -27,6 +42,11 @@ namespace GAIL
         DoubleInt3 = VK_FORMAT_R64G64B64_SINT, 
         UInt3 = VK_FORMAT_R32G32B32_UINT, 
         UDoubleInt3 = VK_FORMAT_R64G64B64_UINT, 
+        ShortFloat3 = VK_FORMAT_R16G16B16_SFLOAT, 
+        Short3 = VK_FORMAT_R16G16B16_SINT, 
+        UShort3 = VK_FORMAT_R16G16B16_UINT, 
+        Byte3 = VK_FORMAT_R8G8B8_SINT, 
+        UByte3 = VK_FORMAT_R8G8B8_UINT, 
 
         Float4 = VK_FORMAT_R32G32B32A32_SFLOAT, 
         Int4 = VK_FORMAT_R32G32B32A32_SINT, 
@@ -34,6 +54,11 @@ namespace GAIL
         DoubleInt4 = VK_FORMAT_R64G64B64A64_SINT, 
         UInt4 = VK_FORMAT_R32G32B32A32_UINT, 
         UDoubleInt4 = VK_FORMAT_R64G64B64A64_UINT, 
+        ShortFloat4 = VK_FORMAT_R16G16B16A16_SFLOAT, 
+        Short4 = VK_FORMAT_R16G16B16A16_SINT, 
+        UShort4 = VK_FORMAT_R16G16B16A16_UINT, 
+        Byte4 = VK_FORMAT_R8G8B8A8_SINT, 
+        UByte4 = VK_FORMAT_R8G8B8A8_UINT, 
     };
 
     // A attribute (vertex buffer) in the shader, changes per vertex, from CPU to GPU (extend to use).
@@ -106,7 +131,7 @@ namespace GAIL
     };
     
     // Renders the object facing the 
-    class BillboardMaterial
+    class BillboardMaterial : BaseMaterial
     {
         public:
             BillboardMaterial();

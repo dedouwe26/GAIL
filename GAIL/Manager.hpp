@@ -7,7 +7,7 @@
 #include "Structs.hpp"
 #include <glfw3.h>
 
-using std::string;
+using string = std::string;
 
 namespace GAIL
 {   

@@ -1,5 +1,9 @@
 #pragma once
 
+#include <string>
+
+using string = std::string;
+
 namespace GAIL
 {
     // A 4x4 matrix.
