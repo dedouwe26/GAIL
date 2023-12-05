@@ -26,11 +26,11 @@ namespace GAIL
     class GraphicsManager
     {
         public:
-            GraphicsManager(Window window);
+            GraphicsManager(int width, int height);
             ~GraphicsManager();
             /*
-            Renders the models to the current frame on that layer (RENDER ApplicationType).
-            Returns if successful
+            Renders the models to the current frame.
+            Returns if successful.
             */
             bool Render(std::vector<Model> models);
     };
@@ -45,12 +45,19 @@ namespace GAIL
     class AudioManager
     {
         public:
+            // Returns all the audio devices for custom audio device selection.
+            static std::vector<string> GetAudioDevices();
+
+            // OpenAL Context, for custom usage.
+            ALCcontext* ALCc;
             AudioManager();
+            // For a custom audio device selection.
+            AudioManager(string audioDevice);
             ~AudioManager();
-            // Plays a sound with volume.
-            bool PlaySound(Sound sound, double volume);
-            // Plays a sound in a 3D space with volume.
-            bool PlaySound3D(Sound sound, Vector3 position, double volume);
+            // Plays a sound.
+            bool PlaySound(Sound sound);
+            // Plays a sound in a 3D space.
+            bool PlaySound3D(Sound sound, Vector3 position);
     };
 
     #pragma endregion
@@ -86,7 +93,7 @@ namespace GAIL
         X = GLFW_KEY_X,
         Y = GLFW_KEY_Y,
         Z = GLFW_KEY_Z,
-        ESCAPE = GLFW_KEY_ESCAPE, // ESC
+        ESCAPE = GLFW_KEY_ESCAPE, // or ESC
         F1 = GLFW_KEY_F1,
         F2 = GLFW_KEY_F2,
         F3 = GLFW_KEY_F3,
@@ -179,6 +186,15 @@ namespace GAIL
         NUMPAD_PERIOD = GLFW_KEY_KP_DECIMAL,
         NUMPAD_EQUALS = GLFW_KEY_KP_EQUAL,
 
+        MOUSE_LEFT = GLFW_MOUSE_BUTTON_LEFT, // AKA MOUSE_1
+        MOUSE_RIGHT = GLFW_MOUSE_BUTTON_RIGHT, // AKA MOUSE_2
+        MOUSE_MIDDLE = GLFW_MOUSE_BUTTON_MIDDLE, // AKA MOUSE_3
+        MOUSE_4 = GLFW_MOUSE_BUTTON_4,
+        MOUSE_5 = GLFW_MOUSE_BUTTON_5,
+        MOUSE_6 = GLFW_MOUSE_BUTTON_6,
+        MOUSE_7 = GLFW_MOUSE_BUTTON_7,
+        MOUSE_8 = GLFW_MOUSE_BUTTON_8,
+
         WORLD_1 = GLFW_KEY_WORLD_1, // World key for foreign languages (non-US).
         WORLD_2 = GLFW_KEY_WORLD_2  // World key for foreign languages (non-US).
     };
@@ -187,27 +203,34 @@ namespace GAIL
     class InputManager
     {
     public:
-        
-        InputManager();
+        // The GLFW window, for custom usage.
+        GLFWwindow *window;
+
+        InputManager(GLFWwindow *window);
         ~InputManager();
         // Converts a key or keypress to the corresponding character (including shift check).
         char ToChar(Key key);
         // Converts a key to the platform-specific scancode.
         unsigned ToScanCode(Key key);
-        // Is mouse locked (read-only, use LockMouse instead).
-        bool MouseLocked;
+
         // Checks if that key is pressed.
         bool IsKeyPressed(Key key);
         // Sets an event for when any key is pressed.
         void SetOnKeyDown(void (*KeyDownFunction)(Key key));
         // Sets an event for when any key is released.
         void SetOnKeyUp(void (*KeyUpFunction)(Key key));
+
         // Returns the mouse position.
         Vector2 GetMousePosition();
         // Sets an event for when the mouse moved.
         void SetOnMouseMoved(void (*MouseMovedFunction)(Vector2 from, Vector2 to));
+        // Sets an event for when the mouse wheel scrolled.
+        void SetOnScroll(void (*ScrollFunction)(double x, double y));
+        // Is mouse locked (read-only, use LockMouse instead).
+        bool MouseLocked;
         // Locks the mouse in place and hide it.
         void LockMouse(bool lock);
+
         // Sets an event for when a path / paths are dropped on the window.
         void SetOnPathDrop(void (*PathDropFunction)(std::vector<string> paths));
     };

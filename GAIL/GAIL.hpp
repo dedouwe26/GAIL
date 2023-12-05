@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Structs.hpp"
-#include "Window.hpp"
 #include "Audio.hpp"
 #include "Model.hpp"
 #include "Shader.hpp"
@@ -12,13 +11,12 @@ namespace GAIL
     // The central part of GAIL. Includes all the Managers.
     class Application
     {
-        private:
+        public:
             GraphicsManager graphicsManager;
             InputManager inputManager;
             AudioManager audioManager;
-            Window window;
-        public:
-            Application(Window window);
+
+            Application(string windowName, int width, int height);
             ~Application();
 
             // Sets the Update function, with delta time (in seconds): CurrentTime - PreviousFrameTime (calls every frame).
@@ -35,12 +33,9 @@ namespace GAIL
             InputManager GetInputManager() {return inputManager;};
             // Gets AudioManager.
             AudioManager GetAudioManager() {return audioManager;};
-            // Gets Window.
-            Window GetWindow() {return window;};
-            // Stops the application (some things might break if used certain functions after).
             /*
             Stops the application (some things might break if used certain functions after).
-            Returns if succeeded.
+            Returns true if succeeded.
             */
             bool Stop();
     };

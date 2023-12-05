@@ -69,15 +69,16 @@ namespace GAIL
             // The type of this attribute.
             AttributeType type;
             VertexAttribute(AttributeType type);
+            ~VertexAttribute();
             // Returns the data for the vertex input attributes.
             void* Use();
-            ~VertexAttribute();
     };
 
     // A basic (per vertex) color attribute.
     class ColorAttribute : VertexAttribute
     {
         public:
+            Color color;
             ColorAttribute(Color color);
             ~ColorAttribute();
     };
@@ -86,14 +87,16 @@ namespace GAIL
     class NormalAttribute : VertexAttribute
     {
         public:
+            Vector3 normal;
             NormalAttribute(Vector3 color);
             ~NormalAttribute();
     };
 
-    // A A basic (per vertex) Texture coordinates attribute.
+    // A basic (per vertex) Texture coordinates attribute.
     class UVAttribute : VertexAttribute
     {
         public:
+            Vector2 uv;
             UVAttribute(Vector2 uv);
             ~UVAttribute();
     };
@@ -102,18 +105,22 @@ namespace GAIL
     class Shader
     {
         public:
+            std::vector<VkVertexInputAttributeDescription> attributeDescription;
             Shader(string vert, string frag);
             ~Shader();
-            // Sets a shader uniform.
+            // Sets all the shader uniforms.
             // Returns true if successful.
-            bool SetUniform();
-            // Sets all the attributes (per vertex) in the shader (vertex buffer).
+            bool SetUniforms();
+            // Sets the per-vertex attribute layout, with the name.
             // Returns true if successful.
-            bool SetAttributes(std::vector<VertexAttribute> attributes);
+            bool SetAttributeLayout(std::map<string, AttributeType> attributeLayout);
+            //                                       // Prepares for rendering and sets all the data.
+            // Remove due to unnecessary processing: void Use(); 
+            
             
     };
 
-    // Contains the shader and shader data (instanced).
+    // This is how anything is drawn to the window, contains the shader and shader data (instanced).
     class BaseMaterial
     {
         private:
@@ -121,10 +128,10 @@ namespace GAIL
         public:
             BaseMaterial(Shader shader);
             ~BaseMaterial();
-            // Sets all the uniforms (used before rendering).
-            void Use(std::map<string, VertexAttribute> attributes);
+            // Sets all the uniforms and attributes (used before rendering).
+            void Use();
             // Returns the Shader.
-            Shader& GetShader() {return *shader;};
+            Shader GetShader() {return *shader;};
 
             // Creates a Material from a MTL file.
             static BaseMaterial FromMtl(string path);
@@ -138,7 +145,7 @@ namespace GAIL
             ~BillboardMaterial();
     };
 
-    // A material for color and view matrix only (default).
+    // A material for color, texture and transform only (default).
     class BasicMaterial : BaseMaterial
     {
         public:
@@ -146,15 +153,24 @@ namespace GAIL
             Color color;
             Matrix viewMatrix;
             BasicMaterial(Color color, Texture texture, Matrix viewMatrix);
+            BasicMaterial(Color color, Texture texture, Transform transform);
             ~BasicMaterial();
     };
 
     // A material that is rendered flat on the screen (e.g. UI).
-    class Basic2DMaterial
+    class Basic2DMaterial : BaseMaterial
     {
         public:
             Basic2DMaterial();
             ~Basic2DMaterial();
+    };
+    // Can render basic text in 2D.
+    class Text2DMaterial : BaseMaterial {
+        public:
+            string text;
+            std::map<char, Texture> font;
+            Text2DMaterial(string text, std::map<char, Texture> font);
+            ~Text2DMaterial();
     };
     
 } // namespace GAIL
