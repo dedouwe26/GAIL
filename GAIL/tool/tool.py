@@ -47,7 +47,7 @@ def main(args):
         returncode = 0
         for cppfile in (glob.glob(projectPath+"/*.cpp")+glob.glob(projectPath+"/base/*.cpp")):
             objectFiles.append(projectPath+"/bin/"+os.path.split(cppfile)[1]+".o")
-            gppproc = subprocess.run([compilerpath+"/g++", "-I"+includePath, "-I"+vulkanSDKPath+"/Include", "-I"+projectPath, "-I"+projectPath+"/base", "-L", vulkanSDKPath+"/Lib/vulkan-1.lib", "-L",libPath+"/glfw3.lib", "-c", cppfile, "-o"+projectPath+"/bin/"+os.path.split(cppfile)[1]+".o"], cwd=compilerpath)
+            gppproc = subprocess.run([compilerpath+"/g++", "-I"+includePath, "-I"+vulkanSDKPath+"/Include", "-I"+projectPath, "-I"+projectPath+"/base", "-L", vulkanSDKPath+"/Lib/vulkan-1.lib", "-L",libPath+"/glfw3.lib", "-L",libPath+"/OpenAL32.lib", "-c", cppfile, "-o"+projectPath+"/bin/"+os.path.split(cppfile)[1]+".o"], cwd=compilerpath)
             returncode = gppproc.returncode
         arargs=[compilerpath+"/ar", "rvs", projectPath+"/bin/GAIL.a"]
         arargs.extend(objectFiles)
