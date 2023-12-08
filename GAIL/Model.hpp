@@ -25,7 +25,9 @@ namespace GAIL
         public:
             int index = -1;
             Vertex *vertex;
+            // Index num is calculated at render.
             Index(Vertex *vertex);
+            // Static index (index is not calculated at render).
             Index(Vertex *vertex, int index);
             ~Index();
     };
@@ -45,9 +47,8 @@ namespace GAIL
     {
         private:
             std::vector<Face> Faces;
-            std::vector<Index> Indices;
         public:
-            Mesh(std::vector<Face> faces, std::vector<Index> indices);
+            Mesh(std::vector<Face> faces);
             ~Mesh();
             static Mesh FromObj(string path);
     };

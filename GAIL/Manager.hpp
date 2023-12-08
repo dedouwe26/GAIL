@@ -29,10 +29,10 @@ namespace GAIL
             GraphicsManager(Window window);
             ~GraphicsManager();
             /*
-            Renders the models to the current frame on that layer (RENDER ApplicationType).
+            Renders the models to the 3D pipeline in the current frame on that layer.
             Returns if successful
             */
-            bool Render(std::vector<Model> models);
+            bool Render3D(std::vector<Model> models);
     };
 
     #pragma endregion
