@@ -1,14 +1,6 @@
 {
     "tasks": [
         {
-            "label": "dotnetbuild",
-            "command": "python3 ${workspaceFolder}/GAIL/tool/tool.py dotnet",
-            "type": "shell",
-            "group": {
-                "kind": "build"
-            }
-        },
-        {
             "label": "cppbuild",
             "command": "python3 ${workspaceFolder}/GAIL/tool/tool.py cpp",
             "type": "shell",

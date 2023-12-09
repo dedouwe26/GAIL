@@ -16,7 +16,7 @@ namespace GAIL
             InputManager inputManager;
             AudioManager audioManager;
 
-            Application(string windowName, int width, int height);
+            Application(string windowName = "GAIL Window", int width = 1000, int height=600, Texture icon = Texture{});
             ~Application();
 
             // Sets the Update function, with delta time (in seconds): CurrentTime - PreviousFrameTime (calls every frame).

@@ -26,6 +26,7 @@ namespace GAIL
     class GraphicsManager
     {
         public:
+            VkInstance instance;
             GraphicsManager(int width, int height);
             ~GraphicsManager();
             /*
@@ -33,6 +34,12 @@ namespace GAIL
             Returns if successful.
             */
             bool Render3D(std::vector<Model> models);
+            /*
+            Renders the models to the 2D pipeline (On top of the 3d) in the current frame on that layer.
+            Returns if successful.
+            */
+            bool Render2D(std::vector<Model> models);
+            
     };
 
     #pragma endregion

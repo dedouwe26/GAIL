@@ -8,13 +8,6 @@
             "args": ["HelloWindow"],
             "console": "integratedTerminal",
             "preLaunchTask": "cppbuild"
-        },
-        {
-            "name": "C#: GAIL Example Window",
-            "type": "dotnet",
-            "preLaunchTask": "dotnetbuild",
-            "request": "launch",
-            "projectPath": "${workspaceFolder}/examples/C#/HelloWindow/HelloWindow.csproj"
-        },
+        }
     ]
 }

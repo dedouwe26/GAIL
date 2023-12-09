@@ -138,7 +138,7 @@ namespace GAIL
     };
     
     // Renders the object facing the 
-    class BillboardMaterial : BaseMaterial
+    class BillboardMaterial : public BaseMaterial
     {
         public:
             BillboardMaterial();
@@ -146,7 +146,7 @@ namespace GAIL
     };
 
     // A material for color, texture and transform only (default).
-    class BasicMaterial : BaseMaterial
+    class BasicMaterial : public BaseMaterial
     {
         public:
             Texture texture;
@@ -158,14 +158,16 @@ namespace GAIL
     };
 
     // A material that is rendered flat on the screen (e.g. UI).
-    class Basic2DMaterial : BaseMaterial
+    class Basic2DMaterial : public BaseMaterial
     {
+        Texture texture;
+        Color color;
         public:
-            Basic2DMaterial();
+            Basic2DMaterial(Color color, Texture texture = Texture{});
             ~Basic2DMaterial();
     };
     // Can render basic text in 2D.
-    class Text2DMaterial : BaseMaterial {
+    class Text2DMaterial : public BaseMaterial {
         public:
             string text;
             std::map<char, Texture> font;
