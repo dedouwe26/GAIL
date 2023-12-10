@@ -1,12 +1,12 @@
 <h1 align="center"><img src="https://raw.githubusercontent.com/dedouwe26/GAIL/main/Logo.svg" alt="logo" width="500", href="https://github.com/dedouwe26/GAIL"/> <br/>
 <code>Graphics Audio Input Library</code> <br/></h1>
-This library is built using Vulkan, CAudio and GLFW for the graphics, audio and input / window management.<br/>
+This library is built using Vulkan, OpenAL and GLFW for the graphics, audio and input / window management.<br/>
 <ul>
 <li>Fast</li>
-<li>C++ with C# bindings</li>
+<li>C++</li>
 <li>Expandible</li>
 <li>It's well documented in the header files.</li>
-<li>GLFW and Vulkan objects are accessible</li>
+<li>GLFW and OpenAL and Vulkan objects are accessible</li>
 </ul>
 <br/>
 Real world implementations (future): <a href="https://github.com/dedouwe26/Dedhub">Dedhub</a> and <a href="https://github.com/dedouwe26/Taired">Taired</a>. <br/><br/>
