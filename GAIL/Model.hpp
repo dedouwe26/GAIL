@@ -64,5 +64,17 @@ namespace GAIL
             Model(Mesh mesh, BaseMaterial material);
             ~Model();
     };
+    
+    /*
+     * A model in 3D / 2D space based on a mesh.
+     * This can be rendered.
+     */
+    class InstancedModel {
+        public:
+            Mesh* mesh;
+            BaseMaterial material;
+            InstancedModel(Mesh* mesh, BaseMaterial material);
+            ~InstancedModel();
+    };
 
 } // namespace GAIL

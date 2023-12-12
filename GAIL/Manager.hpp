@@ -14,11 +14,18 @@ namespace GAIL
 
     #pragma region Graphics
 
-    // Identifies how many dimensions.
-    enum Dimensions {
-        TWO = 2,
-        THREE = 3
+
+    // All the levels of MSAA.
+    enum MSAA {
+        MSAAx1 = Vk_SAMPLE_COUNT_1_BIT, // No MSAA
+        MSAAx2 = VK_SAMPLE_COUNT_2_BIT,
+        MSAAx4 = VK_SAMPLE_COUNT_4_BIT,
+        MSAAx8 = VK_SAMPLE_COUNT_8_BIT,
+        MSAAx16 = VK_SAMPLE_COUNT_16_BIT,
+        MSAAx32 = VK_SAMPLE_COUNT_32_BIT,
+        MSAAx64 = VK_SAMPLE_COUNT_64_BIT
     };
+
 
     /*
      * This handles all the graphics of GAIL.
@@ -26,19 +33,45 @@ namespace GAIL
     class GraphicsManager
     {
         public:
+            // Vulkan Instance
             VkInstance instance;
-            GraphicsManager(int width, int height);
+            // Vulkan Physical Device
+            VkPhysicalDevice physicalDevice;
+            // Vulkan Logical Device
+            VkDevice device;
+
+            int *width;
+            int *height;
+            // Current MSAA size, read-only.
+            MSAA MSAASize = MSAA::MSAAx1;
+            GraphicsManager(int *width, int *height);
             ~GraphicsManager();
+            // Returns the max supported MSAA size.
+            MSAA GetMaxMSAA();
+
+            // Sets the anti-aliasing (MSAA) to that size. Returns true if successful.
+            bool SetMSAA(MSAA MSAASize);
+
             /*
             Renders the models to the 3D pipeline in the current frame on that layer.
             Returns if successful.
             */
             bool Render3D(std::vector<Model> models);
             /*
+            Renders the instanced (Used for models that are rendered multiple times in different places) models to the 3D pipeline in the current frame on that layer.
+            Returns if successful.
+            */
+            bool Render3DInstanced(std::vector<InstancedModel> models);
+            /*
             Renders the models to the 2D pipeline (On top of the 3d) in the current frame on that layer.
             Returns if successful.
             */
             bool Render2D(std::vector<Model> models);
+            /*
+            Renders the instanced (Used for models that are rendered multiple times in different places) models to the 2D pipeline (On top of the 3d) in the current frame on that layer.
+            Returns if successful.
+            */
+            bool Render2DInstanced(std::vector<InstancedModel> models);
             
     };
 

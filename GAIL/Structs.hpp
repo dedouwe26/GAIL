@@ -1,6 +1,6 @@
 #pragma once
 
-// PI
+// PI (𝝅)
 #define PI 3.14159265358979323846
 
 #include <string>
@@ -20,11 +20,24 @@ namespace GAIL
         double m03, m13, m23, m33;
         static Matrix Identity;
 
-        static Matrix FromView();
-        // Creates a Matrix Projection from perspective, FoV in radians: like 90 degrees, aspectRatio of screen:  4/3 or 1000/6000, 
-        // nearClippingPlane from camera: the closest that a object can be, farClippingPlane from : 
-        static Matrix fromPerspective(double FoV, double aspectRatio, double nearClippingPlane = .1, double farClippingPlane = 100.);
-        static Matrix fromOrthographic();
+        // Creates a view matrix that is looking at target. With camera as position of the cam.
+        // And up as the world position up.
+        static Matrix FromLookAt(Vector3 camera, Vector3 target, Vector3 up = Vector3{0, 1, 0});
+        // Creates a view matrix that is at position and rotation.
+        static Matrix FromView(Vector3 position, Quaternion rotation);
+        // Creates a perspective projection matrix, 
+        //FoV in radians: like 90 degrees, 
+        // aspectRatio of screen:  4/3 or 1000/6000, 
+        // near (near clipping plane) from camera: the closest that a object can be, 
+        // far (far clipping plane) from camera : furthest a object can be.
+        static Matrix FromPerspective(double FoV, double aspectRatio, double near = .1, double far = 100.);
+        // Creates a orthographic projection matrix, left: left distance to the camera, 
+        // right: right distance to the camera,
+        // bottom: bottom distance to the camera,
+        // top: top distance to the camera,
+        // near (near clipping plane) from camera: the closest that a object can be, 
+        // far (far clipping plane) from camera : furthest a object can be.
+        static Matrix FromOrthographic(double left, double right, double bottom, double top, double near, double far);
 
         Matrix operator*(Matrix right);
     };
@@ -47,9 +60,9 @@ namespace GAIL
         double y;
         double z;
         // Creates a 4x4 scale matrix from a vector 3.
-        Matrix ToScale();
+        Matrix ToScaleMatrix();
         // Creates a 4x4 translation matrix from a vector 3.
-        Matrix ToTranslation();
+        Matrix ToTranslationMatrix();
         Vector3 operator+(double b) {return {this->x+b,this->y+b,this->z+b};};
         Vector3 operator-(double b) {return {this->x-b,this->y-b,this->z-b};};
         Vector3 operator*(Vector3 b) {return {this->x*b.x,this->y*b.y,this->z*b.z};};
@@ -109,12 +122,13 @@ namespace GAIL
         double z;
         double w;
         static Quaternion Identity;
+
         // Creates a 4x4 rotation matrix from a quaternion.
         Matrix ToRotationMatrix();
 
-        Vector4 operator+(double b) {return {this->x+b,this->y+b,this->z+b,this->w+b};};
-        Vector4 operator-(double b) {return {this->x-b,this->y-b,this->z-b,this->w-b};};
-        Vector4 operator*(Vector4 b) {return {this->x*b.x,this->y*b.y,this->z*b.z,this->w*b.w};};
+        Quaternion operator+(double b) {return {this->x+b,this->y+b,this->z+b,this->w+b};};
+        Quaternion operator-(double b) {return {this->x-b,this->y-b,this->z-b,this->w-b};};
+        Quaternion operator*(Quaternion b) {return {this->x*b.x,this->y*b.y,this->z*b.z,this->w*b.w};};
     };
 
     // Contains rotation, scale and translation for 3D / 2D objects.

@@ -7,7 +7,7 @@ namespace GAIL
                                0, 0, 1, 0,
                                0, 0, 0, 1};
 
-    Matrix Vector3::ToScale() {
+    Matrix Vector3::ToScaleMatrix() {
         Matrix result = Matrix::Identity;
         result.m00 = this->x;
         result.m11 = this->y;
@@ -15,7 +15,7 @@ namespace GAIL
         return result;
     }
 
-    Matrix Vector3::ToTranslation() {
+    Matrix Vector3::ToTranslationMatrix() {
         Matrix result = Matrix::Identity;
         result.m03 = this->x;
         result.m13 = this->y;
@@ -51,8 +51,8 @@ namespace GAIL
         return result;
     }
 
-    Matrix Transform::ToViewMatrix() {
-        return Matrix::Identity * this->rotation.ToRotationMatrix() * this->scale.ToScale() * this->translation.ToTranslation();
+    Matrix Transform::ToModelMatrix() {
+        return Matrix::Identity * (*this->rotation).ToRotationMatrix() * (*this->scale).ToScaleMatrix() * (*this->translation).ToTranslationMatrix();
     }
     Matrix Matrix::operator*(Matrix right)
     {

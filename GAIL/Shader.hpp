@@ -105,8 +105,15 @@ namespace GAIL
     class Shader
     {
         public:
-            std::vector<VkVertexInputAttributeDescription> attributeDescription;
+            std::vector<VkVertexInputAttributeDescription> attributeDescriptions;
+            // everything is in SPIR-V
             Shader(string vert, string frag);
+            // everything is in SPIR-V
+            Shader(string vert, string frag, string geom);
+            // everything is in SPIR-V
+            Shader(string vert, string frag, string mesh);
+            // everything is in SPIR-V
+            Shader(string mesh, string frag);
             ~Shader();
             // Sets all the shader uniforms.
             // Returns true if successful.
@@ -131,7 +138,7 @@ namespace GAIL
             // Sets all the uniforms and attributes (used before rendering).
             void Use();
             // Returns the Shader.
-            Shader GetShader() {return *shader;};
+            Shader* GetShader() {return shader;};
 
             // Creates a Material from a MTL file.
             static BaseMaterial FromMtl(string path);
@@ -151,8 +158,8 @@ namespace GAIL
         public:
             Texture texture;
             Color color;
-            Matrix viewMatrix;
-            BasicMaterial(Color color, Texture texture, Matrix viewMatrix);
+            Matrix modelMatrix;
+            BasicMaterial(Color color, Texture texture, Matrix modelMatrix, Matrix viewMatrix, Matrix projectionMatrix);
             BasicMaterial(Color color, Texture texture, Transform transform);
             ~BasicMaterial();
     };
