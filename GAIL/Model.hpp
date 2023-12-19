@@ -1,15 +1,17 @@
 #pragma once
 
-#include <map>
-#include "Shader.hpp"
+#include "GAIL.hpp"
 
 namespace GAIL
 {
+    class VertexAttribute;
+    class BaseMaterial;
 
     // A point that exists of data (used for 3d objects).
     class Vertex
     {
         public:
+            // The position of this vertex.
             Vector3 position;
             // Attributes for this vertex shown in shader.
             // Name and VertexAttribute.
@@ -20,25 +22,15 @@ namespace GAIL
             ~Vertex();
     };
 
-    // A index that represents a vertex, used for multiple points in one place.
-    class Index {
-        public:
-            int index = -1;
-            Vertex *vertex;
-            // Index num is calculated at render.
-            Index(Vertex *vertex);
-            // Static index (index is not calculated at render).
-            Index(Vertex *vertex, int index);
-            ~Index();
-    };
+    
 
     // A face (triangle) of a mesh.
     class Face
     {
         public:
-            Index *Indices[3];
-            Face(Index *indices[3]);
-            Face(Index p1, Index p2, Index p3);
+            Vertex *Indices[3];
+            Face(Vertex *indices[3]);
+            Face(Vertex p1, Vertex p2, Vertex p3);
             ~Face();
     };
 
@@ -46,8 +38,10 @@ namespace GAIL
     class Mesh
     {
         public:
-            std::vector<Face> Faces;
+            std::vector<unsigned int> Faces;
+            std::vector<Vertex> vertices;
             Mesh(std::vector<Face> faces);
+            Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> IndexFaces);
             ~Mesh();
             static Mesh FromObj(string path);
     };

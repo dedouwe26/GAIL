@@ -4,7 +4,7 @@
             "name": "C++: GAIL Example Window",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/examples/C++/tool/tool.py",
+            "program": "${workspaceFolder}/examples/tool/tool.py",
             "args": ["HelloWindow"],
             "console": "integratedTerminal",
             "preLaunchTask": "cppbuild"

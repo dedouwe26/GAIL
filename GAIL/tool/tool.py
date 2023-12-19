@@ -52,6 +52,7 @@ def main(args):
     print("Build location: GAIL/bin/GAIL.a")
     print("Build Successful" if returncode==0 else "Build Failed")
     print("============= END ============")
+    exit(0 if returncode==0 else 1)
 
 if __name__ == "__main__":
     main(sys.argv)

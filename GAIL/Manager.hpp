@@ -1,13 +1,6 @@
 #pragma once
 
-#include <vector>
-#include <string>
 #include "GAIL.hpp"
-#include "Model.hpp"
-#include "Structs.hpp"
-#include <glfw3.h>
-
-using string = std::string;
 
 namespace GAIL
 {   
@@ -17,7 +10,7 @@ namespace GAIL
 
     // All the levels of MSAA.
     enum MSAA {
-        MSAAx1 = Vk_SAMPLE_COUNT_1_BIT, // No MSAA
+        MSAAx1 = VK_SAMPLE_COUNT_1_BIT, // No MSAA
         MSAAx2 = VK_SAMPLE_COUNT_2_BIT,
         MSAAx4 = VK_SAMPLE_COUNT_4_BIT,
         MSAAx8 = VK_SAMPLE_COUNT_8_BIT,
@@ -26,6 +19,9 @@ namespace GAIL
         MSAAx64 = VK_SAMPLE_COUNT_64_BIT
     };
 
+    struct AppInfo;
+    class InstancedModel;
+    class Model;
 
     /*
      * This handles all the graphics of GAIL.
@@ -34,20 +30,27 @@ namespace GAIL
     {
         public:
             // Vulkan Instance
-            VkInstance instance;
+            vk::Instance instance;
             // Vulkan Physical Device
-            VkPhysicalDevice physicalDevice;
+            vk::PhysicalDevice physicalDevice;
             // Vulkan Logical Device
-            VkDevice device;
+            vk::Device device;
 
-            int *width;
-            int *height;
+            // Output Width (read-only, use SetRenderSize).
+            int outWidth;
+            // Output Height (read-only, use SetRenderSize).
+            int outHeight;
+
             // Current MSAA size, read-only.
             MSAA MSAASize = MSAA::MSAAx1;
-            GraphicsManager(int *width, int *height);
+
+            GraphicsManager(AppInfo info);
             ~GraphicsManager();
             // Returns the max supported MSAA size.
             MSAA GetMaxMSAA();
+            
+            // Sets how many pixels there are rendered
+            void SetRenderSize(int width, int height);
 
             // Sets the anti-aliasing (MSAA) to that size. Returns true if successful.
             bool SetMSAA(MSAA MSAASize);
@@ -266,10 +269,15 @@ namespace GAIL
         void SetOnMouseMoved(void (*MouseMovedFunction)(Vector2 from, Vector2 to));
         // Sets an event for when the mouse wheel scrolled.
         void SetOnScroll(void (*ScrollFunction)(double x, double y));
+        
         // Is mouse locked (read-only, use LockMouse instead).
         bool MouseLocked;
+
         // Locks the mouse in place and hide it.
         void LockMouse(bool lock);
+
+        // Sets an event for when the window is resized.
+        void SetOnWindowResize(void (*WindowResizeFunction)(int width, int height));
 
         // Sets an event for when a path / paths are dropped on the window.
         void SetOnPathDrop(void (*PathDropFunction)(std::vector<string> paths));

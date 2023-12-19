@@ -1,7 +1,6 @@
 #pragma once
 
 #include "GAIL.hpp"
-#include <vulkan/vulkan.hpp>
 
 namespace GAIL
 {
@@ -107,11 +106,7 @@ namespace GAIL
         public:
             std::vector<VkVertexInputAttributeDescription> attributeDescriptions;
             // everything is in SPIR-V
-            Shader(string vert, string frag);
-            // everything is in SPIR-V
-            Shader(string vert, string frag, string geom);
-            // everything is in SPIR-V
-            Shader(string vert, string frag, string mesh);
+            Shader(string vert, string frag, string geom = "");
             // everything is in SPIR-V
             Shader(string mesh, string frag);
             ~Shader();
@@ -167,9 +162,9 @@ namespace GAIL
     // A material that is rendered flat on the screen (e.g. UI).
     class Basic2DMaterial : public BaseMaterial
     {
-        Texture texture;
-        Color color;
         public:
+            Texture texture;
+            Color color;
             Basic2DMaterial(Color color, Texture texture = Texture{});
             ~Basic2DMaterial();
     };

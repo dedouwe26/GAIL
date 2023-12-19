@@ -18,8 +18,7 @@ And to learn it you can check the examples or the <a href="https://github.com/de
 <h2>Examples</h2>
 For starters there are usage examples that show the fundementals to get started:
 <ul>
-<li>Hello Window (make a window) [<a href="https://github.com/dedouwe26/GAIL/tree/main/examples/C%2B%2B/HelloWindow">C++</a>] [<a href="https://github.com/dedouwe26/GAIL/tree/main/examples/C%23/HelloWindow">C#</a>]</li>
-<li>Hello Triangle (draw a triangle) [<a href="https://github.com/dedouwe26/GAIL/tree/main/examples/C%2B%2B/HelloTriangle">C++</a>] [<a href="https://github.com/dedouwe26/GAIL/tree/main/examples/C%23/HelloTriangle">C#</a>]</li>
+<li>Hello Triangle (draw a triangle) [<a href="https://github.com/dedouwe26/GAIL/tree/main/examples/C%2B%2B/HelloTriangle">Code</a>]</li>
 </ul>
 <h2>Building</h2>
 (VSCode recommended, all launch and task files are configured) <br/>
@@ -32,15 +31,14 @@ Most releases come pre-built, but if you want to build a example project or buil
     <li>Choose the following: <br/>
         <b>Follow this if you want to build the <u>main</u> project.</b>
             <ol style="list-style-type: lower-alpha;">
-                <li>Open up a terminal and navigate to the <code>./GAIL/tool</code><br/>and use the command : <code>python ./tool.py [cpp / dotnet]</code>.</li>
-                <li>There should be the output binary: <code>./GAIL/bin/[GAIL.so / GAIL.dll]</code>. <br/> For <b>C++</b> you'll need to compile your code with the .so file. <br/>For <b>C#</b> you'll need to compile GAIL.NET and reference the DLL file.</li>
+                <li>Open up a terminal and navigate to the <code>./GAIL/tool</code><br/>and use the command : <code>python ./tool.py</code>.</li>
+                <li>There should be the output binary: <code>./GAIL/bin/GAIL.so</code>.
             </ol>
         <b>Follow this if you want to build an <u>example</u> project.</b>
             <ol style="list-style-type: lower-alpha;">
                 <li>Compile the main project first.</li>
                 <li>
-                For C#, just run the csproj file in the C# example directory.<br/>
-                For C++, open up a terminal and navigate to the <code>./examples/C++/tool</code><br/>and use the command : <code>python ./tool.py [examplename]</code>. <br/>And it should automaticly run the executable.</li>
+                Open up a terminal and navigate to the <code>./examples/tool</code><br/>and use the command : <code>python ./tool.py [examplename]</code>. <br/>And it should automaticly run the executable.</li>
             </ol>
     </li>
 </ol>

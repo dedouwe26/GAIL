@@ -1,4 +1,4 @@
-#include "Structs.hpp"
+#include "GAIL.hpp"
 
 namespace GAIL
 {

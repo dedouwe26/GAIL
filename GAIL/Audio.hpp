@@ -1,14 +1,19 @@
 #pragma once
 
-#include <string>
-#include <vector>
-#include <al.h>
-#include <alc.h>
-
-using string = std::string;
+#include "GAIL.hpp"
 
 namespace GAIL
 {
+
+    // A sound format: how many channels and the bandwidth.
+    enum SoundFormat {
+        Stereo16 = AL_FORMAT_STEREO16,
+        Mono16 = AL_FORMAT_MONO16,
+        Stereo8 = AL_FORMAT_STEREO8,
+        Mono8 = AL_FORMAT_MONO8
+    };
+
+    class Sound;
 
     // An effect for sounds (like pitch, etc).
     class SoundEffect
@@ -21,14 +26,7 @@ namespace GAIL
             Sound Use(Sound baseSound);
     };
 
-    enum SoundFormat {
-        Stereo16 = AL_FORMAT_STEREO16,
-        Mono16 = AL_FORMAT_MONO16,
-        Stereo8 = AL_FORMAT_STEREO8,
-        Mono8 = AL_FORMAT_MONO8
-    };
-
-    // Represents a sound with effects.
+    // Represents a sound (audio) with effects.
     class Sound
     {
         public:
@@ -61,6 +59,7 @@ namespace GAIL
             */
             static Sound FromFile(string path);
     };
+
     /*
     Reads audio from a microphone or sound output.
     */
