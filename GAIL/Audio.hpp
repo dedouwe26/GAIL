@@ -19,8 +19,8 @@ namespace GAIL
     class SoundEffect
     {
         public:
-            SoundEffect();
-            ~SoundEffect();
+            SoundEffect() {};
+            ~SoundEffect() {};
             // Applies effects to the sound.
             // Returns the effected sound.
             Sound Use(Sound baseSound);
@@ -33,31 +33,36 @@ namespace GAIL
             SoundFormat format;
             double duration;
             int sampleRate;
-            std::vector<char> rawData;
-            // If this sound loops
-            bool isLooping;
-            // The volume of this sound
-            float volume;
 
+            std::vector<char> rawData;
+            // If this sound loops (default: false).
+            bool isLooping = false;
+            // The volume of this sound (default: 1).
+            float volume = 1.f;
+
+            // The current sound effects.
             std::vector<SoundEffect> soundEffects;
 
             // sampleRate in Hertz (44100Hz), rawData in the specified format.
-            Sound(int sampleRate, std::vector<char> rawData, SoundFormat format);
+            Sound(int sampleRate = 0, std::vector<char> rawData = std::vector<char>(), SoundFormat format = SoundFormat::Mono16) : sampleRate{sampleRate}, format{format}, rawData{rawData} {};
             ~Sound();
             // Returns a configured Source (OpenAL) created from this class.
             ALuint CreateSource();
 
             /*
-            Apllies sound effects to this sound (when CreateSource is called).
+            Applies sound effects to this sound (when CreateSource is called).
             Applied in the order from the first to the last of the list (vector).
             */
-            void SetSoundEffects(std::vector<SoundEffect> soundEffects);
+            void SetSoundEffects(std::vector<SoundEffect> soundEffects) {this->soundEffects = soundEffects;};
             
             /*
-            Loads a sound from a audio file with a path to it.
-            Supported types: WAV, ogg, RAW.
+            Loads a sound from a ogg file with a path to it.
             */
-            static Sound FromFile(string path);
+            static Sound FromOGG(string path);
+            /*
+            Loads a sound from a wav file with a path to it.
+            */
+            static Sound FromWAV(string path);
     };
 
     /*

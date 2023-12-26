@@ -12,7 +12,7 @@ using string = std::string;
 namespace GAIL
 {
     // Turns degrees into radians.
-    double ToRadians(double degree) {return degree * (PI/180);};
+    double ToRadians(double degree);
 
     // A structure with 2 components (used for 2D space).
     struct Vector2

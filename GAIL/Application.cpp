@@ -27,6 +27,9 @@ namespace GAIL
             std::cerr << "GAIL: GLFW: window creation failed!" << std::endl;
             this->~Application();
         }
+
+        this->loadFunction(*this);
+
         while (!glfwWindowShouldClose(this->window)) {
             glfwPollEvents();
             // this->updateFunction();
@@ -37,6 +40,7 @@ namespace GAIL
         this->Stop();
     }
     void Application::Stop() {
+        this->stopFunction(*this);
         glfwDestroyWindow(window);
         glfwTerminate();
     }

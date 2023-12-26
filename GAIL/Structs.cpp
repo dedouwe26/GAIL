@@ -2,6 +2,8 @@
 
 namespace GAIL
 {
+    double ToRadians(double degree) {return degree * (PI/180);};
+
     Matrix Matrix::Identity = {1, 0, 0, 0,
                                0, 1, 0, 0,
                                0, 0, 1, 0,

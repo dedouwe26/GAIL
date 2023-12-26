@@ -91,6 +91,9 @@ namespace GAIL
             // Returns all the audio devices for custom audio device selection.
             static std::vector<string> GetAudioDevices();
 
+            // Returns the default audio device.
+            static string GetDefaultAudioDevice();
+
             // OpenAL Context, for custom usage.
             ALCcontext* ALCc;
             AudioManager();
@@ -182,7 +185,7 @@ namespace GAIL
         TAB = GLFW_KEY_TAB,
         LEFT_BRACKET = GLFW_KEY_LEFT_BRACKET, // [
         RIGHT_BRACKET = GLFW_KEY_RIGHT_BRACKET, // ]
-        BACKSLASH = GLFW_KEY_BACKSLASH, // \\ 
+        BACKSLASH = GLFW_KEY_BACKSLASH,
         CAPSLOCK = GLFW_KEY_CAPS_LOCK, // or CAPS
         SEMICOLON = GLFW_KEY_SEMICOLON, // ;
         APOSTROPHE = GLFW_KEY_APOSTROPHE, // '
@@ -245,42 +248,59 @@ namespace GAIL
     // Handles all input in the Application.
     class InputManager
     {
-    public:
-        // The GLFW window, for custom usage.
-        GLFWwindow *window;
+        public:
+            // The GLFW window, for custom usage.
+            GLFWwindow *window;
 
-        InputManager(GLFWwindow *window);
-        ~InputManager();
-        // Converts a key or keypress to the corresponding character (including shift check).
-        char ToChar(Key key);
-        // Converts a key to the platform-specific scancode.
-        unsigned ToScanCode(Key key);
+            
+            void (*KeyDownFunction)(Key key); // Check the corresponding functions.
+            void (*KeyUpFunction)(Key key); // Check the corresponding functions.
+            void (*MouseMovedFunction)(Vector2 pos); // Check the corresponding functions.
+            void (*ScrollFunction)(Vector2 offset); // Check the corresponding functions.
+            void (*WindowResizeFunction)(int width, int height, bool maximized, bool minimized); // Check the corresponding functions.
+            void (*WindowMoveFunction)(Vector2 newPos); // Check the corresponding functions.
+            void (*PathDropFunction)(std::vector<string> paths); // Check the corresponding functions.
 
-        // Checks if that key is pressed.
-        bool IsKeyPressed(Key key);
-        // Sets an event for when any key is pressed.
-        void SetOnKeyDown(void (*KeyDownFunction)(Key key));
-        // Sets an event for when any key is released.
-        void SetOnKeyUp(void (*KeyUpFunction)(Key key));
+            InputManager(GLFWwindow *window);
+            ~InputManager();
+            // Converts a key or keypress to the corresponding character (excluding shift check).
+            char ToChar(Key key);
+            // Converts a key to the platform-specific scancode.
+            int ToScanCode(Key key);
 
-        // Returns the mouse position.
-        Vector2 GetMousePosition();
-        // Sets an event for when the mouse moved.
-        void SetOnMouseMoved(void (*MouseMovedFunction)(Vector2 from, Vector2 to));
-        // Sets an event for when the mouse wheel scrolled.
-        void SetOnScroll(void (*ScrollFunction)(double x, double y));
-        
-        // Is mouse locked (read-only, use LockMouse instead).
-        bool MouseLocked;
+            // Checks if that key is pressed.
+            bool IsKeyPressed(Key key);
+            // Sets an event for when any key is pressed.
+            void SetOnKeyDown(void (*KeyDownFunction)(Key key));
+            // Sets an event for when any key is released.
+            void SetOnKeyUp(void (*KeyUpFunction)(Key key));
 
-        // Locks the mouse in place and hide it.
-        void LockMouse(bool lock);
+            // Returns the mouse position.
+            Vector2 GetMousePosition();
+            // Sets an event for when the mouse moved.
+            void SetOnMouseMoved(void (*MouseMovedFunction)(Vector2 pos));
+            // Sets an event for when the mouse wheel scrolled.
+            void SetOnScroll(void (*ScrollFunction)(Vector2 offset));
+            
+            // Is mouse locked (read-only, use LockMouse instead).
+            bool MouseLocked;
 
-        // Sets an event for when the window is resized.
-        void SetOnWindowResize(void (*WindowResizeFunction)(int width, int height));
+            // Locks the mouse in place and hide it.
+            void LockMouse(bool lock);
 
-        // Sets an event for when a path / paths are dropped on the window.
-        void SetOnPathDrop(void (*PathDropFunction)(std::vector<string> paths));
+            // Sets the window position and size (including maximized, minimized).
+            void SetWindow(int x, int y, int width, int height, bool maximized, bool minimized);
+
+            // Sets the title of the current window (supports UTF-8).
+            void SetTitle(string newTitle);
+            // Sets the icons of the current window, use different sizes for rescaling purposes.
+            void SetIcon(std::vector<Texture> newIcons);
+            // Sets an event for when the window is resized (including maximized, minimized).
+            void SetOnWindowResize(void (*WindowResizeFunction)(int width, int height, bool maximized, bool minimized));
+            // Sets an event for when the window is moved.
+            void SetOnWindowMove(void (*WindowMoveFunction)(Vector2 newPos));
+            // Sets an event for when a path / paths are dropped on the window.
+            void SetOnPathDrop(void (*PathDropFunction)(std::vector<string> paths));
     };
     
     #pragma endregion

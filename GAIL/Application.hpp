@@ -46,11 +46,11 @@ namespace GAIL
             ~Application();
 
             // Sets the Update function, with delta time (in seconds): CurrentTime - PreviousFrameTime (calls every frame).
-            void SetOnUpdate(void (*updateFunction)(Application app, double deltaTime));
+            void SetOnUpdate(void (*updateFunction)(Application app, double deltaTime)) {this->updateFunction = updateFunction;};
             // Sets the Load function (calls at the start).
-            void SetOnLoad(void (*loadFunction)(Application app));
+            void SetOnLoad(void (*loadFunction)(Application app)) {this->loadFunction = loadFunction;};
             // Sets the Stop function (calls at close).
-            void SetOnStop(void (*stopFunction)(Application app));
+            void SetOnStop(void (*stopFunction)(Application app)) {this->stopFunction = stopFunction;};
 
 
             // Gets GraphicsManager.
