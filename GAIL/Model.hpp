@@ -15,10 +15,10 @@ namespace GAIL
             Vector3 position;
             // Attributes for this vertex shown in shader.
             // Name and VertexAttribute.
-            std::map<string, VertexAttribute> attributes;
-            Vertex() {this->position={0,0,0};};
-            Vertex(double x, double y, double z) {this->position={x,y,z};};
-            Vertex(double x, double y) {this->position = {x,y,0};};
+            std::map<string, VertexAttribute> attributes = std::map<string, VertexAttribute>();
+            Vertex();
+            Vertex(double x, double y, double z);
+            Vertex(double x, double y);
             ~Vertex();
     };
 
@@ -28,7 +28,9 @@ namespace GAIL
     class Face
     {
         public:
-            Vertex *Indices[3];
+            Vertex *p1;
+            Vertex *p2;
+            Vertex *p3;
             Face(Vertex *indices[3]);
             Face(Vertex p1, Vertex p2, Vertex p3);
             ~Face();
@@ -38,10 +40,12 @@ namespace GAIL
     class Mesh
     {
         public:
-            std::vector<unsigned int> Faces;
+            // (Face0-p1, Face0-p2, Face0-p3, Face1-p1, etc)
+            std::vector<unsigned int> IndicesFaces;
             std::vector<Vertex> vertices;
+            // Checks if vertices points to the same address.
             Mesh(std::vector<Face> faces);
-            Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> IndexFaces);
+            Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> IndicesFaces);
             ~Mesh();
             static Mesh FromObj(string path);
     };

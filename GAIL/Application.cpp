@@ -2,11 +2,8 @@
 
 #include <iostream>
 
-
-
 namespace GAIL
 {
-
     void Application::GLFWErrorCallback(int error, const char* description) {
         std::cerr << "GAIL: GLFW Error (" << error << "): " << description << std::endl;
     };
@@ -22,6 +19,10 @@ namespace GAIL
         this->window = glfwCreateWindow(width, height, windowName.c_str(), NULL, NULL);
 
         glfwGetWindowSize(this->window, this->width, this->height);
+        
+        std::vector<Texture> icons;
+        icons[0] = icon;
+        this->inputManager.SetIcon(icons);
 
         if (!window) {
             std::cerr << "GAIL: GLFW: window creation failed!" << std::endl;
@@ -30,9 +31,13 @@ namespace GAIL
 
         this->loadFunction(*this);
 
+        double currentTime = glfwGetTime();
+        double lastTime = currentTime;
         while (!glfwWindowShouldClose(this->window)) {
             glfwPollEvents();
-            // this->updateFunction();
+            currentTime = glfwGetTime();
+            this->updateFunction(*this, currentTime - lastTime);
+            lastTime = currentTime;
         }
         this->Stop();
     }

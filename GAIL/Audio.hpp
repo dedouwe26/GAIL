@@ -15,7 +15,7 @@ namespace GAIL
 
     class Sound;
 
-    // An effect for sounds (like pitch, etc).
+    // An effect for sounds.
     class SoundEffect
     {
         public:
@@ -29,40 +29,42 @@ namespace GAIL
     // Represents a sound (audio) with effects.
     class Sound
     {
-        public:
-            SoundFormat format;
-            double duration;
-            int sampleRate;
+    public:
+        SoundFormat format;
+        double duration;
+        int sampleRate;
 
-            std::vector<char> rawData;
-            // If this sound loops (default: false).
-            bool isLooping = false;
-            // The volume of this sound (default: 1).
-            float volume = 1.f;
+        std::vector<char> rawData;
+        // If this sound loops (default: false).
+        bool isLooping = false;
+        // The volume of this sound (default: 1).
+        float volume = 1.f;
+        // The pitch of this sound (default: 1).
+        float pitch = 1.f;
+        // The source (openAL), for custom usage.
+        ALuint source;
+        // The buffer (openAL), for custom usage.
+        ALuint buffer;
 
-            // The current sound effects.
-            std::vector<SoundEffect> soundEffects;
+        // The current sound effects.
+        std::vector<SoundEffect> soundEffects;
 
-            // sampleRate in Hertz (44100Hz), rawData in the specified format.
-            Sound(int sampleRate = 0, std::vector<char> rawData = std::vector<char>(), SoundFormat format = SoundFormat::Mono16) : sampleRate{sampleRate}, format{format}, rawData{rawData} {};
-            ~Sound();
-            // Returns a configured Source (OpenAL) created from this class.
-            ALuint CreateSource();
+        // sampleRate in Hertz (44100Hz), rawData: vector<char>: the raw sound data in PCM (8bit format: 1x the size, 16bit format: 2x the size), format: mono/stereo 16bit etc., soundEffects: vector of effects to apply
+        Sound(int sampleRate = 0, std::vector<char> rawData = std::vector<char>(), SoundFormat format = SoundFormat::Mono16, std::vector<SoundEffect> soundEffects = std::vector<SoundEffect>());
+        ~Sound();
 
-            /*
-            Applies sound effects to this sound (when CreateSource is called).
-            Applied in the order from the first to the last of the list (vector).
-            */
-            void SetSoundEffects(std::vector<SoundEffect> soundEffects) {this->soundEffects = soundEffects;};
-            
-            /*
-            Loads a sound from a ogg file with a path to it.
-            */
-            static Sound FromOGG(string path);
-            /*
-            Loads a sound from a wav file with a path to it.
-            */
-            static Sound FromWAV(string path);
+        // Updates the current source and buffer (call this when you use OpenAL).
+        void Update();
+
+        /*
+        Applies sound effects to this sound (when CreateSource is called).
+        Applied in the order from the first to the last of the list (vector).
+        */
+        void SetSoundEffects(std::vector<SoundEffect> soundEffects);
+        /*
+        Loads a sound from a wav file with a path to it.
+        */
+        static Sound FromWAV(string path);
     };
 
     /*
@@ -71,11 +73,16 @@ namespace GAIL
     class SoundCapture
     {
         public:
-            static int GetDefaultDevice();
+            // the sample rate of this sound capture.
+            int sampleRate;
+            // The format of this sound capture.
+            SoundFormat format;
+            // The capture device, used for custom usage.
+            ALCdevice *captureDevice;
             // Returns all the capture devices' names.
             static std::vector<string> GetCaptureDevices();
-            // For the captureDevice int, use index from GetCaptureDevice or GetDefaultDevice return value, the format of the sound.
-            SoundCapture(int captureDevice, SoundFormat format);
+            // For the captureDevice, use GetCaptureDevice return value or nullptr, the format of the sound, sampleRate in Hz.
+            SoundCapture(SoundFormat format, int sampleRate, string captureDevice = nullptr);
             ~SoundCapture();
             // Starts capturing the audio.
             void Start();

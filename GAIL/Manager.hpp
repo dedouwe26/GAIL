@@ -36,11 +36,6 @@ namespace GAIL
             // Vulkan Logical Device
             vk::Device device;
 
-            // Output Width (read-only, use SetRenderSize).
-            int outWidth;
-            // Output Height (read-only, use SetRenderSize).
-            int outHeight;
-
             // Current MSAA size, read-only.
             MSAA MSAASize = MSAA::MSAAx1;
 
@@ -48,9 +43,6 @@ namespace GAIL
             ~GraphicsManager();
             // Returns the max supported MSAA size.
             MSAA GetMaxMSAA();
-            
-            // Sets how many pixels there are rendered
-            void SetRenderSize(int width, int height);
 
             // Sets the anti-aliasing (MSAA) to that size. Returns true if successful.
             bool SetMSAA(MSAA MSAASize);
@@ -91,19 +83,26 @@ namespace GAIL
             // Returns all the audio devices for custom audio device selection.
             static std::vector<string> GetAudioDevices();
 
-            // Returns the default audio device.
-            static string GetDefaultAudioDevice();
-
             // OpenAL Context, for custom usage.
-            ALCcontext* ALCc;
+            ALCcontext* ALcontext = nullptr;
+            // OpenAL Device, for custom usage.
+            ALCdevice* ALdevice = nullptr;
+
             AudioManager();
             // For a custom audio device selection.
             AudioManager(string audioDevice);
             ~AudioManager();
             // Plays a sound.
-            bool PlaySound(Sound sound);
+            void PlaySound(Sound sound);
             // Plays a sound in a 3D space.
-            bool PlaySound3D(Sound sound, Vector3 position);
+            void PlaySound3D(Sound sound, Vector3 position, Vector3 velocity = Vector3{0, 0, 0});
+            // Stops playing a sound.
+            void StopSound(Sound sound);
+            // (Un)pauses a sound.
+            void PauseSound(Sound sound);
+            // Goes to the specified sample.
+            void Goto(Sound sound, int sample);
+            
     };
 
     #pragma endregion
@@ -248,6 +247,8 @@ namespace GAIL
     // Handles all input in the Application.
     class InputManager
     {
+        private:
+            bool MouseLocked;
         public:
             // The GLFW window, for custom usage.
             GLFWwindow *window;
@@ -257,8 +258,8 @@ namespace GAIL
             void (*KeyUpFunction)(Key key); // Check the corresponding functions.
             void (*MouseMovedFunction)(Vector2 pos); // Check the corresponding functions.
             void (*ScrollFunction)(Vector2 offset); // Check the corresponding functions.
-            void (*WindowResizeFunction)(int width, int height, bool maximized, bool minimized); // Check the corresponding functions.
-            void (*WindowMoveFunction)(Vector2 newPos); // Check the corresponding functions.
+            void (*WindowResizeFunction)(int width, int height, char maximized, char minimized); // Check the corresponding functions.
+            void (*WindowMoveFunction)(int x, int y); // Check the corresponding functions.
             void (*PathDropFunction)(std::vector<string> paths); // Check the corresponding functions.
 
             InputManager(GLFWwindow *window);
@@ -282,23 +283,23 @@ namespace GAIL
             // Sets an event for when the mouse wheel scrolled.
             void SetOnScroll(void (*ScrollFunction)(Vector2 offset));
             
-            // Is mouse locked (read-only, use LockMouse instead).
-            bool MouseLocked;
-
+            // Returns if the mouse is locked.
+            bool GetMouseLocked();
             // Locks the mouse in place and hide it.
             void LockMouse(bool lock);
 
-            // Sets the window position and size (including maximized, minimized).
-            void SetWindow(int x, int y, int width, int height, bool maximized, bool minimized);
-
+            // Sets the window size (keep width and height 0 if you're using maximized or minimized).
+            void SetWindowSize(int width, int height, bool maximized, bool minimized);
+            // Sets the position of the window.
+            void SetWindowPosition(int x, int y);
             // Sets the title of the current window (supports UTF-8).
             void SetTitle(string newTitle);
             // Sets the icons of the current window, use different sizes for rescaling purposes.
             void SetIcon(std::vector<Texture> newIcons);
-            // Sets an event for when the window is resized (including maximized, minimized).
-            void SetOnWindowResize(void (*WindowResizeFunction)(int width, int height, bool maximized, bool minimized));
+            // Sets an event for when the window is resized (including maximized, minimized: 2=restored, 1=applied, 0=nothing).
+            void SetOnWindowResize(void (*WindowResizeFunction)(int width, int height, char maximized, char minimized));
             // Sets an event for when the window is moved.
-            void SetOnWindowMove(void (*WindowMoveFunction)(Vector2 newPos));
+            void SetOnWindowMove(void (*WindowMoveFunction)(int x, int y));
             // Sets an event for when a path / paths are dropped on the window.
             void SetOnPathDrop(void (*PathDropFunction)(std::vector<string> paths));
     };
