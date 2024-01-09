@@ -49,5 +49,11 @@ namespace GAIL
         glfwDestroyWindow(window);
         glfwTerminate();
     }
+    void Application::SetOnUpdate(void (*updateFunction)(Application app, double deltaTime)) {this->updateFunction = updateFunction;};
+    void Application::SetOnLoad(void (*loadFunction)(Application app)) {this->loadFunction = loadFunction;};
+    void Application::SetOnStop(void (*stopFunction)(Application app)) {this->stopFunction = stopFunction;};
+    GraphicsManager Application::GetGraphicsManager() {return graphicsManager;};
+    InputManager Application::GetInputManager() {return inputManager;};
+    AudioManager Application::GetAudioManager() {return audioManager;};
     
 } // namespace GAIL

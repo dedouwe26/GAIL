@@ -6,9 +6,12 @@ namespace GAIL
 {
     // The type of the attribute. 
     //
-    // Double = 64-bit (default: floating-point number), Short = 16-bit (default: int), Byte = 8-bit (default: int), 
+    // Double = 64-bit (default: floating-point number), 
+    // Short = 16-bit (default: int), 
+    // Byte = 8-bit (default: int), 
+    //
     // U = unsigned (no negative numbers), 
-    // Int = signed int, 
+    // Int = signed integer, 
     // 2,3,4 = with 2,3,4 components.
     enum AttributeType {
         Float = VK_FORMAT_R32_SFLOAT, 
@@ -74,7 +77,7 @@ namespace GAIL
     };
 
     // A basic (per vertex) color attribute.
-    class ColorAttribute : VertexAttribute
+    class ColorAttribute : public VertexAttribute
     {
         public:
             Color color;
@@ -83,16 +86,16 @@ namespace GAIL
     };
     
     // A basic (per vertex) normal attribute.
-    class NormalAttribute : VertexAttribute
+    class NormalAttribute : public VertexAttribute
     {
         public:
             Vector3 normal;
-            NormalAttribute(Vector3 color);
+            NormalAttribute(Vector3 normal);
             ~NormalAttribute();
     };
 
     // A basic (per vertex) Texture coordinates attribute.
-    class UVAttribute : VertexAttribute
+    class UVAttribute : public VertexAttribute
     {
         public:
             Vector2 uv;
@@ -100,29 +103,28 @@ namespace GAIL
             ~UVAttribute();
     };
 
-    // Contains code for the GPU on how everything is drawn (instanced).
+    // Contains code for the GPU on how everything is drawn (per-material).
     class Shader
     {
         public:
-            std::vector<VkVertexInputAttributeDescription> attributeDescriptions;
+            std::vector<vk::VertexInputAttributeDescription> attributeDescriptions;
             // everything is in SPIR-V
             Shader(string vert, string frag, string geom = "");
             // everything is in SPIR-V
             Shader(string mesh, string frag);
             ~Shader();
             // Sets all the shader uniforms.
-            // Returns true if successful.
-            bool SetUniforms();
-            // Sets the per-vertex attribute layout, with the name.
-            // Returns true if successful.
-            bool SetAttributeLayout(std::map<string, AttributeType> attributeLayout);
-            //                                       // Prepares for rendering and sets all the data.
-            // Remove due to unnecessary processing: void Use(); 
+            void SetUniforms();
+            // Sets the per-vertex attribute layout, with the name. (attributes with other names are ignored)
+            void SetAttributeLayout(std::map<string, AttributeType> attributeLayout);
+            
+            // // Prepares for rendering and sets all the data.
+            // Removed due to unnecessary processing: void Use(); 
             
             
     };
 
-    // This is how anything is drawn to the window, contains the shader and shader data (instanced).
+    // This is how anything is drawn to the window, contains the shader and shader data (instanced, per model different).
     class BaseMaterial
     {
         private:
@@ -130,21 +132,10 @@ namespace GAIL
         public:
             BaseMaterial(Shader shader);
             ~BaseMaterial();
-            // Sets all the uniforms and attributes (used before rendering).
+            // Sets all the uniforms and attributes (used before rendering) (override when making own material).
             void Use();
             // Returns the Shader.
-            Shader* GetShader() {return shader;};
-
-            // Creates a Material from a MTL file.
-            static BaseMaterial FromMtl(string path);
-    };
-    
-    // Renders the object facing the 
-    class BillboardMaterial : public BaseMaterial
-    {
-        public:
-            BillboardMaterial();
-            ~BillboardMaterial();
+            Shader* GetShader();
     };
 
     // A material for color, texture and transform only (default).
@@ -153,9 +144,9 @@ namespace GAIL
         public:
             Texture texture;
             Color color;
-            Matrix modelMatrix;
+            Matrix mvp;
             BasicMaterial(Color color, Texture texture, Matrix modelMatrix, Matrix viewMatrix, Matrix projectionMatrix);
-            BasicMaterial(Color color, Texture texture, Transform transform);
+            BasicMaterial(Color color, Texture texture, Transform transform, Matrix viewMatrix, Matrix projectionMatrix);
             ~BasicMaterial();
     };
 
