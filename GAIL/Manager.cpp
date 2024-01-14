@@ -106,7 +106,7 @@ namespace GAIL
         alDeleteSources(1, &sound.source);
         alDeleteBuffers(1, &sound.buffer);
     };
-    void AudioManager::PlaySound3D(Sound sound, Vector3 position, Vector3 velocity = Vector3{0, 0, 0}) {
+    void AudioManager::PlaySound3D(Sound sound, Vector3 position, Vector3 velocity) {
         sound.Update();
         alSource3f(sound.source, AL_POSITION, position.x, position.y, position.z);
         alSource3f(sound.source, AL_VELOCITY, velocity.x, velocity.y, velocity.z);

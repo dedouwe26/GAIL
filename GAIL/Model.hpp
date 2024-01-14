@@ -15,7 +15,7 @@ namespace GAIL
             Vector3 position;
             // Attributes for this vertex shown in shader.
             // Name and VertexAttribute.
-            std::map<string, VertexAttribute> attributes = std::map<string, VertexAttribute>();
+            std::map<string, VertexAttribute> attributes;
             Vertex();
             Vertex(double x, double y, double z);
             Vertex(double x, double y);
@@ -45,10 +45,10 @@ namespace GAIL
         public:
             // (Face0-p1, Face0-p2, Face0-p3, Face1-p1, etc)
             std::vector<unsigned> indexFaces;
-            std::vector<Vertex*> vertices;
+            std::vector<Vertex> vertices;
             // Checks if vertices points to the same address.
             Mesh(std::vector<Face> faces);
-            Mesh(std::vector<Vertex*> vertices, std::vector<unsigned> indexFaces);
+            Mesh(std::vector<Vertex> vertices, std::vector<unsigned> indexFaces);
             ~Mesh();
             // Returns a mesh constructed from a Wavefront obj file
             // The attributes for each vertex that can be added are:

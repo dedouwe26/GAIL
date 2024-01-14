@@ -19,10 +19,10 @@ namespace GAIL
     {
         double x;
         double y;
-        Vector2 operator+(double b) {return {this->x+b,this->y+b};};
-        Vector2 operator-(double b) {return {this->x-b,this->y-b};};
-        Vector2 operator*(Vector2 b) {return {this->x*b.x,this->y*b.y};};
-        bool operator==(Vector2 b) {return this->x==b.x && this->y==b.y;}
+        Vector2 operator+(double b);
+        Vector2 operator-(double b);
+        Vector2 operator*(Vector2 b);
+        bool operator==(Vector2 b);
     };
 
     struct Matrix;
@@ -37,10 +37,10 @@ namespace GAIL
         Matrix ToScaleMatrix();
         // Creates a 4x4 translation matrix from a vector 3.
         Matrix ToTranslationMatrix();
-        Vector3 operator+(double b) {return {this->x+b,this->y+b,this->z+b};};
-        Vector3 operator-(double b) {return {this->x-b,this->y-b,this->z-b};};
-        Vector3 operator*(Vector3 b) {return {this->x*b.x,this->y*b.y,this->z*b.z};};
-        bool operator==(Vector3 b) {return this->x==b.x && this->y==b.y && this->z==b.z;}
+        Vector3 operator+(double b);
+        Vector3 operator-(double b);
+        Vector3 operator*(Vector3 b);
+        bool operator==(Vector3 b);
     };
     
     // A structure with 4 components.
@@ -50,10 +50,10 @@ namespace GAIL
         double y;
         double z;
         double w;
-        Vector4 operator+(double b) {return {this->x+b,this->y+b,this->z+b,this->w+b};};
-        Vector4 operator-(double b) {return {this->x-b,this->y-b,this->z-b,this->w-b};};
-        Vector4 operator*(Vector4 b) {return {this->x*b.x,this->y*b.y,this->z*b.z,this->w*b.w};};
-        bool operator==(Vector4 b) {return this->x==b.x && this->y==b.y && this->z==b.z && this->w==b.w;}
+        Vector4 operator+(double b);
+        Vector4 operator-(double b);
+        Vector4 operator*(Vector4 b);
+        bool operator==(Vector4 b);
     };
 
     // A 3D Rotation quaternion
@@ -68,9 +68,9 @@ namespace GAIL
         // Creates a 4x4 rotation matrix from a quaternion.
         Matrix ToRotationMatrix();
 
-        Quaternion operator+(double b) {return {this->x+b,this->y+b,this->z+b,this->w+b};};
-        Quaternion operator-(double b) {return {this->x-b,this->y-b,this->z-b,this->w-b};};
-        Quaternion operator*(Quaternion b) {return {this->x*b.x,this->y*b.y,this->z*b.z,this->w*b.w};};
+        Quaternion operator+(double b);
+        Quaternion operator-(double b);
+        Quaternion operator*(Quaternion b);
     };
 
     // A 4x4 matrix.
@@ -110,10 +110,8 @@ namespace GAIL
         double b; // 0-1
         double a; // 0-1
         // For values between 0-255 (except the alpha channel: 0-1).
-        static Color FromRGBA(unsigned char r, unsigned char g, unsigned char b, double a) {
-            return {r/255., g/255., b/255., a};
-        }
-        bool operator==(Color b) {return this->r==b.r && this->g==b.g && this->b==b.b && this->a==b.a;}
+        static Color FromRGBA(unsigned char r, unsigned char g, unsigned char b, double a);
+        bool operator==(Color b);
     };
 
     // A texture rendered with the GPU.
@@ -127,7 +125,7 @@ namespace GAIL
         std::vector<Color> colors;
 
         // Returns the color on that coordinate.
-        Color* GetColor(Vector2 coord) {return &this->colors[int (coord.x+this->width*coord.y)];};
+        Color* GetColor(Vector2 coord);
         // Creates a texture from a png file.
         static Texture FromPNG(string path);
         // Creates a texture form a jpg file

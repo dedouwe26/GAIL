@@ -11,7 +11,7 @@ namespace GAIL {
     Sound SoundEffect::Use(Sound baseSound) {
         return baseSound;
     };
-    Sound::Sound(int sampleRate = 0, std::vector<char> rawData = std::vector<char>(), SoundFormat format = SoundFormat::Mono16, std::vector<SoundEffect> soundEffects = std::vector<SoundEffect>()) : sampleRate{sampleRate}, format{format}, rawData{rawData}, soundEffects{soundEffects} {
+    Sound::Sound(int sampleRate, std::vector<char> rawData, SoundFormat format, std::vector<SoundEffect> soundEffects) : sampleRate{sampleRate}, format{format}, rawData{rawData}, soundEffects{soundEffects} {
         alGenBuffers(1, &this->buffer);
 
         Sound sound = *this;
@@ -66,99 +66,99 @@ namespace GAIL {
         std::ifstream file(path, std::ios::binary);
         if(!file.is_open()) {
             std::cerr << "GAIL: FromWAV (load file): Could not open \"" << path << "\"" << std::endl;
-            return NULL;
+            return Sound();
         }
         char buffer[4];
         // RIFF
         if(!file.read(buffer, 4)) {
             std::cerr << "GAIL: FromWAV (load file): could not read RIFF" << std::endl;
-            return NULL;
+            return Sound();
         }
         if(std::strncmp(buffer, "RIFF", 4) != 0) {
             std::cerr << "GAIL: FromWAV (load file): file is not a valid WAVE file (header doesn't begin with RIFF)" << std::endl;
-            return NULL;
+            return Sound();
         }
         // ChunkSize of RIFF
         if(!file.read(buffer, 4)) {
             std::cerr << "GAIL: FromWAV (load file): could not read ChunkSize" << std::endl;
-            return NULL;
+            return Sound();
         }
         // format
         if(!file.read(buffer, 4)) {
             std::cerr << "GAIL: FromWAV (load file): could not read Format" << std::endl;
-            return NULL;
+            return Sound();
         }
         if(std::strncmp(buffer, "WAVE", 4) != 0) {
             std::cerr << "GAIL: FromWAV (load file): file is not a valid WAVE file (header doesn't contain WAVE)" << std::endl;
-            return NULL;
+            return Sound();
         }
         // "fmt/0"
         if(!file.read(buffer, 4)) {
             std::cerr << "GAIL: FromWAV (load file): could not read Subchunk1ID" << std::endl;
-            return NULL;
+            return Sound();
         }
         // 16, for PCM.
         if(!file.read(buffer, 4)) {
             std::cerr << "GAIL: FromWAV (load file): could not read Subchunk1Size" << std::endl;
-            return NULL;
+            return Sound();
         }
         // Audio format (1=PCM)
         if(!file.read(buffer, 2)) {
             std::cerr << "GAIL: FromWAV (load file): could not read Audio format" << std::endl;
-            return NULL;
+            return Sound();
         }
         // NumChannels
         if(!file.read(buffer, 2)) {
             std::cerr << "GAIL: FromWAV (load file): could not read NumChannels" << std::endl;
-            return NULL;
+            return Sound();
         }
         int channels = toInt(buffer, 2);
 
         // sample rate
         if(!file.read(buffer, 4)) {
             std::cerr << "GAIL: FromWAV (load file): could not read sample rate" << std::endl;
-            return NULL;
+            return Sound();
         }
         int sampleRate = toInt(buffer, 4);
         // (sampleRate * bitsPerSample * channels) / 8
         if(!file.read(buffer, 4)) {
             std::cerr << "GAIL: FromWAV (load file): could not read (sampleRate * bitsPerSample * channels) / 8" << std::endl;
-            return NULL;
+            return Sound();
         }
         // channels * BitsPerSample/8
         if(!file.read(buffer, 2)) {
             std::cerr << "GAIL: FromWAV (load file): could not read BlockAlign" << std::endl;
-            return NULL;
+            return Sound();
         }
         // bitsPerSample
         if(!file.read(buffer, 2)) {
             std::cerr << "GAIL: FromWAV (load file): could not read bits per sample" << std::endl;
-            return NULL;
+            return Sound();
         }
         int bitsPerSample = toInt(buffer, 2);
         // Subchunk2ID (data)
         if(!file.read(buffer, 4)) {
             std::cerr << "GAIL: FromWAV (load file): could not read Subchunk2ID" << std::endl;
-            return NULL;
+            return Sound();
         }
         if(std::strncmp(buffer, "data", 4) != 0) {
             std::cerr << "GAIL: FromWAV (load file): file is not a valid WAVE file (doesn't have 'data' tag)" << std::endl;
-            return NULL;
+            return Sound();
         }
         // Subchunk2Size
         if(!file.read(buffer, 4)) {
             std::cerr << "GAIL: FromWAV (load file): could not read Subchunk2Size" << std::endl;
-            return NULL;
+            return Sound();
         }
         int size = toInt(buffer, 4);
         /* cannot be at the end of file */
         if(file.eof()) {
             std::cerr << "GAIL: FromWAV (load file): No data." << std::endl;
-            return NULL;
+            return Sound();
         }
         if(file.fail()) {
             std::cerr << "GAIL: FromWAV (load file): fail state set on the file" << std::endl;
-            return NULL;
+            return Sound();
         }
 
         std::vector<char> data = std::vector<char>(size);
@@ -179,7 +179,7 @@ namespace GAIL {
         } while(*(ptr + 1) != '\0');
         return captureDevices;
     };
-    SoundCapture::SoundCapture(SoundFormat format, int sampleRate, string captureDevice = nullptr) {
+    SoundCapture::SoundCapture(SoundFormat format, int sampleRate, string captureDevice) {
         this->captureDevice = alcCaptureOpenDevice(captureDevice.c_str(), sampleRate, format, sampleRate);
         this->sampleRate = sampleRate;
         this->format = format;

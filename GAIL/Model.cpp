@@ -33,7 +33,7 @@ namespace GAIL {
         delete p3;
     };
     Mesh Mesh::FromObj(string path) {
-        std::vector<Vertex*> vertices = std::vector<Vertex*>();
+        std::vector<Vertex> vertices = std::vector<Vertex>();
         std::vector<unsigned int> faces = std::vector<unsigned int>();
 
         std::ifstream file(path, std::ios::in);
@@ -56,7 +56,7 @@ namespace GAIL {
             if (keyword == "v") {
                 double x, y, z;
                 ss >> x >> y >> z;
-                vertices.push_back(&Vertex(x, y, z));
+                vertices.push_back(Vertex(x, y, z));
             } else if (keyword == "vt") {
                 double x, y;
                 ss >> x >> y;
@@ -72,33 +72,33 @@ namespace GAIL {
                     size_t pos = i1.find("//");
                     unsigned v1 = stoi(i1.substr(0, pos));
                     unsigned n1 = stoi(i1.erase(0, pos + 2));
-                    vertices[v1-1]->attributes["normal"] = NormalAttribute{normals[n1-1]};
+                    vertices[v1-1].attributes["normal"] = NormalAttribute{normals[n1-1]};
                     
                     pos = i2.find("//");
                     unsigned v2 = stoi(i2.substr(0, pos));
                     unsigned n2 = stoi(i2.erase(0, pos + 2));
-                    vertices[v2-1]->attributes["normal"] = NormalAttribute{normals[n2-1]};
+                    vertices[v2-1].attributes["normal"] = NormalAttribute{normals[n2-1]};
 
                     pos = i3.find("//");
                     unsigned v3 = stoi(i3.substr(0, pos));
                     unsigned n3 = stoi(i3.erase(0, pos + 2));
-                    vertices[v3-1]->attributes["normal"] = NormalAttribute{normals[n3-1]};
+                    vertices[v3-1].attributes["normal"] = NormalAttribute{normals[n3-1]};
                 } else if (i1.find('/') != std::string::npos) {
                     size_t pos = i1.find("/");
                     if (i1.find("/", pos+1)==std::string::npos) {
                         unsigned v1 = stoi(i1.substr(0, pos));
                         unsigned t1 = stoi(i1.erase(0, pos + 1));
-                        vertices[v1-1]->attributes["uv"] = UVAttribute{UVs[t1-1]};
+                        vertices[v1-1].attributes["uv"] = UVAttribute{UVs[t1-1]};
 
                         pos = i2.find("/");
                         unsigned v2 = stoi(i2.substr(0, pos));
                         unsigned t2 = stoi(i2.erase(0, pos + 1));
-                        vertices[v2-1]->attributes["uv"] = UVAttribute{UVs[t2-1]};
+                        vertices[v2-1].attributes["uv"] = UVAttribute{UVs[t2-1]};
 
                         pos = i3.find("/");
                         unsigned v3 = stoi(i3.substr(0, pos));
                         unsigned t3 = stoi(i3.erase(0, pos + 1));
-                        vertices[v3-1]->attributes["uv"] = UVAttribute{UVs[t3-1]};
+                        vertices[v3-1].attributes["uv"] = UVAttribute{UVs[t3-1]};
                         faces.push_back(v1-1);
                         faces.push_back(v2-1);
                         faces.push_back(v3-1);
@@ -107,24 +107,24 @@ namespace GAIL {
                         unsigned t1 = stoi(i1.erase(0, pos + 1));
                         pos = i1.find("/");
                         unsigned n1 = stoi(i1.erase(0, pos + 1));
-                        vertices[v1-1]->attributes["normal"] = NormalAttribute{normals[n1-1]};
-                        vertices[v1-1]->attributes["uv"] = UVAttribute{UVs[t1-1]};
+                        vertices[v1-1].attributes["normal"] = NormalAttribute{normals[n1-1]};
+                        vertices[v1-1].attributes["uv"] = UVAttribute{UVs[t1-1]};
 
                         pos = i2.find("/");
                         unsigned v2 = stoi(i2.substr(0, pos));
                         unsigned t2 = stoi(i2.erase(0, pos + 1));
                         pos = i2.find("/");
                         unsigned n2 = stoi(i2.erase(0, pos + 1));
-                        vertices[v2-1]->attributes["normal"] = NormalAttribute{normals[n2-1]};
-                        vertices[v2-1]->attributes["uv"] = UVAttribute{UVs[t2-1]};
+                        vertices[v2-1].attributes["normal"] = NormalAttribute{normals[n2-1]};
+                        vertices[v2-1].attributes["uv"] = UVAttribute{UVs[t2-1]};
 
                         pos = i3.find("/");
                         unsigned v3 = stoi(i3.substr(0, pos));
                         unsigned t3 = stoi(i3.erase(0, pos + 1));
                         pos = i3.find("/");
                         unsigned n3 = stoi(i3.erase(0, pos + 1));
-                        vertices[v3-1]->attributes["normal"] = NormalAttribute{normals[n3-1]};
-                        vertices[v3-1]->attributes["uv"] = UVAttribute{UVs[t3-1]};
+                        vertices[v3-1].attributes["normal"] = NormalAttribute{normals[n3-1]};
+                        vertices[v3-1].attributes["uv"] = UVAttribute{UVs[t3-1]};
 
                         faces.push_back(v1-1);
                         faces.push_back(v2-1);
@@ -144,32 +144,32 @@ namespace GAIL {
     };
     Mesh::Mesh(std::vector<Face> faces) {
         for(Face face : faces) {
-            std::vector<GAIL::Vertex *>::iterator iter = std::find(vertices.begin(), vertices.end(), face.p1);
+            std::vector<GAIL::Vertex>::iterator iter = std::find(vertices.begin(), vertices.end(), *face.p1);
             if(iter != vertices.end()) {
                 this->indexFaces.push_back(iter - vertices.begin());
             } else {
-                this->vertices.push_back(face.p1);
+                this->vertices.push_back(*face.p1);
                 this->indexFaces.push_back(vertices.size()-1);
             };
-            iter = std::find(vertices.begin(), vertices.end(), face.p2);
+            iter = std::find(vertices.begin(), vertices.end(), *face.p2);
             if(iter != vertices.end()) {
                 this->indexFaces.push_back(iter - vertices.begin());
             } else {
-                this->vertices.push_back(face.p2);
+                this->vertices.push_back(*face.p2);
                 this->indexFaces.push_back(vertices.size()-1);
             };
-            iter = std::find(vertices.begin(), vertices.end(), face.p3);
+            iter = std::find(vertices.begin(), vertices.end(), *face.p3);
             if(iter != vertices.end()) {
                 this->indexFaces.push_back(iter - vertices.begin());
             } else {
-                this->vertices.push_back(face.p3);
+                this->vertices.push_back(*face.p3);
                 this->indexFaces.push_back(vertices.size()-1);
             };
 
         };
     }
     Mesh::~Mesh() {indexFaces.clear(); vertices.clear();};
-    Mesh::Mesh(std::vector<Vertex*> vertices, std::vector<unsigned> indexFaces) : indexFaces{indexFaces}, vertices{vertices} {};
+    Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned> indexFaces) : indexFaces{indexFaces}, vertices{vertices} {};
     Model::Model(Mesh mesh, BaseMaterial material) : mesh{mesh}, material{material} {};
     Model::~Model() {
         delete &mesh;

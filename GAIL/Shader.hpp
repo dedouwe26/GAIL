@@ -70,8 +70,10 @@ namespace GAIL
         public:
             // The type of this attribute.
             AttributeType type;
+            VertexAttribute();
             VertexAttribute(AttributeType type);
             ~VertexAttribute();
+            bool operator==(const VertexAttribute &b) const;
             // Returns the data for the vertex input attributes.
             void* Use();
     };
