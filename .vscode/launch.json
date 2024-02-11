@@ -2,10 +2,12 @@
     "configurations": [
         {
             "name": "C++: GAIL Hello Triangle",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/examples/tool/tool.py",
-            "args": ["HelloTriangle"],
+            "args": [
+                "HelloTriangle"
+            ],
             "console": "integratedTerminal",
             "preLaunchTask": "cppbuild"
         }

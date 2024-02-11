@@ -2,7 +2,7 @@
     "tasks": [
         {
             "label": "cppbuild",
-            "command": "python3 ${workspaceFolder}/GAIL/tool/tool.py cpp",
+            "command": "python ${workspaceFolder}/GAIL/tool/tool.py cpp",
             "type": "shell",
             "group": "build"
         }

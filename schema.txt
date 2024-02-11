@@ -1,0 +1,8 @@
+1. Compile GAIL src:
+      g++ path/to/gail/src/FILENAME.cpp -c -Wall -I path/to/gail/include -I path/to/vulkan/include -I path/to/openal/include -I path/to/glfw/include -o FILENAME.o
+
+2. Archive (link) all libs together:
+      ar rvs GAIL.a FILENAME.o ... path/to/vulkan/libvulkan.lib path/to/openal/libopenal.lib path/to/glfw/libglfw3.a
+
+3. Compile program:
+      g++ main.cpp -o main.exe -Wall -I path/to/gail/include -I path/to/vulkan/include -I path/to/openal/include -I path/to/glfw/include GAIL.a

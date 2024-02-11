@@ -44,7 +44,8 @@ def main(args):
 
     print("Creating executable file (C++).\n")
     print("------- G++ -------")
-    gppproc = subprocess.run([compilerpath+"/g++", "-Wall", GAILPath+"/bin/GAIL.a", "-I"+vulkanSDKPath+"/Include", "-I"+GAILPath, "-I"+GAILPath+"/include", "-I"+examplePath, examplePath+"/*.cpp", "-o"+examplePath+"/bin/main.exe"], cwd=compilerpath)
+    print(" ".join([compilerpath+"/g++", examplePath+"/*.cpp", "-Wall", GAILPath+"/bin/GAIL.a", "-I"+vulkanSDKPath+"/Include", "-I"+GAILPath, "-I"+GAILPath+"/include", "-I"+examplePath, "-o"+examplePath+"/bin/main.exe"]))
+    gppproc = subprocess.run([compilerpath+"/g++", examplePath+"/*.cpp", "-Wall", GAILPath+"/bin/GAIL.a", "-I"+vulkanSDKPath+"/Include", "-I"+GAILPath, "-I"+GAILPath+"/include", "-I"+examplePath, "-o"+examplePath+"/bin/main.exe"], cwd=compilerpath)
     print("-------------------\n")
         
     print("Build location: examples/C++/"+args[1]+"/bin/main.exe")
