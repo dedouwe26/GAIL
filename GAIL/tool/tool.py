@@ -57,4 +57,8 @@ def main(args):
     exit(0 if returncode==0 else 1)
 
 if __name__ == "__main__":
-    main(sys.argv)
+    # main(sys.argv)
+    args = ["C:\\msys64\\ucrt64\\bin\\ar", "rvs", "D:\\github\\GAIL\\GAIL\\bin\\GAIL.a"]
+    for file in os.listdir("D:\\github\\GAIL\\GAIL\\bin"):
+        args.append("D:\\github\\GAIL\\GAIL\\bin\\"+file)
+    subprocess.run(args)
