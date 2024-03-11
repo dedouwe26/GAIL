@@ -1,5 +1,7 @@
-﻿using Silk.NET.GLFW;
-using Silk.NET.Windowing;
+﻿using GAIL.Audio;
+using GAIL.Graphics;
+using GAIL.Input;
+using GAIL.Window;
 
 namespace GAIL
 {
@@ -28,57 +30,50 @@ namespace GAIL
 
     //     public AppInfo() { }
     // }
-    /// <summary>
-    /// The update callback.
-    /// </summary>
-    public delegate void UpdateCallback(Application app, double deltaTime);
-    /// <summary>
-    /// The load callback.
-    /// </summary>
-    public delegate void LoadCallback(Application app);
-    /// <summary>
-    /// The stop callback.
-    /// </summary>
-    public delegate void StopCallback(Application app);
+
+    
 
 
     /// <summary>
     /// The central part of GAIL. Includes all the Managers.
     /// </summary>
-    public class Application
-    {
-        public unsafe Application(string windowName = "GAIL Window", int width = 1000, int height = 600) {
-            Glfw glfw = Glfw.GetApi();
-            glfw.SetErrorCallback((ErrorCode error, string description) => throw new APIBackendException("GLFW", $"({error}): {description}"));
-            if (!glfw.Init())
-            {
-                throw new APIBackendException("GLFW", "initialization failed!");
-            }
+    public class Application : IDisposable {
 
-            glfw.WindowHint(WindowHintClientApi.ClientApi, ClientApi.NoApi);
+        /// <summary>
+        /// Stores all the managers for other managers.
+        /// </summary>
+        public struct Globals {
+            public GraphicsManager graphicsManager;
+            public AudioManager audioManager;
+            public InputManager inputManager;
+            public WindowManager windowManager;
+        }
 
-            Silk.NET.GLFW.Monitor monitor = new();
-            WindowHandle handle = new();
-            window = glfw.CreateWindow(width, height, windowName, Pointer<Silk.NET.GLFW.Monitor>.From(monitor), Pointer<WindowHandle>.From(handle));
+        /// <param name="windowName">The name of the window.</param>
+        /// <param name="width">The width of the window (in pixels).</param>
+        /// <param name="height">The height of the window (in pixels).</param>
+        /// <exception cref="APIBackendException">GLFW: Initialization, window creation.</exception>
+        public Application(string windowName = "GAIL Window", int width = 1000, int height = 600) {
+            globals = new Globals{
+                graphicsManager = new GraphicsManager(),
+                audioManager = new AudioManager(),
+                inputManager = new InputManager(globals),
+                windowManager = new WindowManager(windowName, width, height)
+            };
 
-            if (window.GetPointer()==null) {
-                throw new APIBackendException("GLFW", "window creation failed!");
-            }
-
-            graphicsManager = new();
-            inputManager = new();
-            audioManager = new();
-
-            LoadEvent?.Invoke(this);
+            OnLoad?.Invoke(this);
 
             double CurrentTime = 0;
             double lastTime = CurrentTime;
-            while (!glfw.WindowShouldClose(window)) {
-                glfw.PollEvents();
-                CurrentTime = glfw.GetTime();
-                UpdateEvent?.Invoke(this, CurrentTime - lastTime);
-                lastTime = CurrentTime;
+            unsafe {
+                while (!globals.windowManager.ShouldClose) {
+                    
+                    CurrentTime = globals.windowManager.Time;
+                    OnUpdate?.Invoke(this, CurrentTime - lastTime);
+                    lastTime = CurrentTime;
+                }
             }
+            
             Stop();
 
         }
@@ -87,41 +82,37 @@ namespace GAIL
             Stop();
         }
         /// <summary>
-        /// The graphics manager.
+        /// The Globals of this Application, contains all the managers.
         /// </summary>
-        public GraphicsManager graphicsManager;
-        /// <summary>
-        /// The input manager.
-        /// </summary>
-        public InputManager inputManager;
-        /// <summary>
-        /// The audio manager.
-        /// </summary>
-        public AudioManager audioManager;
+        public Globals globals;
+
         /// <summary>
         /// The update event, with delta time (in seconds): CurrentTime - PreviousFrameTime (calls every frame).
         /// </summary>
-        public event UpdateCallback? UpdateEvent;
+        public event UpdateCallback? OnUpdate;
         /// <summary>
         /// The load event (calls at the start).
         /// </summary>
-        public event LoadCallback? LoadEvent;
+        public event LoadCallback? OnLoad;
         /// <summary>
         /// The stop event (calls at close).
         /// </summary>
-        public event StopCallback? StopEvent;
-        /// <summary>
-        /// The Silk.NET window instance for custom usage.
-        /// </summary>
-        public readonly Pointer<WindowHandle> window;
+        public event StopCallback? OnStop;
+        
         /// <summary>
         /// Stops the application (some things might break if used certain functions after).
         /// </summary>
-        public unsafe void Stop() {
-            StopEvent?.Invoke(this);
-            Glfw glfw = Glfw.GetApi();
-            glfw.DestroyWindow(window);
-            glfw.Terminate();
+        public void Stop() {
+            OnStop?.Invoke(this);
+            globals.audioManager.Dispose();
+            globals.graphicsManager.Dispose();
+            globals.inputManager.Dispose();
+            
+            globals.windowManager.Dispose();
+        }
+
+        public void Dispose() {
+            Stop();
         }
     }
 }
