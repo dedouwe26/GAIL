@@ -4,9 +4,29 @@ using Silk.NET.GLFW;
 namespace GAIL.Window
 {
     public class WindowManager : IManager {
-        public WindowManager(string windowName, int width, int height) {
+        public WindowManager() {
             glfw = Glfw.GetApi();
             glfw.SetErrorCallback((ErrorCode error, string description) => throw new APIBackendException("GLFW", $"({error}): {description}"));
+            
+        }
+        ~WindowManager() {
+            Dispose();
+        }
+
+        /// <summary>
+        /// Initializes the window manager.
+        /// </summary>
+        /// <param name="windowName">The window name.</param>
+        /// <param name="width">The width of the window (horizontal).</param>
+        /// <param name="height">The height of the window (vertical).</param>
+        /// <exception cref="APIBackendException"></exception>
+        public void Init(string windowName, int width, int height) {
+            unsafe {
+                glfw.SetErrorCallback((ErrorCode error, string description) => {
+                    throw new APIBackendException("GLFW", error.ToString()+": "+description);
+                });
+            }
+
             if (!glfw.Init())
             {
                 throw new APIBackendException("GLFW", "initialization failed!");
@@ -14,24 +34,18 @@ namespace GAIL.Window
 
             glfw.WindowHint(WindowHintClientApi.ClientApi, ClientApi.NoApi);
 
-            Silk.NET.GLFW.Monitor monitor = new();
-            WindowHandle handle = new();
             unsafe {
-                window = glfw.CreateWindow(width, height, windowName, Pointer<Silk.NET.GLFW.Monitor>.From(monitor), Pointer<WindowHandle>.From(handle));
-
-                if (window.GetPointer()==null) {
-                    throw new APIBackendException("GLFW", "window creation failed!");
-                }
+                Window = glfw.CreateWindow(width, height, windowName, null, null);
             }
-        }
-        ~WindowManager() {
-            Dispose();
+            if (Window.IsNull) {
+                throw new APIBackendException("GLFW", "window creation failed!");
+            }
         }
 
         /// <summary>
         /// The GLFW window instance for custom usage.
         /// </summary>
-        public readonly Pointer<WindowHandle> window;
+        public Pointer<WindowHandle> Window { get; private set; } = Pointer<WindowHandle>.FromNull();
         /// <summary>
         /// The GLFW API instance for custom usage.
         /// </summary>
@@ -43,7 +57,7 @@ namespace GAIL.Window
 
         public bool ShouldClose{get{
             unsafe {
-                return glfw.WindowShouldClose(window);
+                return glfw.WindowShouldClose(Window);
             }
         }}
 
@@ -52,11 +66,11 @@ namespace GAIL.Window
         }}
 
         public void Dispose() {
-            Glfw glfw = Glfw.GetApi();
             unsafe {
-                glfw.DestroyWindow(window);
+                glfw.DestroyWindow(Window);
             }
             glfw.Terminate();
+            glfw.Dispose();
         }
     }
 }

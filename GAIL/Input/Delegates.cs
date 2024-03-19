@@ -32,8 +32,8 @@ namespace GAIL.Input
     /// </summary>
     /// <param name="width">The new width.</param>
     /// <param name="height">The new height.</param>
-    /// <param name="maximized">If it was maximized.</param>
-    /// <param name="minimized">If it was minimized.</param>
+    /// <param name="maximized">If it was maximized (0=nothing, 1=maximized, 2=restored).</param>
+    /// <param name="minimized">If it was minimized (0=nothing, 1=minimized, 2=restored).</param>
     public delegate void WindowResizeCallback(int width, int height, byte maximized, byte minimized);
     /// <summary>
     /// Callback for when the window moved.

@@ -1,6 +1,4 @@
 namespace GAIL
 {
-    public interface IManager : IDisposable {
-        
-    }
+    public interface IManager : IDisposable { }
 }

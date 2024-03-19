@@ -1,3 +1,5 @@
+using System.Net.Http.Headers;
+
 namespace GAIL.Core
 {
     /// <summary>
@@ -40,8 +42,11 @@ namespace GAIL.Core
         /// <typeparam name="TValue">The type of the new pointer.</typeparam>
         /// <param name="value">The value of the new pointer.</param>
         /// <returns>The new pointer.</returns>
-        public static Pointer<TValue> From<TValue>(TValue value) where TValue : unmanaged {
-            return new Pointer<TValue>(&value);
+        public static Pointer<T> From(T value) {
+            return new Pointer<T>(&value);
+        }
+        public static Pointer<T> FromNull() {
+            return new Pointer<T>((T*)null);
         }
         public static implicit operator T(Pointer<T> p) {
             return p.GetValue();

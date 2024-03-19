@@ -46,6 +46,20 @@ namespace GAIL.Core
             this.b=b/255;
             this.a=a;
         }
+        /// <summary>
+        /// Returns a byte array from the RGBA components.
+        /// </summary>
+        /// <returns>A byte array from the RGBA components.</returns>
+        public byte[] ToBytes() {
+            return [(byte)(r*255), (byte)(g*255), (byte)(b*255), (byte)(a*255)];
+        }
+        /// <summary>
+        /// Returns a byte array from the RGB components.
+        /// </summary>
+        /// <returns>A byte array from the RGB components.</returns>
+        public byte[] ToBytesRGB() {
+            return [(byte)(r*255), (byte)(g*255), (byte)(b*255), (byte)(a*255)];
+        }
 
         public bool Equals(Color? other) {
             if (other == null) { return false; }

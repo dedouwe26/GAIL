@@ -17,7 +17,7 @@ And to learn it you can check the examples or the <a href="https://github.com/de
 For starters there are usage examples that show the fundementals to get started:
 <ul>
 <li>Hello Triangle (draw a triangle) [<a href="https://github.com/dedouwe26/GAIL/tree/main/examples/HelloTriangle">Code</a>]</li>
-<li>From files (create things from files) [<a href="https://github.com/dedouwe26/GAIL/tree/main/examples/FromFIles">Code</a>]</li>
+<li>From files (create things from files) [<a href="https://github.com/dedouwe26/GAIL/tree/main/examples/FromFiles">Code</a>]</li>
 </ul>
 <h2>Building</h2>
 (VSCode recommended, all launch and task files are configured) <br/>

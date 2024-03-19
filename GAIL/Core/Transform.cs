@@ -9,6 +9,10 @@ namespace GAIL.Core
         Vector3 translation = Vector3.Zero;
         Vector3 scale = Vector3.One;
         Quaternion rotation = Quaternion.Identity;
+        /// <summary>
+        /// Creates a model matrix for a model with this transform.
+        /// </summary>
+        /// <returns>The created model matrix.</returns>
         public Matrix4x4 ToModelMatrix() {
             return Matrix4x4.CreateFromQuaternion(rotation) * Matrix4x4.CreateScale(scale) * Matrix4x4.CreateTranslation(translation);
         }

@@ -9,6 +9,15 @@ namespace GAIL.Audio
     /// </summary>
     public class SoundCapture : IDisposable {
         /// <summary>
+        /// The OpenAL Context API instance for custom usage.
+        /// </summary>
+        public readonly ALContext alc;
+        /// <summary>
+        /// The OpenAL context for custom usage.
+        /// </summary>
+        public readonly Pointer<Context> context;
+
+        /// <summary>
         /// the sample rate of this sound capture.
         /// </summary>
         public readonly uint sampleRate;
@@ -47,11 +56,13 @@ namespace GAIL.Audio
         /// <param name="deviceName">Which capture device to use. (Get name at <see cref="GetCaptureDevices"/> <b>OR pass an empty string for the default</b>)</param>
         /// <exception cref="APIBackendException">OpenAL: Unable to get the Capture extension.</exception>
         public SoundCapture(SoundFormat format, uint sampleRate, string deviceName) {
-            ALContext alc = ALContext.GetApi();
+            alc = ALContext.GetApi();
             unsafe {
                 device = alc.OpenDevice(deviceName);
-                Pointer<Context> context = alc.CreateContext(device, null);
-                alc.MakeContextCurrent(context);
+                context = alc.CreateContext(device, null);
+                if (!alc.MakeContextCurrent(context)) {
+                    throw new APIBackendException("OpenAL", "Failed to make context current.");
+                }
                 if (alc.TryGetExtension(device, out Capture cap)) {
                     throw new APIBackendException("OpenAL", "Unable to get the Capture extension.");
                 }
@@ -67,33 +78,44 @@ namespace GAIL.Audio
         /// <summary>
         /// Closes all the OpenAL devices
         /// </summary>
+        /// <inheritdoc/>
         /// <exception cref="APIBackendException">OpenAL: Unable to get the Capture extension.</exception>
         public void Dispose() {
             buffer = [];
-            ALContext alc = ALContext.GetApi();
             unsafe {
-                Pointer<Context> context = alc.CreateContext(device, null);
-                alc.MakeContextCurrent(context);
+                if (!alc.MakeContextCurrent(context)) {
+                    throw new APIBackendException("OpenAL", "Failed to make context current.");
+                }
                 if (alc.TryGetExtension(device, out Capture cap)) {
                     throw new APIBackendException("OpenAL", "Unable to get the Capture extension.");
                 }
                 cap.CaptureCloseDevice(captureDevice);
                 alc.CloseDevice(device);
+
+                if (!alc.MakeContextCurrent(null)) {
+                    throw new APIBackendException("OpenAL", "Failed to deassign current context.");
+                }
+
+                alc.DestroyContext(context);
             }
+
+            alc.Dispose();
         }
         /// <summary>
         /// Starts capturing the audio.
         /// </summary>
         /// <exception cref="APIBackendException">OpenAL: Unable to get the Capture extension.</exception>
         public void Start() {
-            ALContext alc = ALContext.GetApi();
             unsafe {
-                Pointer<Context> context = alc.CreateContext(device, null);
-                alc.MakeContextCurrent(context);
+                if (!alc.MakeContextCurrent(context)) {
+                    throw new APIBackendException("OpenAL", "Failed to make context current.");
+                }
                 if (alc.TryGetExtension(device, out Capture cap)) {
                     throw new APIBackendException("OpenAL", "Unable to get the Capture extension.");
                 }
                 cap.CaptureStart(captureDevice);
+
+                alc.DestroyContext(context);
             }
         }
         /// <summary>
@@ -106,10 +128,10 @@ namespace GAIL.Audio
         /// <returns>The last captured wave.</returns>
         /// <exception cref="APIBackendException">OpenAL: Unable to get the Capture extension.</exception>
         public byte Capture() {
-            ALContext alc = ALContext.GetApi();
             unsafe {
-                Pointer<Context> context = alc.CreateContext(device, null);
-                alc.MakeContextCurrent(context);
+                if (!alc.MakeContextCurrent(context)) {
+                    throw new APIBackendException("OpenAL", "Failed to make context current.");
+                }
                 if (alc.TryGetExtension(device, out Capture cap)) {
                     throw new APIBackendException("OpenAL", "Unable to get the Capture extension.");
                 }
@@ -119,6 +141,8 @@ namespace GAIL.Audio
                 if (remainingSamples > 0) {
                     buffer = [.. buffer, .. cap.CaptureSamples<byte, BufferFormat>(captureDevice, new BufferFormat(), remainingSamples)];
                 }
+
+                alc.DestroyContext(context);
             }
             return buffer[^1];
         }
@@ -129,10 +153,10 @@ namespace GAIL.Audio
         /// <returns>The captured sound.</returns>
         /// <exception cref="APIBackendException">OpenAL: Unable to get the Capture extension.</exception>
         public Sound Stop() {
-            ALContext alc = ALContext.GetApi();
             unsafe {
-                Pointer<Context> context = alc.CreateContext(device, null);
-                alc.MakeContextCurrent(context);
+                if (!alc.MakeContextCurrent(context)) {
+                    throw new APIBackendException("OpenAL", "Failed to make context current.");
+                }
                 if (alc.TryGetExtension(device, out Capture cap)) {
                     throw new APIBackendException("OpenAL", "Unable to get the Capture extension.");
                 }

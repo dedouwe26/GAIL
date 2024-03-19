@@ -7,7 +7,12 @@ namespace GAIL.Core
             public void Dispose() {
                 throw new NotImplementedException();
             }
-
+            /// <summary>
+            /// Parses from a stream.
+            /// </summary>
+            /// <param name="stream">The stream to parse.</param>
+            /// <returns>The parsed Sound.</returns>
+            /// <exception cref="FileFormatException">The file has the wrong format</exception>
             public Sound Parse(Stream stream) {
                 string path = "Unknown path";
                 if (stream is FileStream fs) {

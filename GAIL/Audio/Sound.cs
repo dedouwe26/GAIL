@@ -12,7 +12,7 @@ namespace GAIL.Audio
         /// <param name="format">The format of the rawData.</param>
         /// <param name="rawData">Raw sound data is in PCM</param>
         public Sound(int sampleRate, SoundFormat format, List<byte> rawData) {
-            AL al = AL.GetApi();
+            al = AL.GetApi();
             
             buffer = al.GenBuffer();
 
@@ -29,15 +29,20 @@ namespace GAIL.Audio
             al.SetSourceProperty(source, SourceInteger.Buffer, buffer);
         }
         ~Sound() {
-                Dispose();
-            }
+            Dispose();
+        }
         public void Dispose() {
-            AL al = AL.GetApi();
             al.DeleteSource(source);
             al.DeleteBuffer(buffer);
             soundEffects.Clear();
             rawData.Clear();
+
+            al.Dispose();
         }
+        /// <summary>
+        /// The OpenAL API instance for custom usage.
+        /// </summary>
+        public readonly AL al;
 
         /// <summary>
         /// The format of this sound.
@@ -88,7 +93,6 @@ namespace GAIL.Audio
         /// Also Applies all the sound effects (from first to last).
         /// </summary>
         public void Update() {
-            AL al = AL.GetApi();
 
             al.DeleteSource(source);
             al.DeleteBuffer(buffer);

@@ -39,7 +39,7 @@ namespace GAIL.Input
         /// <summary>
         /// AKA esc
         /// </summary>
-        ESCAPE = Keys.Escape,
+        Escape = Keys.Escape,
         F1 = Keys.F1,
         F2 = Keys.F2,
         F3 = Keys.F3,
@@ -131,7 +131,7 @@ namespace GAIL.Input
         Enter = Keys.Enter,
         LeftShift = Keys.ShiftLeft,
         Comma = Keys.Comma,
-        PERIOD = Keys.Period,
+        Period = Keys.Period,
         Slash = Keys.Slash,
         RightShift = Keys.ShiftRight,
         /// <summary>
@@ -233,31 +233,32 @@ namespace GAIL.Input
         /// (=)
         /// </summary>
         NumpadEquals = Keys.KeypadEqual,
-
-        /// <summary>
-        /// AKA MOUSE_1
-        /// </summary>
-        MOUSE_LEFT = MouseButton.Left, 
-        /// <summary>
-        /// AKA MOUSE_2
-        /// </summary>
-        MOUSE_RIGHT = MouseButton.Right,
-        /// <summary>
-        /// AKA MOUSE_3
-        /// </summary>
-        MOUSE_MIDDLE = MouseButton.Middle,
-        Mouse4 = MouseButton.Button4,
-        Mouse5 = MouseButton.Button5,
-        Mouse6 = MouseButton.Button6,
-        Mouse7 = MouseButton.Button7,
-        Mouse8 = MouseButton.Button8,
         /// <summary>
         /// World key for foreign languages (non-US).
         /// </summary>
-        WORLD_1 = Keys.World1,
+        World1 = Keys.World1,
         /// <summary>
         /// World key for foreign languages (non-US).
         /// </summary>
-        WORLD_2 = Keys.World2
+        World2 = Keys.World2
+    }
+    public enum MouseButton {
+        /// <summary>
+        /// AKA Mouse1
+        /// </summary>
+        LeftMouse = Silk.NET.GLFW.MouseButton.Left, 
+        /// <summary>
+        /// AKA Mouse2
+        /// </summary>
+        RightMouse = Silk.NET.GLFW.MouseButton.Right,
+        /// <summary>
+        /// AKA Mouse3
+        /// </summary>
+        MiddleMouse = Silk.NET.GLFW.MouseButton.Middle,
+        Mouse4 = Silk.NET.GLFW.MouseButton.Button4,
+        Mouse5 = Silk.NET.GLFW.MouseButton.Button5,
+        Mouse6 = Silk.NET.GLFW.MouseButton.Button6,
+        Mouse7 = Silk.NET.GLFW.MouseButton.Button7,
+        Mouse8 = Silk.NET.GLFW.MouseButton.Button8,
     }
 }
