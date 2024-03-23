@@ -4,7 +4,6 @@ using GAIL.Graphics.Utils;
 using Silk.NET.Core.Native;
 using Silk.NET.GLFW;
 using Silk.NET.Vulkan;
-using Silk.NET.Vulkan.Extensions.KHR;
 
 namespace GAIL.Graphics
 {

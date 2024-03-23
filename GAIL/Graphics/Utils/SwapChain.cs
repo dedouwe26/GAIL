@@ -6,14 +6,15 @@ using Silk.NET.Vulkan.Extensions.KHR;
 namespace GAIL.Graphics.Utils
 {
     public class SwapChain : IDisposable {
-        public struct SwapChainSupportDetails {
+        public struct SupportDetails {
             public SurfaceCapabilitiesKHR Capabilities;
             public SurfaceFormatKHR[] Formats;
             public PresentModeKHR[] PresentModes;
         }
-        public KhrSwapchain swapchainExtension;
+        public KhrSwapchain extension;
         public SwapchainKHR swapchain;
         public Image[] images;
+        public ImageView[] imageViews;
         public Format imageFormat;
         public Extent2D extent;
         private readonly Vk vk;
@@ -27,7 +28,14 @@ namespace GAIL.Graphics.Utils
             this.device = device;
             window = windowManager;
 
-            SwapChainSupportDetails swapChainSupport = SwapChainSupport(device.physicalDevice);
+            (KhrSwapchain swapchainExtension, SwapchainKHR swapchain, Image[] images) = CreateSwapChain(instance);
+            extension = swapchainExtension;
+            this.swapchain = swapchain;
+            this.images = images;
+        }
+        public (KhrSwapchain swapchainExtension, SwapchainKHR swapchain, Image[] images) CreateSwapChain(Instance instance) {
+            
+            SupportDetails swapChainSupport = SwapChainSupport(device.physicalDevice);
             SurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(swapChainSupport.Formats);
             PresentModeKHR presentMode = ChoosePresentMode(swapChainSupport.PresentModes);
             extent = CreateSwapExtent(swapChainSupport.Capabilities);
@@ -70,21 +78,22 @@ namespace GAIL.Graphics.Utils
                 }
 
             }
-            if (!vk.TryGetDeviceExtension(instance, device.logicalDevice, out swapchainExtension)) {
+            if (!vk.TryGetDeviceExtension(instance, device.logicalDevice, out KhrSwapchain swapchainExtension)) {
                 throw new APIBackendException("Vulkan", "Failed to get VK_KHR_swapchain extension.");
             }
             unsafe {
-                if (swapchainExtension.CreateSwapchain(device.logicalDevice, createInfo, null, out swapchain) != Result.Success) {
+                if (swapchainExtension.CreateSwapchain(device.logicalDevice, createInfo, null, out SwapchainKHR swapchain) != Result.Success) {
                     throw new APIBackendException("Vulkan", "Failed to create swapchain.");
                 }
                 swapchainExtension.GetSwapchainImages(device.logicalDevice, swapchain, ref imageCount, null);
-                images = new Image[imageCount];
+                Image[] images = new Image[imageCount];
                 fixed (Image* swapChainImagesPtr = images)
                 {
                     swapchainExtension.GetSwapchainImages(device.logicalDevice, swapchain, ref imageCount, swapChainImagesPtr);
                 }
             }
             imageFormat = surfaceFormat.Format;
+            return (swapchainExtension, swapchain, images);
         }
 
         public Extent2D CreateSwapExtent(SurfaceCapabilitiesKHR capabilities) {
@@ -116,8 +125,8 @@ namespace GAIL.Graphics.Utils
             }
             return surfaceFormats[0];
         }
-        public SwapChainSupportDetails SwapChainSupport(PhysicalDevice physicalDevice) {
-            SwapChainSupportDetails details = new();
+        public SupportDetails SwapChainSupport(PhysicalDevice physicalDevice) {
+            SupportDetails details = new();
 
             surface.surfaceExtension.GetPhysicalDeviceSurfaceCapabilities(physicalDevice, surface.surface, out details.Capabilities);
 
@@ -151,8 +160,13 @@ namespace GAIL.Graphics.Utils
         }
     
         public void Dispose() {
+            foreach (ImageView imageView in imageViews) {
+                unsafe {
+                    vk.DestroyImageView(device.logicalDevice, imageView, null);
+                }
+            }
             unsafe {
-                swapchainExtension.DestroySwapchain(device.logicalDevice, swapchain, null);
+                extension.DestroySwapchain(device.logicalDevice, swapchain, null);
             }
         }
     }

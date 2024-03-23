@@ -67,7 +67,8 @@ namespace GAIL.Graphics.Utils
                     QueueCreateInfoCount = (uint)uniqueQueueFamilies.Length,
                     PQueueCreateInfos = queueCreateInfos,
                     PEnabledFeatures = &deviceFeatures,
-                    EnabledExtensionCount = 0,
+                    EnabledExtensionCount = (uint)deviceExtensions.Length,
+                    PpEnabledExtensionNames = (byte**)SilkMarshal.StringArrayToPtr(deviceExtensions),
                     EnabledLayerCount = 0
                 };
                 if (vk.CreateDevice(physicalDevice, in createInfo, null, out logicalDevice)!=Result.Success) {
@@ -76,6 +77,7 @@ namespace GAIL.Graphics.Utils
                 vk.GetDeviceQueue(logicalDevice, indices.GraphicsFamily!.Value, 0, out graphicsQueue);
                 vk.GetDeviceQueue(logicalDevice, indices.PresentFamily!.Value, 0, out presentQueue);
 
+                SilkMarshal.Free((nint)createInfo.PpEnabledExtensionNames);
             }
         }
 
@@ -107,7 +109,7 @@ namespace GAIL.Graphics.Utils
             bool swapChainAdequate = false;
             
             if (extensionsSupported) {
-                SwapChain.SwapChainSupportDetails swapChainSupport = CheckSwapChainSupport(device);
+                SwapChain.SupportDetails swapChainSupport = CheckSwapChainSupport(device);
                 swapChainAdequate = swapChainSupport.Formats.Length != 0 && swapChainSupport.PresentModes.Length != 0;
             }
 
@@ -115,21 +117,21 @@ namespace GAIL.Graphics.Utils
 
         }
 
-        public SwapChain.SwapChainSupportDetails CheckSwapChainSupport(PhysicalDevice device) {
-            var details = new SwapChain.SwapChainSupportDetails();
+        public SwapChain.SupportDetails CheckSwapChainSupport(PhysicalDevice device) {
+            var details = new SwapChain.SupportDetails();
 
             unsafe {
-                surface.surfaceExtension.GetPhysicalDeviceSurfaceCapabilities(physicalDevice, surface.surface, out details.Capabilities);
+                surface.surfaceExtension.GetPhysicalDeviceSurfaceCapabilities(device, surface.surface, out details.Capabilities);
 
                 uint formatCount = 0;
-                surface.surfaceExtension.GetPhysicalDeviceSurfaceFormats(physicalDevice, surface.surface, ref formatCount, null);
+                surface.surfaceExtension.GetPhysicalDeviceSurfaceFormats(device, surface.surface, ref formatCount, null);
 
                 if (formatCount != 0)
                 {
                     details.Formats = new SurfaceFormatKHR[formatCount];
                     fixed (SurfaceFormatKHR* formatsPtr = details.Formats)
                     {
-                        surface.surfaceExtension.GetPhysicalDeviceSurfaceFormats(physicalDevice, surface.surface, ref formatCount, formatsPtr);
+                        surface.surfaceExtension.GetPhysicalDeviceSurfaceFormats(device, surface.surface, ref formatCount, formatsPtr);
                     }
                 }
                 else
@@ -138,14 +140,14 @@ namespace GAIL.Graphics.Utils
                 }
 
                 uint presentModeCount = 0;
-                surface.surfaceExtension.GetPhysicalDeviceSurfacePresentModes(physicalDevice, surface.surface, ref presentModeCount, null);
+                surface.surfaceExtension.GetPhysicalDeviceSurfacePresentModes(device, surface.surface, ref presentModeCount, null);
 
                 if (presentModeCount != 0)
                 {
                     details.PresentModes = new PresentModeKHR[presentModeCount];
                     fixed (PresentModeKHR* formatsPtr = details.PresentModes)
                     {
-                        surface.surfaceExtension.GetPhysicalDeviceSurfacePresentModes(physicalDevice, surface.surface, ref presentModeCount, formatsPtr);
+                        surface.surfaceExtension.GetPhysicalDeviceSurfacePresentModes(device, surface.surface, ref presentModeCount, formatsPtr);
                     }
 
                 }
