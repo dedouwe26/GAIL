@@ -2,7 +2,9 @@ namespace GAIL.Core
 {
     public static partial class PNG {
         public partial class Decoder : IDecoder<Texture> {
-            public void Dispose() { }
+            public void Dispose() {
+                GC.SuppressFinalize(this);
+            }
             /// <summary>
             /// Parses from a stream.
             /// </summary>

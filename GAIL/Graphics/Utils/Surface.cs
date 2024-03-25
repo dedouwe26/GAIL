@@ -33,6 +33,7 @@ namespace GAIL.Graphics.Utils
                 surfaceExtension.DestroySurface(instance, surface, null);
             }
             surfaceExtension.Dispose();
+            GC.SuppressFinalize(this);
         }
     }
 }

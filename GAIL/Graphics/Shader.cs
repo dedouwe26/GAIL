@@ -18,13 +18,13 @@ namespace GAIL.Graphics
         /// <param name="vertexShader">The per-vertex shader (in SPIR-V compiled).</param>
         /// <param name="fragmentShader">The per-pixel shader (in SPIR-V compiled).</param>
         /// <param name="geometryShader">The geometry shader (in SPIR-V compiled).</param>
-        public Shader(string vertexShader, string fragmentShader, string geometryShader = "") {
+        public Shader(byte[] vertexShader, byte[] fragmentShader, byte[]? geometryShader = null) {
             
         }
         ~Shader() { Dispose(); }
 
         public void Dispose() {
-            throw new NotImplementedException();
+            GC.SuppressFinalize(this);
         }
         /// <summary>
         /// Adds a uniform value to the shader (first uniform set will be at position 0).

@@ -222,6 +222,7 @@ namespace GAIL.Graphics.Utils
             unsafe {
                 vk.DestroyDevice(logicalDevice, null);
             }
+            GC.SuppressFinalize(this);
         }
     }
 }

@@ -5,7 +5,7 @@ namespace GAIL.Core
     public static partial class WAV {
         public partial class Decoder : IDecoder<Sound> {
             public void Dispose() {
-                throw new NotImplementedException();
+                GC.SuppressFinalize(this);
             }
             /// <summary>
             /// Parses from a stream.

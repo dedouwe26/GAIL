@@ -105,6 +105,7 @@ namespace GAIL.Graphics
                 vk.DestroyInstance(instance, null);
                 vk.Dispose();
             }
+            GC.SuppressFinalize(this);
         }
         public MSAA GetMaxMSAA() {
             throw new NotImplementedException();

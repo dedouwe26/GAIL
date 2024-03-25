@@ -71,6 +71,7 @@ namespace GAIL.Audio
             }
             alc.Dispose();
             al.Dispose();
+            GC.SuppressFinalize(this);
         }
         /// <summary>
         /// Starts playing a sound. If the sound is already being played, it will restart from the beginning.

@@ -32,7 +32,42 @@ namespace GAIL.Graphics.Utils
             extension = swapchainExtension;
             this.swapchain = swapchain;
             this.images = images;
+
+            imageViews = CreateImageViews();
         }
+
+        public ImageView[] CreateImageViews() {
+            imageViews = new ImageView[images.Length];
+
+            for (int i = 0; i < imageViews.Length; i++) {
+                ImageViewCreateInfo createInfo = new() {
+                    SType = StructureType.ImageViewCreateInfo,
+                    Image = images[i],
+                    ViewType = ImageViewType.Type2D,
+                    Format = imageFormat,
+                    Components = {
+                        R = ComponentSwizzle.Identity,
+                        G = ComponentSwizzle.Identity,
+                        B = ComponentSwizzle.Identity,
+                        A = ComponentSwizzle.Identity,
+                    },
+                    SubresourceRange = {
+                        AspectMask = ImageAspectFlags.ColorBit,
+                        BaseMipLevel = 0,
+                        LevelCount = 1,
+                        BaseArrayLayer = 0,
+                        LayerCount = 1,
+                    }
+                };
+                unsafe {
+                    if (vk!.CreateImageView(device.logicalDevice, createInfo, null, out imageViews[i]) != Result.Success) {
+                        throw new APIBackendException("Vulkan", "Failed to create image view.");
+                    }
+                }
+            }
+            return imageViews;
+        }
+
         public (KhrSwapchain swapchainExtension, SwapchainKHR swapchain, Image[] images) CreateSwapChain(Instance instance) {
             
             SupportDetails swapChainSupport = SwapChainSupport(device.physicalDevice);
@@ -168,6 +203,7 @@ namespace GAIL.Graphics.Utils
             unsafe {
                 extension.DestroySwapchain(device.logicalDevice, swapchain, null);
             }
+            GC.SuppressFinalize(this);
         }
     }
 }

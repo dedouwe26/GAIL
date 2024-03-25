@@ -120,6 +120,7 @@ namespace GAIL.Input
         }
         public void Dispose() {
             glfw.Dispose();
+            GC.SuppressFinalize(this);
         }
 
         /// <summary>

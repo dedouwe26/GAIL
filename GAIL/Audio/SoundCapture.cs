@@ -100,6 +100,8 @@ namespace GAIL.Audio
             }
 
             alc.Dispose();
+
+            GC.SuppressFinalize(this);
         }
         /// <summary>
         /// Starts capturing the audio.

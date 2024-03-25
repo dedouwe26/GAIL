@@ -145,6 +145,7 @@ namespace GAIL
 
         public void Dispose() {
             Stop();
+            GC.SuppressFinalize(this);
         }
     }
 }

@@ -38,6 +38,8 @@ namespace GAIL.Audio
             rawData.Clear();
 
             al.Dispose();
+
+            GC.SuppressFinalize(this);
         }
         /// <summary>
         /// The OpenAL API instance for custom usage.

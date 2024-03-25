@@ -71,6 +71,7 @@ namespace GAIL.Window
             }
             glfw.Terminate();
             glfw.Dispose();
+            GC.SuppressFinalize(this);
         }
     }
 }

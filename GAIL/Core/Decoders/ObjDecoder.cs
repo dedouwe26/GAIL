@@ -4,7 +4,9 @@ namespace GAIL.Core
 {
     public static partial class Obj {
         public partial class Decoder : IDecoder<Mesh> {
-            public void Dispose() { }
+            public void Dispose() {
+                GC.SuppressFinalize(this);
+            }
             /// <summary>
             /// Parses from a stream.
             /// </summary>
