@@ -1,6 +1,6 @@
 {
     "files.exclude": {
-        "**/*.csproj": true,
+        // "**/*.csproj": true,
         "**/bin/": true,
         "**/obj/": true
     }

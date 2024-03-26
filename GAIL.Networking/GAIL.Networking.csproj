@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PackageId>GAIL.Networking</PackageId>
+    <Version>1.0.0</Version>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageDescription>GAIL is a library with graphics, audio and input. This is the network part of GAIL Delta.</PackageDescription>
+    <PackageTags>Networking;library;GAIL</PackageTags>
+    <Authors>0xDED</Authors>
+    <RepositoryUrl>https://github.com/dedouwe26/GAIL.git</RepositoryUrl> 
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../README.md" Pack="true" PackagePath="\"/>
+  </ItemGroup>
+
+</Project>

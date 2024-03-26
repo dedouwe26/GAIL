@@ -7,10 +7,16 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PackageId>GAIL</PackageId>
     <Version>1.0.0</Version>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageDescription>GAIL is a library with graphics, audio and input.</PackageDescription>
+    <PackageTags>Graphics;Audio;Input;library;GAIL</PackageTags>
     <Authors>0xDED</Authors>
+    <RepositoryUrl>https://github.com/dedouwe26/GAIL.git</RepositoryUrl> 
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="../README.md" Pack="true" PackagePath="\"/>
     <PackageReference Include="Silk.NET" Version="2.20.0" />
     <PackageReference Include="Silk.NET.Assimp" Version="2.20.0" />
     <PackageReference Include="Silk.NET.OpenAL.Extensions.EXT" Version="2.20.0" />
