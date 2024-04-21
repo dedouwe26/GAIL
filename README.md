@@ -9,9 +9,10 @@ This library is built using Vulkan, OpenAL and GLFW for the graphics, audio and 
 <li>OpenAL and Vulkan objects are accessible. 🪟</li>
 </ul>
 
-It is built using <a href="https://github.com/dotnet/Silk.NET">Silk.NET</a> and there will come a 2D version later built on <a href="https://www.sfml-dev.org/download/sfml.net/">SFML.NET</a>.
+It now also has Networking with packets 🛜 and data saving with storage files 🗄️. And GAIL is built using <a href="https://github.com/dotnet/Silk.NET">Silk.NET</a>. <br/>
+There also is a <a href="https://github.com/dedouwe26/GAIL2D/">2D version</a> that i'm working on.
 
-If you find a bug 🪲 or if you have a question, please add a new issue in the issues tab.<br/>
+If you find a bug 🪲 or if you have a question, please add a new issue in the <a href="https://github.com/dedouwe26/issues">issues tab</a>.<br/>
 And to learn it you can check the examples or the <a href="https://github.com/dedouwe26/GAIL/wiki">wiki</a>
 
 <br/> A alternative for GAIL is <a href="https://www.raylib.com/index.html">Raylib</a>, but this is built on OpenGL.
