@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Sockets;
+using GAIL.Networking.Parser;
 
 namespace GAIL.Networking.Client;
 
@@ -26,8 +27,15 @@ public class ClientContainer : IDisposable {
         tcpClient = new TcpClient();
     }
     private void Listen() {
+        List<byte> data = [];
         while (!Closed) {
-            NetworkStream!.ReadByte();
+            int i;
+            if ((i=NetworkStream!.ReadByte())==-1) {
+                break;
+            }
+            byte b = Convert.ToByte(i);
+            if (b == PacketParser.NewPacket && data[^1]!=PacketParser.NewPacket) {
+            }
         }
     }
     public void SendPacket(Packet packet) {

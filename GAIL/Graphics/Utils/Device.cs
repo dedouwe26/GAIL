@@ -26,11 +26,8 @@ namespace GAIL.Graphics.Utils
         public Queue graphicsQueue;
         public Queue presentQueue;
         private readonly Surface surface;
-        private readonly Vk vk;
 
-
-        public Device(Vk vk, Instance instance, ref Surface surface) {
-            this.vk = vk;
+        public Device(Instance instance, ref Surface surface) {
             this.surface = surface;
 
             foreach (PhysicalDevice device in GetPhysicalDevices(instance)) {
@@ -71,11 +68,11 @@ namespace GAIL.Graphics.Utils
                     PpEnabledExtensionNames = (byte**)SilkMarshal.StringArrayToPtr(deviceExtensions),
                     EnabledLayerCount = 0
                 };
-                if (vk.CreateDevice(physicalDevice, in createInfo, null, out logicalDevice)!=Result.Success) {
+                if (API.Vk.CreateDevice(physicalDevice, in createInfo, null, out logicalDevice)!=Result.Success) {
                     throw new APIBackendException("Vulkan", "Failed to create logical device.");
                 }
-                vk.GetDeviceQueue(logicalDevice, indices.GraphicsFamily!.Value, 0, out graphicsQueue);
-                vk.GetDeviceQueue(logicalDevice, indices.PresentFamily!.Value, 0, out presentQueue);
+                API.Vk.GetDeviceQueue(logicalDevice, indices.GraphicsFamily!.Value, 0, out graphicsQueue);
+                API.Vk.GetDeviceQueue(logicalDevice, indices.PresentFamily!.Value, 0, out presentQueue);
 
                 SilkMarshal.Free((nint)createInfo.PpEnabledExtensionNames);
             }
@@ -87,7 +84,7 @@ namespace GAIL.Graphics.Utils
         public PhysicalDevice[] GetPhysicalDevices(Instance instance) {
             uint deviceCount = 0;
             unsafe {
-                vk.EnumeratePhysicalDevices(instance, ref deviceCount, null);
+                API.Vk.EnumeratePhysicalDevices(instance, ref deviceCount, null);
             }
             if (deviceCount == 0) {
                 throw new APIBackendException("Vulkan", "Failed to find GPU with Vulkan support.");
@@ -95,7 +92,7 @@ namespace GAIL.Graphics.Utils
             PhysicalDevice[] devices = new PhysicalDevice[deviceCount];
             unsafe {
                 fixed (PhysicalDevice* devicesPtr = devices) {
-                    vk.EnumeratePhysicalDevices(instance, ref deviceCount, devicesPtr);
+                    API.Vk.EnumeratePhysicalDevices(instance, ref deviceCount, devicesPtr);
                 }
             }
             return devices;
@@ -164,12 +161,12 @@ namespace GAIL.Graphics.Utils
         public bool CheckDeviceExtensionsSupport(PhysicalDevice device) {
             uint extentionsCount = 0;
             unsafe {
-                vk.EnumerateDeviceExtensionProperties(device, (byte*)null, ref extentionsCount, null);
+                API.Vk.EnumerateDeviceExtensionProperties(device, (byte*)null, ref extentionsCount, null);
 
                 ExtensionProperties[] availableExtensions = new ExtensionProperties[extentionsCount];
                 fixed (ExtensionProperties* availableExtensionsPtr = availableExtensions)
                 {
-                    vk.EnumerateDeviceExtensionProperties(device, (byte*)null, ref extentionsCount, availableExtensionsPtr);
+                    API.Vk.EnumerateDeviceExtensionProperties(device, (byte*)null, ref extentionsCount, availableExtensionsPtr);
                 }
 
                 HashSet<string?> availableExtensionNames = availableExtensions.Select(extension => Marshal.PtrToStringAnsi((IntPtr)extension.ExtensionName)).ToHashSet();
@@ -189,12 +186,12 @@ namespace GAIL.Graphics.Utils
 
             unsafe {
                 uint queueFamilyCount = 0;
-                vk.GetPhysicalDeviceQueueFamilyProperties(device, ref queueFamilyCount, null);
+                API.Vk.GetPhysicalDeviceQueueFamilyProperties(device, ref queueFamilyCount, null);
 
                 QueueFamilyProperties[] queueFamilies = new QueueFamilyProperties[queueFamilyCount];
 
                 fixed (QueueFamilyProperties* queueFamiliesPtr = queueFamilies) {
-                    vk!.GetPhysicalDeviceQueueFamilyProperties(device, ref queueFamilyCount, queueFamiliesPtr);
+                    API.Vk.GetPhysicalDeviceQueueFamilyProperties(device, ref queueFamilyCount, queueFamiliesPtr);
                 }
 
                 for (uint i = 0; i < queueFamilies.Length; i++)
@@ -220,7 +217,7 @@ namespace GAIL.Graphics.Utils
 
         public void Dispose() {
             unsafe {
-                vk.DestroyDevice(logicalDevice, null);
+                API.Vk.DestroyDevice(logicalDevice, null);
             }
             GC.SuppressFinalize(this);
         }

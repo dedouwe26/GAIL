@@ -7,6 +7,8 @@
     <PublishTrimmed>true</PublishTrimmed>
     <PackageId>GAIL.Storage</PackageId>
     <Version>1.0.0</Version>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageDescription>GAIL is a library with graphics, audio and input. This is the storage (file saves) part of GAIL Delta.</PackageDescription>
     <PackageTags>Storage;library;GAIL</PackageTags>

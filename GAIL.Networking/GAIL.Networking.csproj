@@ -7,12 +7,15 @@
     <PublishTrimmed>true</PublishTrimmed>
     <PackageId>GAIL.Networking</PackageId>
     <Version>1.0.0</Version>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageDescription>GAIL is a library with graphics, audio and input. This is the network part of GAIL Delta.</PackageDescription>
     <PackageTags>Networking;library;GAIL</PackageTags>
     <Authors>0xDED</Authors>
     <RepositoryUrl>https://github.com/dedouwe26/GAIL.git</RepositoryUrl> 
     <RepositoryType>git</RepositoryType>
+    <!-- <NoWarn>1591</NoWarn> -->
   </PropertyGroup>
 
   <ItemGroup>

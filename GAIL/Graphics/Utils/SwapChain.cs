@@ -17,13 +17,11 @@ namespace GAIL.Graphics.Utils
         public ImageView[] imageViews;
         public Format imageFormat;
         public Extent2D extent;
-        private readonly Vk vk;
         private readonly Surface surface;
         private readonly WindowManager window;
         private readonly Device device;
 
-        public SwapChain(Vk vk, Instance instance, Surface surface, Device device, WindowManager windowManager) {
-            this.vk = vk;
+        public SwapChain(Instance instance, Surface surface, Device device, WindowManager windowManager) {
             this.surface = surface;
             this.device = device;
             window = windowManager;
@@ -60,7 +58,7 @@ namespace GAIL.Graphics.Utils
                     }
                 };
                 unsafe {
-                    if (vk!.CreateImageView(device.logicalDevice, createInfo, null, out imageViews[i]) != Result.Success) {
+                    if (API.Vk.CreateImageView(device.logicalDevice, createInfo, null, out imageViews[i]) != Result.Success) {
                         throw new APIBackendException("Vulkan", "Failed to create image view.");
                     }
                 }
@@ -113,7 +111,7 @@ namespace GAIL.Graphics.Utils
                 }
 
             }
-            if (!vk.TryGetDeviceExtension(instance, device.logicalDevice, out KhrSwapchain swapchainExtension)) {
+            if (!API.Vk.TryGetDeviceExtension(instance, device.logicalDevice, out KhrSwapchain swapchainExtension)) {
                 throw new APIBackendException("Vulkan", "Failed to get VK_KHR_swapchain extension.");
             }
             unsafe {
@@ -136,7 +134,7 @@ namespace GAIL.Graphics.Utils
                 return capabilities.CurrentExtent;
             } else {
                 unsafe {
-                    window.glfw.GetFramebufferSize(window.Window, out int width, out int height);
+                    API.Glfw.GetFramebufferSize(window.Window, out int width, out int height);
                     return new() {
                         Width = Math.Clamp((uint)width, capabilities.MinImageExtent.Width, capabilities.MaxImageExtent.Width),
                         Height = Math.Clamp((uint)height, capabilities.MinImageExtent.Height, capabilities.MaxImageExtent.Height)
@@ -197,7 +195,7 @@ namespace GAIL.Graphics.Utils
         public void Dispose() {
             foreach (ImageView imageView in imageViews) {
                 unsafe {
-                    vk.DestroyImageView(device.logicalDevice, imageView, null);
+                    API.Vk.DestroyImageView(device.logicalDevice, imageView, null);
                 }
             }
             unsafe {

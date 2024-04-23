@@ -12,39 +12,35 @@ namespace GAIL.Audio
         /// <param name="format">The format of the rawData.</param>
         /// <param name="rawData">Raw sound data is in PCM</param>
         public Sound(int sampleRate, SoundFormat format, List<byte> rawData) {
-            al = AL.GetApi();
-            
-            buffer = al.GenBuffer();
+            buffer = API.Al.GenBuffer();
 
             Sound sound = this;
             foreach (ISoundEffect effect in soundEffects) {
                 sound = effect.Use(sound);
             }
 
-            al.BufferData(buffer, (BufferFormat)format, rawData.ToArray(), sampleRate);
-            source = al.GenSource();
-            al.SetSourceProperty(source, SourceFloat.Pitch, pitch);
-            al.SetSourceProperty(source, SourceFloat.Gain, volume);
-            al.SetSourceProperty(source, SourceBoolean.Looping, isLooping);
-            al.SetSourceProperty(source, SourceInteger.Buffer, buffer);
+            API.Al.BufferData(buffer, (BufferFormat)format, rawData.ToArray(), sampleRate);
+            source = API.Al.GenSource();
+            API.Al.SetSourceProperty(source, SourceFloat.Pitch, pitch);
+            API.Al.SetSourceProperty(source, SourceFloat.Gain, volume);
+            API.Al.SetSourceProperty(source, SourceBoolean.Looping, isLooping);
+            API.Al.SetSourceProperty(source, SourceInteger.Buffer, buffer);
         }
+
+        /// <summary></summary>
         ~Sound() {
             Dispose();
         }
+
+        /// <inheritdoc/>
         public void Dispose() {
-            al.DeleteSource(source);
-            al.DeleteBuffer(buffer);
+            API.Al.DeleteSource(source);
+            API.Al.DeleteBuffer(buffer);
             soundEffects.Clear();
             rawData.Clear();
 
-            al.Dispose();
-
             GC.SuppressFinalize(this);
         }
-        /// <summary>
-        /// The OpenAL API instance for custom usage.
-        /// </summary>
-        public readonly AL al;
 
         /// <summary>
         /// The format of this sound.
@@ -65,7 +61,7 @@ namespace GAIL.Audio
         /// </summary>
         public List<byte> rawData = [];
         /// <summary>
-        // If this sound loops (default: false).
+        /// If this sound loops (default: false).
         /// </summary>
         public bool isLooping = false;
         /// <summary>
@@ -96,22 +92,22 @@ namespace GAIL.Audio
         /// </summary>
         public void Update() {
 
-            al.DeleteSource(source);
-            al.DeleteBuffer(buffer);
+            API.Al.DeleteSource(source);
+            API.Al.DeleteBuffer(buffer);
             
-            buffer = al.GenBuffer();
+            buffer = API.Al.GenBuffer();
 
             Sound sound = this;
             foreach (ISoundEffect effect in soundEffects) {
                 sound = effect.Use(sound);
             }
 
-            al.BufferData(buffer, (BufferFormat)format, rawData.ToArray(), sampleRate);
-            source = al.GenSource();
-            al.SetSourceProperty(source, SourceFloat.Pitch, pitch);
-            al.SetSourceProperty(source, SourceFloat.Gain, volume);
-            al.SetSourceProperty(source, SourceBoolean.Looping, isLooping);
-            al.SetSourceProperty(source, SourceInteger.Buffer, buffer);
+            API.Al.BufferData(buffer, (BufferFormat)format, rawData.ToArray(), sampleRate);
+            source = API.Al.GenSource();
+            API.Al.SetSourceProperty(source, SourceFloat.Pitch, pitch);
+            API.Al.SetSourceProperty(source, SourceFloat.Gain, volume);
+            API.Al.SetSourceProperty(source, SourceBoolean.Looping, isLooping);
+            API.Al.SetSourceProperty(source, SourceInteger.Buffer, buffer);
         }
         /// <summary>
         /// Sets the sound effects for later use.

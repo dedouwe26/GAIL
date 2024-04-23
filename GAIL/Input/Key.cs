@@ -242,6 +242,9 @@ namespace GAIL.Input
         /// </summary>
         World2 = Keys.World2
     }
+    /// <summary>
+    /// Represents the mouse buttons.
+    /// </summary>
     public enum MouseButton {
         /// <summary>
         /// AKA Mouse1

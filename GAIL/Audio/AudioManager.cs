@@ -8,19 +8,15 @@ namespace GAIL.Audio
     /// Handles all audio in the Application.
     /// </summary>
     public class AudioManager : IManager {
+        /// <summary>
+        /// Gets all the audio devices names.
+        /// </summary>
+        /// <returns>A list of the names of all the audio devices.</returns>
         public static List<string> GetAudioDevices() {
             unsafe {
                 return [.. ALContext.GetApi().GetContextProperty(null, GetContextString.DeviceSpecifier).Split("\0")];
             }
         }
-        /// <summary>
-        /// The OpenAL API instance for custom usage.
-        /// </summary>
-        public readonly AL al;
-        /// <summary>
-        /// The OpenAL Context API instance for custom usage.
-        /// </summary>
-        public readonly ALContext alc;
         /// <summary>
         /// OpenAL Context, for custom usage.
         /// </summary>
@@ -29,14 +25,7 @@ namespace GAIL.Audio
         /// OpenAL Device, for custom usage.
         /// </summary>
         public Pointer<Device> device = Pointer<Device>.FromNull();
-        
-        /// <summary>
-        /// Create an audio manager.
-        /// </summary>
-        public AudioManager() {
-            alc = ALContext.GetApi();
-            al = AL.GetApi();
-        }
+
         /// <summary>
         /// Initializes the audio manager.
         /// </summary>
@@ -44,16 +33,18 @@ namespace GAIL.Audio
         /// <exception cref="APIBackendException"></exception>
         public void Init(string audioDevice = "") {
             unsafe {
-                device = alc.OpenDevice(audioDevice);
+                device = API.Alc.OpenDevice(audioDevice);
                 if (device.IsNull) {
                     throw new APIBackendException("OpenAL", string.Format("Failed to open device ({0})", audioDevice));
                 }
-                context = alc.CreateContext(device, null);
+                context = API.Alc.CreateContext(device, null);
                 if (context.IsNull) {
                     throw new APIBackendException("OpenAL", "Failed to create OpenAL context.");
                 }
             }
         }
+
+        /// <summary></summary>
         ~AudioManager() {
             Dispose();
         }
@@ -61,16 +52,14 @@ namespace GAIL.Audio
         /// <exception cref="APIBackendException"></exception>
         public void Dispose() {
             unsafe {
-                if (!alc.MakeContextCurrent(null)) {
+                if (!API.Alc.MakeContextCurrent(null)) {
                     throw new APIBackendException("OpenAL", "Failed to deassign current context.");
                 }
-                alc.DestroyContext(context);
-                if (!alc.CloseDevice(device)) {
+                API.Alc.DestroyContext(context);
+                if (!API.Alc.CloseDevice(device)) {
                     throw new APIBackendException("OpenAL", "Failed to close device.");
                 }
             }
-            alc.Dispose();
-            al.Dispose();
             GC.SuppressFinalize(this);
         }
         /// <summary>
@@ -83,18 +72,18 @@ namespace GAIL.Audio
         public void PlaySound(Sound sound) {
             sound.Update();
             unsafe {
-                if (!alc.MakeContextCurrent(context)) {
+                if (!API.Alc.MakeContextCurrent(context)) {
                     throw new APIBackendException("OpenAL", "Failed to make context current.");
                 }
             }
-            al.SourcePlay(sound.source);
+            API.Al.SourcePlay(sound.source);
             int state;
             do {
-                al.GetSourceProperty(sound.source, GetSourceInteger.SourceState, out state);
+                API.Al.GetSourceProperty(sound.source, GetSourceInteger.SourceState, out state);
             } while (state==(int)SourceState.Playing);
             
-            al.DeleteSource(sound.source);
-            al.DeleteBuffer(sound.buffer);
+            API.Al.DeleteSource(sound.source);
+            API.Al.DeleteBuffer(sound.buffer);
         }
         /// <summary>
         /// Starts playing a sound with 3D positions. If the sound is already being played, it will restart from the beginning.
@@ -108,21 +97,21 @@ namespace GAIL.Audio
         public void PlaySound3D(Sound sound, Vector3 position, Vector3 velocity, Vector3 direction) {
             sound.Update();
             unsafe {
-                if (!alc.MakeContextCurrent(context)) {
+                if (!API.Alc.MakeContextCurrent(context)) {
                     throw new APIBackendException("OpenAL", "Failed to make context current.");
                 }
             }
-            al.SetSourceProperty(sound.source, SourceVector3.Position, in position);
-            al.SetSourceProperty(sound.source, SourceVector3.Velocity, in velocity);
-            al.SetSourceProperty(sound.source, SourceVector3.Direction, in direction);
+            API.Al.SetSourceProperty(sound.source, SourceVector3.Position, in position);
+            API.Al.SetSourceProperty(sound.source, SourceVector3.Velocity, in velocity);
+            API.Al.SetSourceProperty(sound.source, SourceVector3.Direction, in direction);
             
-            al.SourcePlay(sound.source);
+            API.Al.SourcePlay(sound.source);
             int state;
             do {
-                al.GetSourceProperty(sound.source, GetSourceInteger.SourceState, out state);
+                API.Al.GetSourceProperty(sound.source, GetSourceInteger.SourceState, out state);
             } while (state!=(int)SourceState.Stopped);
-            al.DeleteSource(sound.source);
-            al.DeleteBuffer(sound.buffer);
+            API.Al.DeleteSource(sound.source);
+            API.Al.DeleteBuffer(sound.buffer);
         }
         /// <summary>
         /// Stops an playing or paused sound.
@@ -131,11 +120,11 @@ namespace GAIL.Audio
         /// <exception cref="APIBackendException"></exception>
         public void StopSound(Sound sound) {
             unsafe {
-                if (!alc.MakeContextCurrent(context)) {
+                if (!API.Alc.MakeContextCurrent(context)) {
                     throw new APIBackendException("OpenAL", "Failed to make context current.");
                 }
             }
-            al.SourceStop(sound.source);
+            API.Al.SourceStop(sound.source);
         }
         /// <summary>
         /// Pauses or resumes a sound.
@@ -144,12 +133,12 @@ namespace GAIL.Audio
         /// <exception cref="APIBackendException"></exception>
         public void PauseSound(Sound sound) {
             unsafe {
-                if (!alc.MakeContextCurrent(context)) {
+                if (!API.Alc.MakeContextCurrent(context)) {
                     throw new APIBackendException("OpenAL", "Failed to make context current.");
                 }
             }
-            al.GetSourceProperty(sound.source, GetSourceInteger.SourceState, out int state);
-            if (state == (int)SourceState.Paused) { al.SourcePlay(sound.source); } else { al.SourcePause(sound.source); }
+            API.Al.GetSourceProperty(sound.source, GetSourceInteger.SourceState, out int state);
+            if (state == (int)SourceState.Paused) { API.Al.SourcePlay(sound.source); } else { API.Al.SourcePause(sound.source); }
         }
         /// <summary>
         /// Changes the 3D stuff of a sound (like position).
@@ -161,13 +150,13 @@ namespace GAIL.Audio
         /// <exception cref="APIBackendException"></exception>
         public void SetSound3D(Sound sound, Vector3 position, Vector3 velocity, Vector3 direction) {
             unsafe {
-                if (!alc.MakeContextCurrent(context)) {
+                if (!API.Alc.MakeContextCurrent(context)) {
                     throw new APIBackendException("OpenAL", "Failed to make context current.");
                 }
             }
-            al.SetSourceProperty(sound.source, SourceVector3.Position, in position);
-            al.SetSourceProperty(sound.source, SourceVector3.Velocity, in velocity);
-            al.SetSourceProperty(sound.source, SourceVector3.Direction, in direction);
+            API.Al.SetSourceProperty(sound.source, SourceVector3.Position, in position);
+            API.Al.SetSourceProperty(sound.source, SourceVector3.Velocity, in velocity);
+            API.Al.SetSourceProperty(sound.source, SourceVector3.Direction, in direction);
         }
         /// <summary>
         /// Checks if the sound is still playing or is paused.
@@ -177,11 +166,11 @@ namespace GAIL.Audio
         /// <exception cref="APIBackendException"></exception>
         public (bool isPlaying, bool isPaused) GetSoundState(Sound sound) {
             unsafe {
-                if (!alc.MakeContextCurrent(context)) {
+                if (!API.Alc.MakeContextCurrent(context)) {
                     throw new APIBackendException("OpenAL", "Failed to make context current.");
                 }
             }
-            al.GetSourceProperty(sound.source, GetSourceInteger.SourceState, out int i);
+            API.Al.GetSourceProperty(sound.source, GetSourceInteger.SourceState, out int i);
 
             return (i==(int)SourceState.Playing, i==(int)SourceState.Paused);
         }
@@ -193,11 +182,11 @@ namespace GAIL.Audio
         /// <exception cref="APIBackendException"></exception>
         public void Goto(Sound sound, int sample) {
             unsafe {
-                if (!alc.MakeContextCurrent(context)) {
+                if (!API.Alc.MakeContextCurrent(context)) {
                     throw new APIBackendException("OpenAL", "Failed to make context current.");
                 }
             }
-            al.SetSourceProperty(sound.source, SourceInteger.SampleOffset, sample);
+            API.Al.SetSourceProperty(sound.source, SourceInteger.SampleOffset, sample);
 
         }
     }

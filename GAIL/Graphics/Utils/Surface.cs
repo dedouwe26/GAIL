@@ -12,15 +12,15 @@ namespace GAIL.Graphics.Utils
         public KhrSurface surfaceExtension;
         public SurfaceKHR surface;
         private readonly Instance instance;
-        public Surface(Vk vk, Instance instance, WindowManager window) {
+        public Surface(Instance instance, WindowManager window) {
             this.instance = instance;
-            if (!vk.TryGetInstanceExtension(instance, out surfaceExtension)) {
+            if (!API.Vk.TryGetInstanceExtension(instance, out surfaceExtension)) {
                 throw new APIBackendException("Vulkan", "Failed to get VK_KHR_surface extension.");
             }
             unsafe {
                 VkNonDispatchableHandle* surfacePtr = stackalloc VkNonDispatchableHandle[1];
                 int errorCode;
-                if ((errorCode = window.glfw.CreateWindowSurface(instance.ToHandle(), window.Window, null, surfacePtr))!=0) {
+                if ((errorCode = API.Glfw.CreateWindowSurface(instance.ToHandle(), window.Window, null, surfacePtr))!=0) {
                     throw new APIBackendException("GLFW", "Failed to create surface: "+errorCode);
                 }
                 Glfw.ThrowExceptions();
@@ -28,6 +28,8 @@ namespace GAIL.Graphics.Utils
             }
             
         }
+
+        /// <inheritdoc/>
         public void Dispose() {
             unsafe {
                 surfaceExtension.DestroySurface(instance, surface, null);

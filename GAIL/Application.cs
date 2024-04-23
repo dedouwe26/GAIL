@@ -84,7 +84,7 @@ namespace GAIL
             {
                 while (!globals.windowManager.ShouldClose) {
                     globals.windowManager.Update();
-                    CurrentTime = globals.windowManager.Time;
+                    CurrentTime = WindowManager.Time;
                     OnUpdate?.Invoke(this, CurrentTime - lastTime);
                     lastTime = CurrentTime;
                 }

@@ -42,15 +42,14 @@ namespace GAIL.Input
         /// Event for when a file(s) has been dropped onto the window.
         /// </summary>
         public event PathDropCallback? OnPathDrop;
-        /// <summary>
-        /// The GLFW API instance for custom usage.
-        /// </summary>
-        public readonly Glfw glfw;
 
         private Application.Globals globals;
 
+        /// <summary>
+        /// Creates an input manager.
+        /// </summary>
+        /// <param name="globals">The globals for this application.</param>
         public InputManager(Application.Globals globals) {
-            glfw = Glfw.GetApi();
             this.globals = globals;
         }
 
@@ -59,7 +58,7 @@ namespace GAIL.Input
         /// </summary>
         public void Init() {
             unsafe {
-                glfw.SetKeyCallback(globals.windowManager.Window, 
+                API.Glfw.SetKeyCallback(globals.windowManager.Window, 
                     (WindowHandle* window, Keys key, int scanCode, InputAction action, KeyModifiers mods) => {
                         // OnKeyDown?.Invoke((Key)key);
                         if (action == InputAction.Press) {
@@ -71,37 +70,37 @@ namespace GAIL.Input
                         }
                     }
                 );
-                glfw.SetCursorPosCallback(globals.windowManager.Window,
+                API.Glfw.SetCursorPosCallback(globals.windowManager.Window,
                     (WindowHandle* window, double xpos, double ypos) => {
                         OnMouseMoved?.Invoke(new Vector2((float)xpos, (float)ypos));
                     }
                 );
-                glfw.SetScrollCallback(globals.windowManager.Window,
+                API.Glfw.SetScrollCallback(globals.windowManager.Window,
                     (WindowHandle* window, double xoffset, double yoffset) => {
                         OnScroll?.Invoke(new Vector2((float)xoffset, (float)yoffset));
                     }
                 );
-                glfw.SetWindowPosCallback(globals.windowManager.Window,
+                API.Glfw.SetWindowPosCallback(globals.windowManager.Window,
                     (WindowHandle* window, int xpos, int ypos) => {
                         OnWindowMove?.Invoke(xpos, ypos);
                     }
                 );
-                glfw.SetWindowSizeCallback(globals.windowManager.Window,
+                API.Glfw.SetWindowSizeCallback(globals.windowManager.Window,
                     (WindowHandle* window, int width, int height) => {
                         OnWindowResize?.Invoke(width, height, 0, 0);
                     }
                 );
-                glfw.SetWindowIconifyCallback(globals.windowManager.Window,
+                API.Glfw.SetWindowIconifyCallback(globals.windowManager.Window,
                     (WindowHandle* window, bool iconified) => {
                         OnWindowResize?.Invoke(0, 0, 0, (byte)(iconified ? 1 : 2));
                     }
                 );
-                glfw.SetWindowMaximizeCallback(globals.windowManager.Window,
+                API.Glfw.SetWindowMaximizeCallback(globals.windowManager.Window,
                     (WindowHandle* window, bool maximized) => {
                         OnWindowResize?.Invoke(0, 0, (byte)(maximized? 1 : 2), 0);
                     }
                 );
-                glfw.SetDropCallback(globals.windowManager.Window, 
+                API.Glfw.SetDropCallback(globals.windowManager.Window, 
                     (WindowHandle* window, int count, nint paths) => {
                         List<string> list = [];
                         for ( int i = 0; i < count; i++ ) {
@@ -115,11 +114,13 @@ namespace GAIL.Input
                 );
             }
         }
+
+        /// <summary> </summary>
         ~InputManager() {
             Dispose();
         }
+        /// <inheritdoc/>
         public void Dispose() {
-            glfw.Dispose();
             GC.SuppressFinalize(this);
         }
 
@@ -129,7 +130,7 @@ namespace GAIL.Input
         /// <param name="key">The key to convert</param>
         /// <returns>The name (printable character).</returns>
         public string ToName(Key key) {
-            return glfw.GetKeyName((int)key, ToScanCode(key));
+            return API.Glfw.GetKeyName((int)key, ToScanCode(key));
         }
         /// <summary>
         /// Converts a key to its platform-specific scan code.
@@ -137,7 +138,7 @@ namespace GAIL.Input
         /// <param name="key">The key to convert.</param>
         /// <returns>The platform-specific scan code.</returns>
         public int ToScanCode(Key key) {
-            return glfw.GetKeyScancode((int)key);
+            return API.Glfw.GetKeyScancode((int)key);
         }
         /// <summary>
         /// Returns whether the given key is pressed.
@@ -146,7 +147,7 @@ namespace GAIL.Input
         /// <returns>Whether the given key is pressed or not.</returns>
         public bool IsKeyPressed(Key key) {
             unsafe {
-                return glfw.GetKey(globals.windowManager.Window, (Keys)(int)key) == (int)InputAction.Press;
+                return API.Glfw.GetKey(globals.windowManager.Window, (Keys)(int)key) == (int)InputAction.Press;
             }
         }
         /// <summary>
@@ -156,7 +157,7 @@ namespace GAIL.Input
         /// <returns>Whether the given mouse button is pressed or not.</returns>
         public bool IsMouseButtonPressed(MouseButton button) {
             unsafe {
-                return glfw.GetMouseButton(globals.windowManager.Window, (int)button) == (int)InputAction.Press;
+                return API.Glfw.GetMouseButton(globals.windowManager.Window, (int)button) == (int)InputAction.Press;
             }
         }
         /// <summary>
@@ -165,7 +166,7 @@ namespace GAIL.Input
         /// <returns>The position of the mouse in pixels (relative to the top-left side of the window).</returns>
         public Vector2 GetMousePosition() {
             unsafe {
-                glfw.GetCursorPos(globals.windowManager.Window, out double x, out double y);
+                API.Glfw.GetCursorPos(globals.windowManager.Window, out double x, out double y);
                 Vector2 mousePos = new((float)x, (float)y);
                 return mousePos;
             }
@@ -177,11 +178,11 @@ namespace GAIL.Input
         public bool MouseLocked {
             get {
                 unsafe {
-                    return glfw.GetInputMode(globals.windowManager.Window, CursorStateAttribute.Cursor) == (int)CursorModeValue.CursorDisabled;
+                    return API.Glfw.GetInputMode(globals.windowManager.Window, CursorStateAttribute.Cursor) == (int)CursorModeValue.CursorDisabled;
                 }
             } set {
                 unsafe {
-                    glfw.SetInputMode(globals.windowManager.Window, CursorStateAttribute.Cursor, value ? CursorModeValue.CursorDisabled : CursorModeValue.CursorNormal);
+                    API.Glfw.SetInputMode(globals.windowManager.Window, CursorStateAttribute.Cursor, value ? CursorModeValue.CursorDisabled : CursorModeValue.CursorNormal);
                 }
             }
         }
@@ -194,9 +195,9 @@ namespace GAIL.Input
         /// <param name="minimized">If it is minimized.</param>
         public void SetWindowSize(int width, int height, bool maximized = false, bool minimized = false) {
             unsafe {
-                glfw.SetWindowSize(globals.windowManager.Window, width, height);
-                if (maximized) { glfw.MaximizeWindow(globals.windowManager.Window); }
-                if (minimized) { glfw.IconifyWindow(globals.windowManager.Window); }
+                API.Glfw.SetWindowSize(globals.windowManager.Window, width, height);
+                if (maximized) { API.Glfw.MaximizeWindow(globals.windowManager.Window); }
+                if (minimized) { API.Glfw.IconifyWindow(globals.windowManager.Window); }
             }
             
         }
@@ -207,7 +208,7 @@ namespace GAIL.Input
         /// <param name="y">The y (vertical) position (pixels).</param>
         public void SetWindowPosition(int x, int y) {
             unsafe {
-                glfw.SetWindowSize(globals.windowManager.Window, x, y);
+                API.Glfw.SetWindowSize(globals.windowManager.Window, x, y);
             }
         }
         /// <summary>
@@ -216,7 +217,7 @@ namespace GAIL.Input
         /// <param name="newTitle">The new title name.</param>
         public void SetWindowTitle(string newTitle) {
             unsafe {
-                glfw.SetWindowTitle(globals.windowManager.Window, newTitle);
+                API.Glfw.SetWindowTitle(globals.windowManager.Window, newTitle);
             }
         }
         /// <summary>
@@ -226,7 +227,7 @@ namespace GAIL.Input
         public void SetWindowIcon(List<Texture> newIcon) {
             unsafe {
                 fixed (Image* ptr = newIcon.Select(x => x.ToGLFWRGB()).ToArray()) {
-                    glfw.SetWindowIcon(globals.windowManager.Window, 1, ptr);
+                    API.Glfw.SetWindowIcon(globals.windowManager.Window, 1, ptr);
                 }
             }
         }

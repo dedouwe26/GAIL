@@ -11,35 +11,29 @@ namespace GAIL.Graphics
     /// This handles all the graphics of GAIL.
     /// </summary>
     public class GraphicsManager : IManager {
-
-        /// <summary>
-        /// The Vulkan API instance for custom usage.
-        /// </summary>
-        public readonly Vk vk;
         /// <summary>
         /// Vulkan Instance.
         /// </summary>
         public Instance instance;
         /// <summary>
-        /// The vulkan devices, for custom usage.
+        /// The vulkan devices utility, for custom usage.
         /// </summary>
         public Utils.Device? device;
         /// <summary>
-        /// The vulkan window surface, for custom usage.
+        /// The vulkan window surface utility, for custom usage.
         /// </summary>
         public Surface? surface;
+
+        /// <summary>
+        /// The vulkan swapchain utility, for custom usage.
+        /// </summary>
         public SwapChain? swapchain;
         /// <summary>
         /// Current MSAA size, use setMSAA to change it.
         /// </summary>
         public MSAA MSAAsize = MSAA.MSAAx1;
 
-        public static readonly string[] ValidationLayers = ["VK_LAYER_KHRONOS_validation"];
-
-        public GraphicsManager() {
-            vk = Vk.GetApi();
-        }
-
+        /// <summary></summary>
         ~GraphicsManager() {
             Dispose();
         }
@@ -47,13 +41,14 @@ namespace GAIL.Graphics
         /// <summary>
         /// Initializes the graphics manager.
         /// </summary>
+        /// <param name="globals">The globals of this application.</param>
         /// <param name="appInfo">The application info for vulkan.</param>
         /// <exception cref="APIBackendException"></exception>
         public void Init(Application.Globals globals, AppInfo appInfo) {
             CreateInstance(appInfo);
-            surface = new Surface(vk, instance, globals.windowManager);
-            device = new Utils.Device(vk, instance, ref surface);
-            swapchain = new SwapChain(vk, instance, surface, device, globals.windowManager);
+            surface = new Surface(instance, globals.windowManager);
+            device = new Utils.Device(instance, ref surface);
+            swapchain = new SwapChain(instance, surface, device, globals.windowManager);
 
         }
         private void CreateInstance(AppInfo appInfo) {
@@ -86,7 +81,7 @@ namespace GAIL.Graphics
                 };
 
                 // Creates instance.
-                if (vk.CreateInstance(createInfo, null, out instance) != Result.Success) {
+                if (API.Vk.CreateInstance(createInfo, null, out instance) != Result.Success) {
                     throw new APIBackendException("Vulkan", "Failed to create Vulkan Instance!");
                 };
 
@@ -96,14 +91,14 @@ namespace GAIL.Graphics
             }
         }
 
-
+        /// <inheritdoc/>
         public void Dispose() {
             unsafe {
                 swapchain!.Dispose();
                 device!.Dispose();
                 surface!.Dispose();
-                vk.DestroyInstance(instance, null);
-                vk.Dispose();
+                API.Vk.DestroyInstance(instance, null);
+                API.Vk.Dispose();
             }
             GC.SuppressFinalize(this);
         }
