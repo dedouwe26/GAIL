@@ -23,27 +23,18 @@ namespace GAIL.Input
     /// <param name="pos"></param>
     public delegate void MouseMovedCallback(Vector2 pos);
     /// <summary>
+    /// Callback for when a mouse button is released.
+    /// </summary>
+    /// <param name="button">The button that is released.</param>
+    public delegate void MouseButtonUpCallback(MouseButton button);
+    /// <summary>
+    /// Callback for when a mouse button is pressed.
+    /// </summary>
+    /// <param name="button">The button that is pressed.</param>
+    public delegate void MouseButtonDownCallback(MouseButton button);
+    /// <summary>
     /// Callback for when the mouse scrolled.
     /// </summary>
     /// <param name="offset">How much it scrolled.</param>
     public delegate void ScrollCallback(Vector2 offset);
-    /// <summary>
-    /// Callback for when the window resized.
-    /// </summary>
-    /// <param name="width">The new width.</param>
-    /// <param name="height">The new height.</param>
-    /// <param name="maximized">If it was maximized (0=nothing, 1=maximized, 2=restored).</param>
-    /// <param name="minimized">If it was minimized (0=nothing, 1=minimized, 2=restored).</param>
-    public delegate void WindowResizeCallback(int width, int height, byte maximized, byte minimized);
-    /// <summary>
-    /// Callback for when the window moved.
-    /// </summary>
-    /// <param name="x">The new x (horizontal) position.</param>
-    /// <param name="y">The new y (vertical) position.</param>
-    public delegate void WindowMoveCallback(int x, int y);
-    /// <summary>
-    /// Callback for when a file(s) has been dropped onto the window.
-    /// </summary>
-    /// <param name="paths">A list of all the paths to the files.</param>
-    public delegate void PathDropCallback(List<string> paths);
 }

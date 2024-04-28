@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using GAIL.Core;
 using OxDED.Terminal.Logging;
 using Silk.NET.GLFW;
@@ -12,6 +13,19 @@ namespace GAIL.Window
         /// The logger corresponding to the graphics part of the application.
         /// </summary>
         public readonly Logger Logger;
+
+        /// <summary>
+        /// Event for when the window resized.
+        /// </summary>
+        public event WindowResizeCallback? OnWindowResize;
+        /// <summary>
+        /// Event for when the window moved.
+        /// </summary>
+        public event WindowMoveCallback? OnWindowMove;
+        /// <summary>
+        /// Event for when a file(s) has been dropped onto the window.
+        /// </summary>
+        public event PathDropCallback? OnPathDrop;
 
         /// <summary>
         /// Creates a window manager.
@@ -34,11 +48,11 @@ namespace GAIL.Window
         /// <summary>
         /// Initializes the window manager.
         /// </summary>
-        /// <param name="windowName">The window name.</param>
+        /// <param name="title">The window name.</param>
         /// <param name="width">The width of the window (horizontal).</param>
         /// <param name="height">The height of the window (vertical).</param>
         /// <exception cref="APIBackendException"></exception>
-        public void Init(string windowName, int width, int height) {
+        public void Init(string title, int width, int height) {
 
             if (!API.Glfw.Init())
             {
@@ -50,11 +64,45 @@ namespace GAIL.Window
             API.Glfw.WindowHint(WindowHintClientApi.ClientApi, ClientApi.NoApi);
 
             unsafe {
-                Window = API.Glfw.CreateWindow(width, height, windowName, null, null);
+                Window = API.Glfw.CreateWindow(width, height, title, null, null);
             }
             if (Window.IsNull) {
                 Logger.LogFatal("GLFW: Window creation failed!");
                 throw new APIBackendException("GLFW", "window creation failed!");
+            }
+            unsafe {
+                API.Glfw.SetWindowPosCallback(Window,
+                    (WindowHandle* window, int xpos, int ypos) => {
+                        OnWindowMove?.Invoke(xpos, ypos);
+                    }
+                );
+                API.Glfw.SetWindowSizeCallback(Window,
+                    (WindowHandle* window, int width, int height) => {
+                        OnWindowResize?.Invoke(width, height, 0, 0);
+                    }
+                );
+                API.Glfw.SetWindowIconifyCallback(Window,
+                    (WindowHandle* window, bool iconified) => {
+                        OnWindowResize?.Invoke(0, 0, 0, (byte)(iconified ? 1 : 2));
+                    }
+                );
+                API.Glfw.SetWindowMaximizeCallback(Window,
+                    (WindowHandle* window, bool maximized) => {
+                        OnWindowResize?.Invoke(0, 0, (byte)(maximized? 1 : 2), 0);
+                    }
+                );
+                API.Glfw.SetDropCallback(Window, 
+                    (WindowHandle* window, int count, nint paths) => {
+                        List<string> list = [];
+                        for ( int i = 0; i < count; i++ ) {
+                            nint? strPtr = (nint?)Marshal.PtrToStructure(paths, typeof(nint));
+                            if (strPtr == null) { continue; }
+                            list.Add(Marshal.PtrToStringUTF8(strPtr.Value)!);
+                            paths = new IntPtr(paths.ToInt64()+IntPtr.Size);
+                        }
+                        OnPathDrop?.Invoke(list);
+                    }
+                );
             }
         }
 

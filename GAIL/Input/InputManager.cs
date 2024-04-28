@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using GAIL.Core;
 using OxDED.Terminal.Logging;
 using Silk.NET.GLFW;
+using Silk.NET.SDL;
 
 namespace GAIL.Input
 {
@@ -28,21 +29,17 @@ namespace GAIL.Input
         /// </summary>
         public event MouseMovedCallback? OnMouseMoved;
         /// <summary>
+        /// Event for when a mouse button is pressed.
+        /// </summary>
+        public event MouseButtonDownCallback? OnMouseButtonDown;
+        /// <summary>
+        /// Event for when a mouse button is released.
+        /// </summary>
+        public event MouseButtonUpCallback? OnMouseButtonUp;
+        /// <summary>
         /// Event for when the window resized.
         /// </summary>
         public event ScrollCallback? OnScroll;
-        /// <summary>
-        /// Event for when the window resized.
-        /// </summary>
-        public event WindowResizeCallback? OnWindowResize;
-        /// <summary>
-        /// Event for when the window moved.
-        /// </summary>
-        public event WindowMoveCallback? OnWindowMove;
-        /// <summary>
-        /// Event for when a file(s) has been dropped onto the window.
-        /// </summary>
-        public event PathDropCallback? OnPathDrop;
 
         private Application.Globals globals;
 
@@ -69,13 +66,21 @@ namespace GAIL.Input
             unsafe {
                 API.Glfw.SetKeyCallback(globals.windowManager.Window, 
                     (WindowHandle* window, Keys key, int scanCode, InputAction action, KeyModifiers mods) => {
-                        // OnKeyDown?.Invoke((Key)key);
                         if (action == InputAction.Press) {
                             OnKeyDown?.Invoke((Key)key);
                         } else if (action == InputAction.Release) {
                             OnKeyUp?.Invoke((Key)key);
                         } else if (action == InputAction.Repeat) {
                             OnKeyRepeat?.Invoke((Key)key);
+                        }
+                    }
+                );
+                API.Glfw.SetMouseButtonCallback(globals.windowManager.Window,
+                    (WindowHandle* window, Silk.NET.GLFW.MouseButton button, InputAction action, KeyModifiers mods) => {
+                        if (action == InputAction.Press) {
+                            OnMouseButtonDown?.Invoke((MouseButton)button);
+                        } else if (action == InputAction.Release) {
+                            OnMouseButtonUp?.Invoke((MouseButton)button);
                         }
                     }
                 );
@@ -89,38 +94,7 @@ namespace GAIL.Input
                         OnScroll?.Invoke(new Vector2((float)xoffset, (float)yoffset));
                     }
                 );
-                API.Glfw.SetWindowPosCallback(globals.windowManager.Window,
-                    (WindowHandle* window, int xpos, int ypos) => {
-                        OnWindowMove?.Invoke(xpos, ypos);
-                    }
-                );
-                API.Glfw.SetWindowSizeCallback(globals.windowManager.Window,
-                    (WindowHandle* window, int width, int height) => {
-                        OnWindowResize?.Invoke(width, height, 0, 0);
-                    }
-                );
-                API.Glfw.SetWindowIconifyCallback(globals.windowManager.Window,
-                    (WindowHandle* window, bool iconified) => {
-                        OnWindowResize?.Invoke(0, 0, 0, (byte)(iconified ? 1 : 2));
-                    }
-                );
-                API.Glfw.SetWindowMaximizeCallback(globals.windowManager.Window,
-                    (WindowHandle* window, bool maximized) => {
-                        OnWindowResize?.Invoke(0, 0, (byte)(maximized? 1 : 2), 0);
-                    }
-                );
-                API.Glfw.SetDropCallback(globals.windowManager.Window, 
-                    (WindowHandle* window, int count, nint paths) => {
-                        List<string> list = [];
-                        for ( int i = 0; i < count; i++ ) {
-                            nint? strPtr = (nint?)Marshal.PtrToStructure(paths, typeof(nint));
-                            if (strPtr == null) { continue; }
-                            list.Add(Marshal.PtrToStringUTF8(strPtr.Value)!);
-                            paths = new IntPtr(paths.ToInt64()+IntPtr.Size);
-                        }
-                        OnPathDrop?.Invoke(list);
-                    }
-                );
+                
             }
         }
 
@@ -158,7 +132,8 @@ namespace GAIL.Input
         /// <returns>Whether the given key is pressed or not.</returns>
         public bool IsKeyPressed(Key key) {
             unsafe {
-                return API.Glfw.GetKey(globals.windowManager.Window, (Keys)(int)key) == (int)InputAction.Press;
+                int state = API.Glfw.GetKey(globals.windowManager.Window, (Keys)(int)key);
+                return state == (int)InputAction.Press || state == (int)InputAction.Release;
             }
         }
         /// <summary>
