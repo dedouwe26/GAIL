@@ -8,7 +8,7 @@ using Silk.NET.Vulkan;
 namespace GAIL.Graphics
 {
     /// <summary>
-    /// This handles all the graphics of GAIL.
+    /// Handles all the graphics of GAIL.
     /// </summary>
     public class GraphicsManager : IManager {
         /// <summary>
