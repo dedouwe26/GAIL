@@ -1,5 +1,6 @@
 using System.Numerics;
 using GAIL.Core;
+using OxDED.Terminal.Logging;
 using Silk.NET.OpenAL;
 
 namespace GAIL.Audio
@@ -27,18 +28,34 @@ namespace GAIL.Audio
         public Pointer<Device> device = Pointer<Device>.FromNull();
 
         /// <summary>
+        /// The logger corresponding to the graphics part of the application.
+        /// </summary>
+        public readonly Logger Logger;
+
+        /// <summary>
+        /// Creates an audio manager. Use <see cref="Init"/> to initialize the manager.
+        /// </summary>
+        /// <param name="logger">The logger to use.</param>
+        public AudioManager(Logger logger) {
+            Logger = logger;
+        }
+
+        /// <summary>
         /// Initializes the audio manager.
         /// </summary>
-        /// <param name="audioDevice">The custom selected audio device name. Get the name from <see cref="GetAudioDevices"/></param>
+        /// <param name="audioDevice">The custom selected audio device name. Get the name from <see cref="GetAudioDevices"/> (default: default device).</param>
         /// <exception cref="APIBackendException"></exception>
         public void Init(string audioDevice = "") {
+
             unsafe {
                 device = API.Alc.OpenDevice(audioDevice);
                 if (device.IsNull) {
-                    throw new APIBackendException("OpenAL", string.Format("Failed to open device ({0})", audioDevice));
+                    Logger.LogFatal($"OpenAL: Failed to open device ({audioDevice}).");
+                    throw new APIBackendException("OpenAL", $"Failed to open device ({audioDevice}).");
                 }
                 context = API.Alc.CreateContext(device, null);
                 if (context.IsNull) {
+                    Logger.LogFatal($"OpenAL: Failed to create OpenAL context.");
                     throw new APIBackendException("OpenAL", "Failed to create OpenAL context.");
                 }
             }
@@ -51,12 +68,15 @@ namespace GAIL.Audio
         /// <inheritdoc/>
         /// <exception cref="APIBackendException"></exception>
         public void Dispose() {
+            Logger.LogDebug("Terminating OpenAL.");
             unsafe {
                 if (!API.Alc.MakeContextCurrent(null)) {
+                    Logger.LogError("OpenAL: Failed to deassign current context.");
                     throw new APIBackendException("OpenAL", "Failed to deassign current context.");
                 }
                 API.Alc.DestroyContext(context);
                 if (!API.Alc.CloseDevice(device)) {
+                    Logger.LogError("OpenAL: Failed to close device.");
                     throw new APIBackendException("OpenAL", "Failed to close device.");
                 }
             }
@@ -73,6 +93,7 @@ namespace GAIL.Audio
             sound.Update();
             unsafe {
                 if (!API.Alc.MakeContextCurrent(context)) {
+                    Logger.LogError("OpenAL: Failed to make context current.");
                     throw new APIBackendException("OpenAL", "Failed to make context current.");
                 }
             }
@@ -98,6 +119,7 @@ namespace GAIL.Audio
             sound.Update();
             unsafe {
                 if (!API.Alc.MakeContextCurrent(context)) {
+                    Logger.LogError("OpenAL: Failed to make context current.");
                     throw new APIBackendException("OpenAL", "Failed to make context current.");
                 }
             }
@@ -121,6 +143,7 @@ namespace GAIL.Audio
         public void StopSound(Sound sound) {
             unsafe {
                 if (!API.Alc.MakeContextCurrent(context)) {
+                    Logger.LogError("OpenAL: Failed to make context current.");
                     throw new APIBackendException("OpenAL", "Failed to make context current.");
                 }
             }
@@ -134,6 +157,7 @@ namespace GAIL.Audio
         public void PauseSound(Sound sound) {
             unsafe {
                 if (!API.Alc.MakeContextCurrent(context)) {
+                    Logger.LogError("OpenAL: Failed to make context current.");
                     throw new APIBackendException("OpenAL", "Failed to make context current.");
                 }
             }
@@ -151,6 +175,7 @@ namespace GAIL.Audio
         public void SetSound3D(Sound sound, Vector3 position, Vector3 velocity, Vector3 direction) {
             unsafe {
                 if (!API.Alc.MakeContextCurrent(context)) {
+                    Logger.LogError("OpenAL: Failed to make context current.");
                     throw new APIBackendException("OpenAL", "Failed to make context current.");
                 }
             }
@@ -167,6 +192,7 @@ namespace GAIL.Audio
         public (bool isPlaying, bool isPaused) GetSoundState(Sound sound) {
             unsafe {
                 if (!API.Alc.MakeContextCurrent(context)) {
+                    Logger.LogError("OpenAL: Failed to make context current.");
                     throw new APIBackendException("OpenAL", "Failed to make context current.");
                 }
             }
@@ -183,6 +209,7 @@ namespace GAIL.Audio
         public void Goto(Sound sound, int sample) {
             unsafe {
                 if (!API.Alc.MakeContextCurrent(context)) {
+                    Logger.LogError("OpenAL: Failed to make context current.");
                     throw new APIBackendException("OpenAL", "Failed to make context current.");
                 }
             }

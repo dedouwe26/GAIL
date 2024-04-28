@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using GAIL.Core;
+using OxDED.Terminal.Logging;
 using Silk.NET.GLFW;
 
 namespace GAIL.Input
@@ -46,10 +47,17 @@ namespace GAIL.Input
         private Application.Globals globals;
 
         /// <summary>
+        /// The logger corresponding to the graphics part of the application.
+        /// </summary>
+        public readonly Logger Logger;
+
+        /// <summary>
         /// Creates an input manager.
         /// </summary>
         /// <param name="globals">The globals for this application.</param>
-        public InputManager(Application.Globals globals) {
+        /// <param name="logger">The logger to use.</param>
+        public InputManager(Application.Globals globals, Logger logger) {
+            Logger = logger;
             this.globals = globals;
         }
 
@@ -57,6 +65,7 @@ namespace GAIL.Input
         /// Initializes the input manager.
         /// </summary>
         public void Init() {
+            Logger.LogDebug("Setting all GLFW callbacks.");
             unsafe {
                 API.Glfw.SetKeyCallback(globals.windowManager.Window, 
                     (WindowHandle* window, Keys key, int scanCode, InputAction action, KeyModifiers mods) => {
@@ -115,7 +124,9 @@ namespace GAIL.Input
             }
         }
 
-        /// <summary> </summary>
+        /// <summary>
+        /// Disposes this input manager.
+        /// </summary>
         ~InputManager() {
             Dispose();
         }
@@ -183,51 +194,6 @@ namespace GAIL.Input
             } set {
                 unsafe {
                     API.Glfw.SetInputMode(globals.windowManager.Window, CursorStateAttribute.Cursor, value ? CursorModeValue.CursorDisabled : CursorModeValue.CursorNormal);
-                }
-            }
-        }
-        /// <summary>
-        /// Sets the size of the window, optionally maximized and/or minimized.
-        /// </summary>
-        /// <param name="width">The new width of the window (pixels).</param>
-        /// <param name="height">The new height of the window (pixels).</param>
-        /// <param name="maximized">If it is maximized.</param>
-        /// <param name="minimized">If it is minimized.</param>
-        public void SetWindowSize(int width, int height, bool maximized = false, bool minimized = false) {
-            unsafe {
-                API.Glfw.SetWindowSize(globals.windowManager.Window, width, height);
-                if (maximized) { API.Glfw.MaximizeWindow(globals.windowManager.Window); }
-                if (minimized) { API.Glfw.IconifyWindow(globals.windowManager.Window); }
-            }
-            
-        }
-        /// <summary>
-        /// Sets the window position to the given coordinates.
-        /// </summary>
-        /// <param name="x">The x (horizontal) position (pixels).</param>
-        /// <param name="y">The y (vertical) position (pixels).</param>
-        public void SetWindowPosition(int x, int y) {
-            unsafe {
-                API.Glfw.SetWindowSize(globals.windowManager.Window, x, y);
-            }
-        }
-        /// <summary>
-        /// Sets the window title to the given string.
-        /// </summary>
-        /// <param name="newTitle">The new title name.</param>
-        public void SetWindowTitle(string newTitle) {
-            unsafe {
-                API.Glfw.SetWindowTitle(globals.windowManager.Window, newTitle);
-            }
-        }
-        /// <summary>
-        /// Sets the window icon to the given image ().
-        /// </summary>
-        /// <param name="newIcon"></param>
-        public void SetWindowIcon(List<Texture> newIcon) {
-            unsafe {
-                fixed (Image* ptr = newIcon.Select(x => x.ToGLFWRGB()).ToArray()) {
-                    API.Glfw.SetWindowIcon(globals.windowManager.Window, 1, ptr);
                 }
             }
         }

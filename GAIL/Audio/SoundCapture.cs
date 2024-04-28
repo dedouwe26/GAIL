@@ -1,4 +1,5 @@
 using GAIL.Core;
+using OxDED.Terminal.Logging;
 using Silk.NET.OpenAL;
 using Silk.NET.OpenAL.Extensions.EXT;
 
@@ -49,7 +50,7 @@ namespace GAIL.Audio
         /// </summary>
         /// <param name="format">The format in which to capture the sound.</param>
         /// <param name="sampleRate">The sample rate in which to capture the sound.</param>
-        /// <param name="deviceName">Which capture device to use. (Get name at <see cref="GetCaptureDevices"/> <b>OR pass an empty string for the default</b>)</param>
+        /// <param name="deviceName">Which capture device to use (get name at <see cref="GetCaptureDevices"/> <b>OR pass an empty string for the default</b>).</param>
         /// <exception cref="APIBackendException">OpenAL: Unable to get the Capture extension.</exception>
         public SoundCapture(SoundFormat format, uint sampleRate, string deviceName) {
             unsafe {
@@ -75,7 +76,7 @@ namespace GAIL.Audio
         /// Closes all the OpenAL devices
         /// </summary>
         /// <inheritdoc/>
-        /// <exception cref="APIBackendException">OpenAL: Unable to get the Capture extension.</exception>
+        /// <exception cref="APIBackendException"></exception>
         public void Dispose() {
             buffer = [];
             unsafe {
@@ -94,13 +95,12 @@ namespace GAIL.Audio
 
                 API.Alc.DestroyContext(context);
             }
-
             GC.SuppressFinalize(this);
         }
         /// <summary>
         /// Starts capturing the audio.
         /// </summary>
-        /// <exception cref="APIBackendException">OpenAL: Unable to get the Capture extension.</exception>
+        /// <exception cref="APIBackendException"/>
         public void Start() {
             unsafe {
                 if (!API.Alc.MakeContextCurrent(context)) {

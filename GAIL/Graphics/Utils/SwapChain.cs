@@ -1,5 +1,6 @@
 using GAIL.Core;
 using GAIL.Window;
+using OxDED.Terminal.Logging;
 using Silk.NET.Vulkan;
 using Silk.NET.Vulkan.Extensions.KHR;
 
@@ -20,8 +21,10 @@ namespace GAIL.Graphics.Utils
         private readonly Surface surface;
         private readonly WindowManager window;
         private readonly Device device;
+        private readonly Logger Logger;
 
-        public SwapChain(Instance instance, Surface surface, Device device, WindowManager windowManager) {
+        public SwapChain(Instance instance, Logger logger, Surface surface, Device device, WindowManager windowManager) {
+            Logger = logger;
             this.surface = surface;
             this.device = device;
             window = windowManager;
@@ -35,6 +38,7 @@ namespace GAIL.Graphics.Utils
         }
 
         public ImageView[] CreateImageViews() {
+            Logger.LogDebug("Creating Vulkan image views.");
             imageViews = new ImageView[images.Length];
 
             for (int i = 0; i < imageViews.Length; i++) {
@@ -58,8 +62,10 @@ namespace GAIL.Graphics.Utils
                     }
                 };
                 unsafe {
-                    if (API.Vk.CreateImageView(device.logicalDevice, createInfo, null, out imageViews[i]) != Result.Success) {
-                        throw new APIBackendException("Vulkan", "Failed to create image view.");
+                    Result r;
+                    if ((r = API.Vk.CreateImageView(device.logicalDevice, createInfo, null, out imageViews[i])) != Result.Success) {
+                        Logger.LogDebug("Vulkan: Failed to create image view: "+r.ToString());
+                        throw new APIBackendException("Vulkan", "Failed to create image view: "+r.ToString());
                     }
                 }
             }
@@ -112,14 +118,18 @@ namespace GAIL.Graphics.Utils
 
             }
             if (!API.Vk.TryGetDeviceExtension(instance, device.logicalDevice, out KhrSwapchain swapchainExtension)) {
+                Logger.LogFatal("Vulkan: Failed to get Swapchain extension!");
                 throw new APIBackendException("Vulkan", "Failed to get VK_KHR_swapchain extension.");
             }
+            Image[] images;
             unsafe {
-                if (swapchainExtension.CreateSwapchain(device.logicalDevice, createInfo, null, out SwapchainKHR swapchain) != Result.Success) {
-                    throw new APIBackendException("Vulkan", "Failed to create swapchain.");
+                Result r;
+                if ((r=swapchainExtension.CreateSwapchain(device.logicalDevice, createInfo, null, out SwapchainKHR swapchain)) != Result.Success) {
+                    Logger.LogFatal("Vulkan: Failed to create swapchain: "+r.ToString());
+                    throw new APIBackendException("Vulkan", "Failed to create swapchain: "+r.ToString());
                 }
                 swapchainExtension.GetSwapchainImages(device.logicalDevice, swapchain, ref imageCount, null);
-                Image[] images = new Image[imageCount];
+                images = new Image[imageCount];
                 fixed (Image* swapChainImagesPtr = images)
                 {
                     swapchainExtension.GetSwapchainImages(device.logicalDevice, swapchain, ref imageCount, swapChainImagesPtr);
@@ -192,6 +202,7 @@ namespace GAIL.Graphics.Utils
             
         }
     
+        /// <inheritdoc/>
         public void Dispose() {
             foreach (ImageView imageView in imageViews) {
                 unsafe {

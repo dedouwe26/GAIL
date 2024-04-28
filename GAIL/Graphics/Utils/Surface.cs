@@ -1,5 +1,6 @@
 using GAIL.Core;
 using GAIL.Window;
+using OxDED.Terminal.Logging;
 using Silk.NET.Core.Native;
 using Silk.NET.GLFW;
 using Silk.NET.Vulkan;
@@ -12,15 +13,18 @@ namespace GAIL.Graphics.Utils
         public KhrSurface surfaceExtension;
         public SurfaceKHR surface;
         private readonly Instance instance;
-        public Surface(Instance instance, WindowManager window) {
+        public Surface(Instance instance, Logger logger, WindowManager window) {
+            logger.LogDebug("Creating Surface.");
             this.instance = instance;
             if (!API.Vk.TryGetInstanceExtension(instance, out surfaceExtension)) {
+                logger.LogFatal("Vulkan: Failed to get Surface extension!");
                 throw new APIBackendException("Vulkan", "Failed to get VK_KHR_surface extension.");
             }
             unsafe {
                 VkNonDispatchableHandle* surfacePtr = stackalloc VkNonDispatchableHandle[1];
                 int errorCode;
                 if ((errorCode = API.Glfw.CreateWindowSurface(instance.ToHandle(), window.Window, null, surfacePtr))!=0) {
+                    logger.LogFatal("Vulkan: Failed to create surface: "+errorCode);
                     throw new APIBackendException("GLFW", "Failed to create surface: "+errorCode);
                 }
                 Glfw.ThrowExceptions();

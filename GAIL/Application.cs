@@ -1,16 +1,16 @@
-﻿using GAIL.Audio;
+using GAIL.Audio;
 using GAIL.Graphics;
 using GAIL.Input;
 using GAIL.Window;
-using Silk.NET.OpenGL;
+using OxDED.Terminal;
+using OxDED.Terminal.Logging;
 
 namespace GAIL
 {
     /// <summary>
     /// The metadata of the application.
     /// </summary>
-    public struct AppInfo
-    {
+    public struct AppInfo {
         /// <summary>
         /// App name (UTF-8)
         /// </summary>
@@ -29,59 +29,90 @@ namespace GAIL
         ///
         public uint[] EngineVersion = [1, 0, 0];
 
+        /// <summary></summary>
         public AppInfo() { }
     }
-
-
 
     /// <summary>
     /// The central part of GAIL. Includes all the Managers.
     /// </summary>
-    public class Application : IDisposable
-    {
+    public class Application : IDisposable {
 
         /// <summary>
         /// Stores all the managers for other managers.
         /// </summary>
-        public struct Globals
-        {
+        public struct Globals {
+            /// <summary>
+            /// The graphics manager of this application.
+            /// </summary>
             public GraphicsManager graphicsManager;
+            /// <summary>
+            /// The audio manager of this application.
+            /// </summary>
             public AudioManager audioManager;
+            /// <summary>
+            /// The input manager of this application.
+            /// </summary>
             public InputManager inputManager;
+            /// <summary>
+            /// The window manager of this application.
+            /// </summary>
             public WindowManager windowManager;
+            /// <summary>
+            /// The main logger for this application.
+            /// </summary>
+            public Logger logger;
         }
 
         /// <summary>
-        /// Creates an 3D / 2D application.
+        /// Creates a GAIL application.
         /// </summary>
-        /// <param name="windowName">The name of the window.</param>
+        /// <param name="windowName">The name of the window (also used for the <paramref name="loggerID"/>).</param>
         /// <param name="width">The width of the window (in pixels).</param>
         /// <param name="height">The height of the window (in pixels).</param>
+        /// <param name="loggerID">The ID for the logger (default: GAIL.App.{windowName replace ' ' with '_'}).</param>
         /// <param name="appInfo">The app info used for vulkan (null for default).</param>
-        /// <param name="audioDevice">The custom audio device if necessary</param>
-        public Application(string windowName = "GAIL Window", int width = 1000, int height = 600, AppInfo? appInfo = null, string audioDevice = "") {
-            globals = new() { windowManager = new WindowManager() };
+        /// <param name="audioDevice">The custom audio device if necessary (default: empty).</param>
+        /// <param name="logLevel">The log level of all the loggers in this application (default: Info).</param>
+        /// <param name="logTargets">All the log targets for all the loggers in this application (default: TerminalTarget).</param>
+        public Application(string windowName = "GAIL Window", int width = 1000, int height = 600, AppInfo? appInfo = null, string audioDevice = "", string? loggerID = null, Severity logLevel = Severity.Info, Dictionary<Type, ITarget>? logTargets = null) {  
+            globals = new() {
+                logger = new Logger(loggerID??"GAIL.App."+windowName.Replace(' ', '_'), "GAIL", logLevel, logTargets??new(){[typeof(TerminalTarget)] = new TerminalTarget()})
+            };
+            if (globals.logger.HasTarget<TerminalTarget>()) {
+                globals.logger.GetTarget<TerminalTarget>().Format = "<{0}>: ("+Color.DarkBlue.ToForegroundANSI()+"{2}"+ANSI.Styles.ResetAll+")[{5}"+ANSI.Styles.Bold+"{3}"+ANSI.Styles.ResetAll+"] : {5}{4}"+ANSI.Styles.ResetAll;
+                globals.logger.GetTarget<TerminalTarget>().NameFormat =  "{0} - {1}";
+            }
+            if (globals.logger.HasTarget<FileTarget>()) {
+                globals.logger.GetTarget<FileTarget>().Format = "<{0}>: ({2})[{3}] : {4}";
+                globals.logger.GetTarget<FileTarget>().NameFormat =  "{0} - {1}";
+            }
+
+            globals.logger.LogDebug("Initialising all managers.");
+
+            globals.windowManager = new WindowManager(globals.logger.CreateSubLogger("Window", "Window", logLevel));
             globals.windowManager.Init(windowName, width, height);
-            globals.inputManager = new InputManager(globals);
+
+            globals.inputManager = new InputManager(globals, globals.logger.CreateSubLogger("Input", "Input", logLevel));
             globals.inputManager.Init();
-            globals.graphicsManager = new GraphicsManager();
+
+            globals.graphicsManager = new GraphicsManager(globals.logger.CreateSubLogger("Graphics", "Graphics", logLevel));
             globals.graphicsManager.Init(globals, appInfo == null? new AppInfo() : appInfo.Value);
-            globals.audioManager = new AudioManager();
+
+            globals.audioManager = new AudioManager(globals.logger.CreateSubLogger("Audio", "Audio", logLevel));
             globals.audioManager.Init(audioDevice);
         }
-        
+
         /// <summary>
         /// Starts the application, use after subscribing on events.
         /// </summary>
         public void Start() {
-            // globals.inputManager.Init();
-
+            Logger.LogInfo("Starting...");
             OnLoad?.Invoke(this);
 
             double CurrentTime = 0;
             double lastTime = CurrentTime;
-            unsafe
-            {
+            unsafe {
                 while (!globals.windowManager.ShouldClose) {
                     globals.windowManager.Update();
                     CurrentTime = WindowManager.Time;
@@ -92,8 +123,8 @@ namespace GAIL
 
             Stop();
         }
-        ~Application()
-        {
+        /// <summary></summary>
+        ~Application() {
             Stop();
         }
         /// <summary>
@@ -116,6 +147,10 @@ namespace GAIL
         /// The manager for the window.
         /// </summary>
         public WindowManager WindowManager {get {return globals.windowManager;}}
+        /// <summary>
+        /// The logger of this application.
+        /// </summary>
+        public Logger Logger {get {return globals.logger;}}
 
         /// <summary>
         /// The update event, with delta time (in seconds): CurrentTime - PreviousFrameTime (calls every frame).
@@ -133,8 +168,8 @@ namespace GAIL
         /// <summary>
         /// Stops the application (some things might break if used certain functions after).
         /// </summary>
-        public void Stop()
-        {
+        public void Stop() {
+            Logger.LogInfo("Stopping...");
             OnStop?.Invoke(this);
             globals.audioManager.Dispose();
             globals.graphicsManager.Dispose();
@@ -143,6 +178,8 @@ namespace GAIL
             globals.windowManager.Dispose();
         }
 
+        /// <inheritdoc/>
+        /// <remarks>Stops the program (<see cref="Stop"/>).</remarks>
         public void Dispose() {
             Stop();
             GC.SuppressFinalize(this);

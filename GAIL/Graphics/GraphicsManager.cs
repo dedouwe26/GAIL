@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using GAIL.Core;
 using GAIL.Graphics.Utils;
-using Silk.NET.Core.Native;
+using OxDED.Terminal.Logging;
 using Silk.NET.GLFW;
 using Silk.NET.Vulkan;
 
@@ -33,7 +33,22 @@ namespace GAIL.Graphics
         /// </summary>
         public MSAA MSAAsize = MSAA.MSAAx1;
 
-        /// <summary></summary>
+        /// <summary>
+        /// The logger corresponding to the graphics part of the application.
+        /// </summary>
+        public readonly Logger Logger;
+
+        /// <summary>
+        /// Creates a graphics manager. Use <see cref="Init"/> to initialize the manager.
+        /// </summary>
+        /// <param name="logger">The logger to use.</param>
+        public GraphicsManager(Logger logger) {
+            Logger = logger;
+        }
+
+        /// <summary>
+        /// Disposes this graphics manager.
+        /// </summary>
         ~GraphicsManager() {
             Dispose();
         }
@@ -46,12 +61,13 @@ namespace GAIL.Graphics
         /// <exception cref="APIBackendException"></exception>
         public void Init(Application.Globals globals, AppInfo appInfo) {
             CreateInstance(appInfo);
-            surface = new Surface(instance, globals.windowManager);
-            device = new Utils.Device(instance, ref surface);
-            swapchain = new SwapChain(instance, surface, device, globals.windowManager);
+            surface = new Surface(instance, Logger, globals.windowManager);
+            device = new Utils.Device(instance, Logger, ref surface);
+            swapchain = new SwapChain(instance, Logger, surface, device, globals.windowManager);
 
         }
         private void CreateInstance(AppInfo appInfo) {
+            Logger.LogDebug("Creating Vulkan Instance.");
             unsafe {
                 // Creates application info from AppInfo.
                 ApplicationInfo vkInfo = new() {
@@ -81,8 +97,10 @@ namespace GAIL.Graphics
                 };
 
                 // Creates instance.
-                if (API.Vk.CreateInstance(createInfo, null, out instance) != Result.Success) {
-                    throw new APIBackendException("Vulkan", "Failed to create Vulkan Instance!");
+                Result r;
+                if ((r=API.Vk.CreateInstance(createInfo, null, out instance)) != Result.Success) {
+                    Logger.LogFatal("Vulkan: Failed to create Vulkan Instance: "+r.ToString());
+                    throw new APIBackendException("Vulkan", "Failed to create Vulkan Instance: "+r.ToString());
                 };
 
                 // Clears unmanaged resources.
@@ -93,6 +111,7 @@ namespace GAIL.Graphics
 
         /// <inheritdoc/>
         public void Dispose() {
+            Logger.LogDebug("Disposing Vulkan.");
             unsafe {
                 swapchain!.Dispose();
                 device!.Dispose();

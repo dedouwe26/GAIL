@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using GAIL.Core;
+using OxDED.Terminal.Logging;
 using Silk.NET.Core;
 using Silk.NET.Core.Native;
 using Silk.NET.Vulkan;
@@ -26,10 +27,13 @@ namespace GAIL.Graphics.Utils
         public Queue graphicsQueue;
         public Queue presentQueue;
         private readonly Surface surface;
+        private readonly Logger Logger;
 
-        public Device(Instance instance, ref Surface surface) {
+        public Device(Instance instance, Logger logger, ref Surface surface) {
+            Logger = logger;
             this.surface = surface;
 
+            Logger.LogDebug("Searching for Vulkan physical device.");
             foreach (PhysicalDevice device in GetPhysicalDevices(instance)) {
                 if (IsDeviceSuitable(device)) {
                     physicalDevice = device;
@@ -38,6 +42,7 @@ namespace GAIL.Graphics.Utils
             CreateLogicalDevice();
         }
         public void CreateLogicalDevice() {
+            Logger.LogDebug("Creating Vulkan logical device");
             QueueFamilyIndices indices = FindQueueFamilies(physicalDevice);
 
             uint[] uniqueQueueFamilies = [ indices.GraphicsFamily!.Value, indices.PresentFamily!.Value];
@@ -68,8 +73,10 @@ namespace GAIL.Graphics.Utils
                     PpEnabledExtensionNames = (byte**)SilkMarshal.StringArrayToPtr(deviceExtensions),
                     EnabledLayerCount = 0
                 };
-                if (API.Vk.CreateDevice(physicalDevice, in createInfo, null, out logicalDevice)!=Result.Success) {
-                    throw new APIBackendException("Vulkan", "Failed to create logical device.");
+                Result r;
+                if ((r = API.Vk.CreateDevice(physicalDevice, in createInfo, null, out logicalDevice))!=Result.Success) {
+                    Logger.LogFatal("Vulkan: Failed to create logical device: "+r.ToString());
+                    throw new APIBackendException("Vulkan", "Failed to create logical device: "+r.ToString());
                 }
                 API.Vk.GetDeviceQueue(logicalDevice, indices.GraphicsFamily!.Value, 0, out graphicsQueue);
                 API.Vk.GetDeviceQueue(logicalDevice, indices.PresentFamily!.Value, 0, out presentQueue);
@@ -78,7 +85,6 @@ namespace GAIL.Graphics.Utils
             }
         }
 
-        /// <param name="vk">Vulkan API instance.</param>
         /// <param name="instance">Vulkan instance.</param>
         /// <exception cref="APIBackendException"></exception>
         public PhysicalDevice[] GetPhysicalDevices(Instance instance) {
@@ -87,6 +93,7 @@ namespace GAIL.Graphics.Utils
                 API.Vk.EnumeratePhysicalDevices(instance, ref deviceCount, null);
             }
             if (deviceCount == 0) {
+                Logger.LogFatal("Vulkan: Failed to find GPU with Vulkan support!");
                 throw new APIBackendException("Vulkan", "Failed to find GPU with Vulkan support.");
             }
             PhysicalDevice[] devices = new PhysicalDevice[deviceCount];
@@ -97,7 +104,6 @@ namespace GAIL.Graphics.Utils
             }
             return devices;
         }
-        /// <param name="vk">Vulkan API instance.</param>
         /// <param name="device">What device.</param>
         public bool IsDeviceSuitable(PhysicalDevice device) {
 
@@ -123,37 +129,27 @@ namespace GAIL.Graphics.Utils
                 uint formatCount = 0;
                 surface.surfaceExtension.GetPhysicalDeviceSurfaceFormats(device, surface.surface, ref formatCount, null);
 
-                if (formatCount != 0)
-                {
+                if (formatCount != 0) {
                     details.Formats = new SurfaceFormatKHR[formatCount];
-                    fixed (SurfaceFormatKHR* formatsPtr = details.Formats)
-                    {
+                    fixed (SurfaceFormatKHR* formatsPtr = details.Formats) {
                         surface.surfaceExtension.GetPhysicalDeviceSurfaceFormats(device, surface.surface, ref formatCount, formatsPtr);
                     }
                 }
-                else
-                {
-                    details.Formats = Array.Empty<SurfaceFormatKHR>();
+                else {
+                    details.Formats = [];
                 }
-
                 uint presentModeCount = 0;
                 surface.surfaceExtension.GetPhysicalDeviceSurfacePresentModes(device, surface.surface, ref presentModeCount, null);
-
-                if (presentModeCount != 0)
-                {
+                if (presentModeCount != 0) {
                     details.PresentModes = new PresentModeKHR[presentModeCount];
-                    fixed (PresentModeKHR* formatsPtr = details.PresentModes)
-                    {
+                    fixed (PresentModeKHR* formatsPtr = details.PresentModes) {
                         surface.surfaceExtension.GetPhysicalDeviceSurfacePresentModes(device, surface.surface, ref presentModeCount, formatsPtr);
                     }
-
                 }
-                else
-                {
-                    details.PresentModes = Array.Empty<PresentModeKHR>();
+                else {
+                    details.PresentModes = [];
                 }
             }
-            
 
             return details;
         }
@@ -199,9 +195,10 @@ namespace GAIL.Graphics.Utils
                     if (queueFamilies[i].QueueFlags.HasFlag(QueueFlags.GraphicsBit)) {
                         indices.GraphicsFamily = i;
                     }
-                    
-                    if (surface.surfaceExtension.GetPhysicalDeviceSurfaceSupport(device, i, surface.surface, out Bool32 presentSupport) != Result.Success) {
-                        throw new APIBackendException("Vulkan", "Unable to get surface support.");
+                    Result r;
+                    if ((r=surface.surfaceExtension.GetPhysicalDeviceSurfaceSupport(device, i, surface.surface, out Bool32 presentSupport)) != Result.Success) {
+                        Logger.LogFatal("Vulkan: Unable to get surface support: "+r.ToString());
+                        throw new APIBackendException("Vulkan", "Unable to get surface support: "+r.ToString());
                     }
                     if (presentSupport) {
                         indices.PresentFamily = i;
@@ -215,6 +212,7 @@ namespace GAIL.Graphics.Utils
             }
         }
 
+        /// <inheritdoc/>
         public void Dispose() {
             unsafe {
                 API.Vk.DestroyDevice(logicalDevice, null);
