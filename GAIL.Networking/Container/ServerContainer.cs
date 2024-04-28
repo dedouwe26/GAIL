@@ -60,6 +60,14 @@ public class ServerContainer : IDisposable {
         tcpListener = new TcpListener(ip);
         
     }
+
+    /// <summary>
+    /// Disposes the server.
+    /// </summary>
+    ~ServerContainer() {
+        Dispose();
+    }
+
     /// <summary>
     /// Starts the server.
     /// </summary>

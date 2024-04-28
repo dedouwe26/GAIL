@@ -67,8 +67,15 @@ public class ClientContainer : IDisposable {
             tcpClient = new TcpClient(local);
         }
         IP = tcpClient.Client.LocalEndPoint as IPEndPoint;
-        
     }
+
+    /// <summary>
+    /// Disposes the client.
+    /// </summary>
+    ~ClientContainer() {
+        Dispose();
+    }
+
     /// <summary>
     /// Starts listening.
     /// </summary>

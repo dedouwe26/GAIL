@@ -47,6 +47,13 @@ public class Connection : IDisposable {
     }
 
     /// <summary>
+    /// Disposes the connection.
+    /// </summary>
+    ~Connection() {
+        Dispose();
+    }
+
+    /// <summary>
     /// Changes the user-set data.
     /// </summary>
     /// <typeparam name="T">The type of the data.</typeparam>

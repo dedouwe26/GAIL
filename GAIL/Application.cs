@@ -39,7 +39,7 @@ namespace GAIL
     public class Application : IDisposable {
 
         /// <summary>
-        /// Stores all the managers for other managers.
+        /// Stores all managers and loggers for this application.
         /// </summary>
         public struct Globals {
             /// <summary>
@@ -130,7 +130,7 @@ namespace GAIL
         /// <summary>
         /// The Globals of this Application, contains all the managers.
         /// </summary>
-        public Globals globals;
+        public readonly Globals globals;
         /// <summary>
         /// The manager for the graphics.
         /// </summary>
