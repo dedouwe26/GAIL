@@ -63,9 +63,23 @@ public static class PacketParser {
         }
         return (obj as Field<object>)!;
     }
+    /// <summary>
+    /// Creates a field from 
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="data"></param>
+    /// <returns></returns>
     public static Field<T> CreateFieldFromType<T>(object data) where T : notnull {
         return (CreateFieldFromType(typeof(T), data) as Field<T>)!;
     }
+    /// <summary>
+    /// Creates a field from an type.
+    /// </summary>
+    /// <param name="type">The value type of the field.</param>
+    /// <param name="data">The raw data for the field.</param>
+    /// <returns>The created field.</returns>
+    /// <exception cref="ArgumentException"></exception>
+    /// <exception cref="InvalidOperationException"></exception>
     public static Field<object> CreateFieldFromType(Type type, byte[] data) {
         if (!Fields.TryGetValue(type, out FieldCreator ctor)) {
             throw new ArgumentException("No field found for type: "+type.Name, nameof(type));
@@ -76,13 +90,26 @@ public static class PacketParser {
         }
         return (obj as Field<object>)!;
     }
+    /// <summary>
+    /// Creates a field from an type.
+    /// </summary>
+    /// <typeparam name="T">The value type of the field.</typeparam>
+    /// <param name="data">The raw data for the field.</param>
+    /// <returns>The created field.</returns>
     public static Field<T> CreateFieldFromType<T>(byte[] data) where T : notnull {
         return (CreateFieldFromType(typeof(T), data) as Field<T>)!;
     }
-    public static bool RegisterFieldType<T>(Field<T> field) where T : notnull {
+    /// <summary>
+    /// Registers a field.
+    /// </summary>
+    /// <typeparam name="TField">The type of the field.</typeparam>
+    /// <typeparam name="TType">The type of the field type.</typeparam>
+    /// <param name="field">An instance of the Field, only used for getting a constructor</param>
+    /// <returns></returns>
+    public static bool RegisterField<TField, TType>(TField field) where TField : Field<TType> where TType : notnull {
         if (field == null) {return false;}
-        if (Fields.ContainsKey(typeof(T))) {return false;}
-        Fields.Add(typeof(T), new (field.GetType().GetConstructor([typeof(T)])!, field.GetType().GetConstructor([typeof(byte[])])!));
+        if (Fields.ContainsKey(typeof(TType))) {return false;}
+        Fields.Add(typeof(TType), new (field.GetType().GetConstructor([typeof(TType)])!, field.GetType().GetConstructor([typeof(byte[])])!));
         return true;
     }
     public static List<Field<object>> Parse(byte[] data, List<Type> format) {
@@ -146,6 +173,12 @@ public static class PacketParser {
         }
         return CreateFieldFromType(type, [.. newData]);
     }
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="data"></param>
+    /// <returns></returns>
     public static Field<T> Decode<T>(byte[] data) where T : notnull {
         return (Decode(data, typeof(T)) as Field<T>)!;
     }

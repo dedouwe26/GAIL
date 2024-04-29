@@ -36,6 +36,7 @@ public abstract class Field<T> where T : notnull {
     /// The value of this field.
     /// </summary>
     public T Value { get { return value!;} set { this.value = value; } }
+    public abstract bool HasFixedSize { get; }
     private T? value;
     /// <summary>
     /// The type of this field (type of the parser / formatter).

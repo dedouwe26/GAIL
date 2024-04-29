@@ -4,11 +4,14 @@ namespace GAIL.Networking.Parser;
 
 public class BoolField : Field<bool> {
     static BoolField() {
-        PacketParser.RegisterFieldType(new BoolField());
+        PacketParser.RegisterField(new BoolField());
     }
     public BoolField() {}
     public BoolField(bool value) : base(value) { }
     public BoolField(byte[] data) : base(data) { }
+
+    public override bool HasFixedSize => true;
+
     public override FormatData Format() {
         return new ([Value ? (byte)1 : (byte)0], false);
     }
@@ -22,7 +25,7 @@ public class BoolField : Field<bool> {
 }
 public class FloatField : Field<float> {
     static FloatField() {
-        PacketParser.RegisterFieldType(new FloatField());
+        PacketParser.RegisterField(new FloatField());
     }
     public FloatField() {}
     public FloatField(float value) : base(value) { }
@@ -33,10 +36,11 @@ public class FloatField : Field<float> {
     public override float Parse(byte[] data) {
         return BitConverter.IsLittleEndian ? BitConverter.ToSingle(data) : BitConverter.ToSingle(data.Reverse().ToArray());
     }
+    public override bool HasFixedSize => true;
 }
 public class DoubleField : Field<double> {
     static DoubleField() {
-        PacketParser.RegisterFieldType(new DoubleField());
+        PacketParser.RegisterField(new DoubleField());
     }
     public DoubleField() {}
     public DoubleField(double value) : base(value) { }
@@ -48,10 +52,11 @@ public class DoubleField : Field<double> {
     public override double Parse(byte[] data) {
         return BitConverter.IsLittleEndian ? BitConverter.ToDouble(data) : BitConverter.ToDouble(data.Reverse().ToArray());
     }
+    public override bool HasFixedSize => true;
 }
 public class ByteField : Field<byte> {
     static ByteField() {
-        PacketParser.RegisterFieldType(new ByteField());
+        PacketParser.RegisterField(new ByteField());
     }
     public ByteField() {}
     public ByteField(byte value) : base(value) { }
@@ -63,10 +68,11 @@ public class ByteField : Field<byte> {
     public override byte Parse(byte[] data) {
         return data[0];
     }
+    public override bool HasFixedSize => true;
 }
 public class ShortField : Field<short> {
     static ShortField() {
-        PacketParser.RegisterFieldType(new ShortField());
+        PacketParser.RegisterField(new ShortField());
     }
     public ShortField() {}
     public ShortField(short value) : base(value) { }
@@ -77,10 +83,11 @@ public class ShortField : Field<short> {
     public override short Parse(byte[] data) {
         return BitConverter.IsLittleEndian ? BitConverter.ToInt16(data) : BitConverter.ToInt16(data.Reverse().ToArray());
     }
+    public override bool HasFixedSize => true;
 }
 public class IntField : Field<int> {
     static IntField() {
-        PacketParser.RegisterFieldType(new IntField());
+        PacketParser.RegisterField(new IntField());
     }
     public IntField() {}
     public IntField(int value) : base(value) { }
@@ -91,10 +98,11 @@ public class IntField : Field<int> {
     public override int Parse(byte[] data) {
         return BitConverter.IsLittleEndian ? BitConverter.ToInt32(data) : BitConverter.ToInt32(data.Reverse().ToArray());
     }
+    public override bool HasFixedSize => true;
 }
 public class LongField : Field<long> {
     static LongField() {
-        PacketParser.RegisterFieldType(new LongField());
+        PacketParser.RegisterField(new LongField());
     }
     public LongField() {}
     public LongField(long value) : base(value) { }
@@ -105,10 +113,11 @@ public class LongField : Field<long> {
     public override long Parse(byte[] data) {
         return BitConverter.IsLittleEndian ? BitConverter.ToInt64(data) : BitConverter.ToInt64(data.Reverse().ToArray());
     }
+    public override bool HasFixedSize => true;
 }
 public class SByteField : Field<sbyte> {
     static SByteField() {
-        PacketParser.RegisterFieldType(new SByteField());
+        PacketParser.RegisterField(new SByteField());
     }
     public SByteField() {}
     public SByteField(sbyte value) : base(value) { }
@@ -119,10 +128,11 @@ public class SByteField : Field<sbyte> {
     public override sbyte Parse(byte[] data) {
         return (sbyte)data[0];
     }
+    public override bool HasFixedSize => true;
 }
 public class UShortField : Field<ushort> {
     static UShortField() {
-        PacketParser.RegisterFieldType(new UShortField());
+        PacketParser.RegisterField(new UShortField());
     }
     public UShortField() {}
     public UShortField(ushort value) : base(value) { }
@@ -133,10 +143,11 @@ public class UShortField : Field<ushort> {
     public override ushort Parse(byte[] data) {
         return BitConverter.IsLittleEndian ? BitConverter.ToUInt16(data) : BitConverter.ToUInt16(data.Reverse().ToArray());
     }
+    public override bool HasFixedSize => true;
 }
 public class UIntField : Field<uint> {
     static UIntField() {
-        PacketParser.RegisterFieldType(new UIntField());
+        PacketParser.RegisterField(new UIntField());
     }
     public UIntField() {}
     public UIntField(uint value) : base(value) { }
@@ -147,10 +158,11 @@ public class UIntField : Field<uint> {
     public override uint Parse(byte[] data) {
         return BitConverter.IsLittleEndian ? BitConverter.ToUInt32(data) : BitConverter.ToUInt32(data.Reverse().ToArray());
     }
+    public override bool HasFixedSize => true;
 }
 public class ULongField : Field<ulong> {
     static ULongField() {
-        PacketParser.RegisterFieldType(new ULongField());
+        PacketParser.RegisterField(new ULongField());
     }
     public ULongField() {}
     public ULongField(ulong value) : base(value) { }
@@ -161,11 +173,12 @@ public class ULongField : Field<ulong> {
     public override ulong Parse(byte[] data) {
         return BitConverter.IsLittleEndian ? BitConverter.ToUInt64(data) : BitConverter.ToUInt64(data.Reverse().ToArray());
     }
+    public override bool HasFixedSize => true;
 }
 
 public class StringField : Field<string> {
     static StringField() {
-        PacketParser.RegisterFieldType(new StringField());
+        PacketParser.RegisterField(new StringField());
     }
     public StringField() {}
     public StringField(string value) : base(value) { }
@@ -176,11 +189,12 @@ public class StringField : Field<string> {
     public override string Parse(byte[] data) {
         return BitConverter.IsLittleEndian ? Encoding.UTF8.GetString(data) : Encoding.UTF8.GetString(data.Reverse().ToArray());
     }
+    public override bool HasFixedSize => true;
 }
 
 public class ListField : Field<List<Field<object>>> {
     static ListField() {
-        PacketParser.RegisterFieldType(new ListField());
+        PacketParser.RegisterField(new ListField());
     }
     public ListField() {}
     public ListField(List<Field<object>> value) : base(value) { }
@@ -195,6 +209,7 @@ public class ListField : Field<List<Field<object>>> {
     }
 
     public override List<Field<object>> Parse(byte[] data) {
-        
+        // TODO: Follow PacketParser.Parse()
     }
+    public override bool HasFixedSize => false;
 }
