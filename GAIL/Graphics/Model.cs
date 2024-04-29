@@ -5,7 +5,13 @@ namespace GAIL.Graphics
     /// This can be rendered.
     /// </summary>
     public class Model {
+        /// <summary>
+        /// The mesh (3D data) of this Model. 
+        /// </summary>
         public Mesh mesh;
+        /// <summary>
+        /// The material (3D render data) of this Model.
+        /// </summary>
         public IMaterial material;
         /// <summary>
         /// Creates a model.

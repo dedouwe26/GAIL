@@ -43,10 +43,12 @@ namespace GAIL.Graphics
         /// <param name="projectionMatrix">The properties of the camera (far plane, near plane, FoV, etc).</param>
         public BasicMaterial(Color color, Texture? texture, Transform transform, Matrix4x4 viewMatrix, Matrix4x4 projectionMatrix) : this(color, texture, transform.ToModelMatrix(), viewMatrix, projectionMatrix) { }
 
+        /// <inheritdoc/>
         public Shader GetShader() {
             throw new NotImplementedException();
         }
 
+        /// <inheritdoc/>
         public void Use() {
             throw new NotImplementedException();
         }
@@ -74,10 +76,12 @@ namespace GAIL.Graphics
             this.color = color;
         }
 
+        /// <inheritdoc/>
         public Shader GetShader() {
             throw new NotImplementedException();
         }
 
+        /// <inheritdoc/>
         public void Use() {
             throw new NotImplementedException();
         }
@@ -106,10 +110,12 @@ namespace GAIL.Graphics
             this.font = font;
         }
 
+        /// <inheritdoc/>
         public Shader GetShader() {
             throw new NotImplementedException();
         }
 
+        /// <inheritdoc/>
         public void Use() {
             throw new NotImplementedException();
         }

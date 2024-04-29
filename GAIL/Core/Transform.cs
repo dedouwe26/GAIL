@@ -16,11 +16,14 @@ namespace GAIL.Core
         public Matrix4x4 ToModelMatrix() {
             return Matrix4x4.CreateFromQuaternion(rotation) * Matrix4x4.CreateScale(scale) * Matrix4x4.CreateTranslation(translation);
         }
+        /// <inheritdoc/>
         public bool Equals(Transform? other) {
             if (other == null) { return false; }
             return translation == other.translation && scale == other.scale && rotation == other.rotation;
         }
+        /// <inheritdoc/>
         public override bool Equals(object? obj) { return Equals(obj as Transform); }
-        public override int GetHashCode() { throw new NotImplementedException(); }
+        /// <inheritdoc/>
+        public override int GetHashCode() { return translation.GetHashCode()+scale.GetHashCode()+rotation.GetHashCode(); }
     }
 }

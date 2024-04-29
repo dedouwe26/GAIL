@@ -21,8 +21,12 @@ namespace GAIL.Graphics
         public Shader(byte[] vertexShader, byte[] fragmentShader, byte[]? geometryShader = null) {
             
         }
+        /// <summary>
+        /// Calls <see cref="Dispose"/>.
+        /// </summary>
         ~Shader() { Dispose(); }
 
+        /// <inheritdoc/>
         public void Dispose() {
             GC.SuppressFinalize(this);
         }

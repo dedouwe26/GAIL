@@ -10,59 +10,109 @@ namespace GAIL.Input
         /// A key that is not known to GLFW.
         /// </summary>
         Unknown = Keys.Unknown,
+        ///
         A = Keys.A,
+        ///
         B = Keys.B,
+        ///
         C = Keys.C,
+        ///
         D = Keys.D,
+        ///
         E = Keys.E,
+        ///
         F = Keys.F,
+        ///
         G = Keys.G,
+        ///
         H = Keys.H,
+        ///
         I = Keys.I,
+        ///
         J = Keys.J,
+        ///
         K = Keys.K,
+        ///
         L = Keys.L,
+        ///
         M = Keys.M,
+        ///
         N = Keys.N,
+        ///
         O = Keys.O,
+        ///
         P = Keys.P,
+        ///
         Q = Keys.Q,
+        ///
         R = Keys.R,
+        ///
         S = Keys.S,
+        ///
         T = Keys.T,
+        ///
         U = Keys.U,
+        ///
         V = Keys.V,
+        ///
         W = Keys.W,
+        ///
         X = Keys.X,
+        ///
         Y = Keys.Y,
+        ///
         Z = Keys.Z,
         /// <summary>
         /// AKA esc
         /// </summary>
         Escape = Keys.Escape,
+        ///
         F1 = Keys.F1,
+        ///
         F2 = Keys.F2,
+        ///
         F3 = Keys.F3,
+        ///
         F4 = Keys.F4,
+        ///
         F5 = Keys.F5,
+        ///
         F6 = Keys.F6,
+        ///
         F7 = Keys.F7,
+        ///
         F8 = Keys.F8,
+        ///
         F9 = Keys.F9,
+        ///
         F10 = Keys.F10,
+        ///
         F11 = Keys.F11,
+        ///
         F12 = Keys.F12,
+        ///
         F13 = Keys.F13, 
+        ///
         F14 = Keys.F14,
+        ///
         F15 = Keys.F15,
+        ///
         F16 = Keys.F16,
+        ///
         F17 = Keys.F17,
+        ///
         F18 = Keys.F18,
+        ///
         F19 = Keys.F19,
+        ///
         F20 = Keys.F20,
+        ///
         F21 = Keys.F21,
+        ///
         F22 = Keys.F22,
+        ///
         F23 = Keys.F23,
+        ///
         F24 = Keys.F24,
         /// <summary>
         /// ;)
@@ -84,15 +134,25 @@ namespace GAIL.Input
         /// (`)
         /// </summary>
         GraveAccent = Keys.GraveAccent,
+        ///
         Number1 = Keys.Number1,
+        ///
         Number2 = Keys.Number2,
+        ///
         Number3 = Keys.Number3,
+        ///
         Number4 = Keys.Number4,
+        ///
         Number5 = Keys.Number5,
+        ///
         Number6 = Keys.Number6,
+        ///
         Number7 = Keys.Number7,
+        ///
         Number8 = Keys.Number8,
+        ///
         Number9 = Keys.Number9,
+        ///
         Number0 = Keys.Number0,
         /// <summary>
         /// (-)
@@ -102,7 +162,9 @@ namespace GAIL.Input
         /// (=)
         /// </summary>
         Equals = Keys.Equal,
+        ///
         Backspace = Keys.Backspace, 
+        ///
         Tab = Keys.Tab,
         /// <summary>
         /// ([)
@@ -112,6 +174,7 @@ namespace GAIL.Input
         /// (])
         /// </summary>
         RightBracket = Keys.RightBracket,
+        ///
         Backslash = Keys.BackSlash,
         /// <summary>
         /// AKA caps
@@ -129,17 +192,25 @@ namespace GAIL.Input
         /// AKA return.
         /// </summary>
         Enter = Keys.Enter,
+        ///
         LeftShift = Keys.ShiftLeft,
+        ///
         Comma = Keys.Comma,
+        ///
         Period = Keys.Period,
+        ///
         Slash = Keys.Slash,
+        ///
         RightShift = Keys.ShiftRight,
         /// <summary>
         /// AKA ctrl.
         /// </summary>
         LeftControl = Keys.ControlLeft,
+        ///
         LeftAlt = Keys.AltLeft,
+        ///
         Space = Keys.Space,
+        ///
         RightAlt = Keys.AltRight,
         /// <summary>
         /// or context menu key.
@@ -157,16 +228,27 @@ namespace GAIL.Input
         /// like right Windows key.
         /// </summary>
         RightSuper = Keys.SuperRight,
+        ///
         Insert = Keys.Insert,
+        ///
         Home = Keys.Home,
+        ///
         PageUp = Keys.PageUp,
+        ///
         PageDown = Keys.PageDown,
+        ///
         Delete = Keys.Delete,
+        ///
         End = Keys.End,
+        ///
         ArrowUp = Keys.Up,
+        ///
         ArrowLeft = Keys.Left,
+        ///
         ArrowDown = Keys.Down,
+        ///
         ArrowRight = Keys.Right,
+        ///
         NumLock = Keys.NumLock,
         /// <summary>
         /// (/)
@@ -224,6 +306,7 @@ namespace GAIL.Input
         /// (+)
         /// </summary>
         NumpadAdd = Keys.KeypadAdd,
+        ///
         NumpadEnter = Keys.KeypadEnter,
         /// <summary>
         /// (.)
@@ -249,19 +332,24 @@ namespace GAIL.Input
         /// <summary>
         /// AKA Mouse1
         /// </summary>
-        LeftMouse = Silk.NET.GLFW.MouseButton.Left, 
+        Left = Silk.NET.GLFW.MouseButton.Left, 
         /// <summary>
         /// AKA Mouse2
         /// </summary>
-        RightMouse = Silk.NET.GLFW.MouseButton.Right,
+        Right = Silk.NET.GLFW.MouseButton.Right,
         /// <summary>
-        /// AKA Mouse3
+        /// Mouse wheel button, AKA Mouse3
         /// </summary>
-        MiddleMouse = Silk.NET.GLFW.MouseButton.Middle,
+        Middle = Silk.NET.GLFW.MouseButton.Middle,
+        ///
         Mouse4 = Silk.NET.GLFW.MouseButton.Button4,
+        ///
         Mouse5 = Silk.NET.GLFW.MouseButton.Button5,
+        ///
         Mouse6 = Silk.NET.GLFW.MouseButton.Button6,
+        ///
         Mouse7 = Silk.NET.GLFW.MouseButton.Button7,
+        ///
         Mouse8 = Silk.NET.GLFW.MouseButton.Button8,
     }
 }

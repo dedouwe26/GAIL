@@ -123,7 +123,9 @@ namespace GAIL
 
             Dispose();
         }
-        /// <summary></summary>
+        /// <summary>
+        /// Disposes this application.
+        /// </summary>
         ~Application() {
             Dispose();
         }

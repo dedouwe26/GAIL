@@ -61,25 +61,28 @@ namespace GAIL.Core
             return [(byte)(r*255), (byte)(g*255), (byte)(b*255), (byte)(a*255)];
         }
 
+        /// <inheritdoc/>
         public bool Equals(Color? other) {
             if (other == null) { return false; }
             return (r==other.r)&&(g==other.g)&&(b==other.b)&&(a==other.a);
         }
+        ///
         public static bool operator ==(Color? a, Color? b) {
             if (a==null) { return false; }
             return a.Equals(b);
         }
+        ///
         public static bool operator !=(Color? a, Color? b) {
             if (a==null) { return false; }
             return a.Equals(b);
         }
-
+        /// <inheritdoc/>
         public override bool Equals(object? obj) {
             if (obj==null) { return false; }
             if (obj.GetType()!=typeof(Color)) { return false; }
             return Equals((Color)obj);
         }
-
+        /// <inheritdoc/>
         public override int GetHashCode() { return ((byte)(r*255)) + ((byte)(g*255))*1_000 + ((byte)(b*255))*1_000_000+((int)(a*255))*1_000_000_000; }
     }
 }

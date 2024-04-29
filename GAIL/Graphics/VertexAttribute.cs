@@ -15,7 +15,7 @@ namespace GAIL.Graphics
         /// </summary>
         /// <param name="type">The type of the attribute.</param>
         protected VertexAttribute(AttributeType type) { this.type = type; }
-
+        /// <inheritdoc/>
         public bool Equals(VertexAttribute? other) {
             if (other == null) { return false; }
             return type == other.type;
@@ -26,13 +26,13 @@ namespace GAIL.Graphics
         /// </summary>
         /// <returns>The data for the vertex input attributes.</returns>
         public abstract byte[] Use();
-
+        /// <inheritdoc/>
         public override bool Equals(object? obj) {
             if (obj == null) { return false; }
             if (obj.GetType() != typeof(VertexAttribute)) { return false; }
             return Equals((VertexAttribute)obj);
         }
-
+        /// <inheritdoc/>
         public override int GetHashCode() { return (int)type; }
     }
 }

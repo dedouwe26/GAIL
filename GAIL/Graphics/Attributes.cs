@@ -16,6 +16,7 @@ namespace GAIL.Graphics
         /// </summary>
         public Color color = color;
 
+        /// <inheritdoc/>
         public override byte[] Use() {
             throw new NotImplementedException();
         }
@@ -33,6 +34,7 @@ namespace GAIL.Graphics
         /// </summary>
         public Vector3 normal = normal;
 
+        /// <inheritdoc/>
         public override byte[] Use() {
             throw new NotImplementedException();
         }
@@ -50,6 +52,7 @@ namespace GAIL.Graphics
         /// </summary>
         public Vector2 uv = uv;
 
+        /// <inheritdoc/>
         public override byte[] Use() {
             throw new NotImplementedException();
         }

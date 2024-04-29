@@ -4,18 +4,31 @@ using Silk.NET.GLFW;
 namespace GAIL.Core
 {
     /// <summary>
-    /// A texture rendered with the GPU.
+    /// A image or texture.
     /// </summary>
-    /// <param name="width">The width of the texture.</param>
-    /// <param name="height">The height of the texture.</param>
-    public class Texture(uint width, uint height) {
-        public uint width = width;
-        public uint height = height;
+    public class Texture {
+        /// <summary>
+        /// The width of this texture.
+        /// </summary>
+        public readonly uint Width;
+        /// <summary>
+        /// The height of this texture;
+        /// </summary>
+        public readonly uint Height;
         /// <summary>
         /// Format: each row has the length of the width. Height is the amount of rows.
         /// row0 + row1 + row2 + row[height]
         /// </summary>
-        public Color[] colors = new Color[width * height];
+        public Color[] colors;
+
+        /// <param name="width">The width of the texture.</param>
+        /// <param name="height">The height of the texture.</param>
+        public Texture(uint width, uint height) {
+            Width = width;
+            Height = height;
+            colors = new Color[width * height];
+        }
+
         /// <summary>
         /// Returns the color at the given position.
         /// </summary>
@@ -24,9 +37,15 @@ namespace GAIL.Core
         /// <returns>The color at the given position.</returns>
         /// <exception cref="IndexOutOfRangeException">outside file</exception>
         public Color GetColor(uint x, uint y) {
-            if (x >= width||y >= height) { throw new IndexOutOfRangeException(); }
-            return colors[(y*width)+x];
+            if (x >= Width||y >= Height) { throw new IndexOutOfRangeException(); }
+            return colors[(y*Width)+x];
         }
+
+        /// <summary>
+        /// Creates a texture from an PNG file.
+        /// </summary>
+        /// <param name="path">The path to the PNG file.</param>
+        /// <returns>The texture of the PNG file.</returns>
         public static Texture FromPNG(string path) {
             return PNG.Parse(path);
         }
@@ -41,7 +60,7 @@ namespace GAIL.Core
                     byteList = [.. byteList, .. color.ToBytes()];
                 }
                 fixed (byte* pixelArray = byteList.ToArray()) {
-                    return new Image{Width = (int)width, Height = (int)height, Pixels = pixelArray};
+                    return new Image{Width = (int)Width, Height = (int)Height, Pixels = pixelArray};
                 }
             }
             
@@ -57,10 +76,9 @@ namespace GAIL.Core
                     byteList = [.. byteList, .. color.ToBytes()];
                 }
                 fixed (byte* pixelArray = byteList.ToArray()) {
-                    return new Image{Width = (int)width, Height = (int)height, Pixels = pixelArray};
+                    return new Image{Width = (int)Width, Height = (int)Height, Pixels = pixelArray};
                 }
             }
-            
         }
     }
 }

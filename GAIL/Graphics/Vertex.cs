@@ -47,13 +47,15 @@ namespace GAIL.Graphics
         /// <param name="attribute">The attribute itself.</param>
         public void AddAttribute(string name, VertexAttribute attribute) { attributes.Add(name, attribute); }
 
+        /// <inheritdoc/>
         public bool Equals(Vertex? other)  {
             if (other == null) { return false; }
             return Position == other.Position && attributes == other.attributes;
         }
 
+        /// <inheritdoc/>
         public override bool Equals(object? obj) { return Equals(obj as Vertex); }
-
+        /// <inheritdoc/>
         public override int GetHashCode() { return Position.GetHashCode(); }
     }
 }

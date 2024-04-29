@@ -4,6 +4,7 @@ namespace GAIL.Core
 {
     public static partial class WAV {
         public partial class Decoder : IDecoder<Sound> {
+            /// <inheritdoc/>
             public void Dispose() {
                 GC.SuppressFinalize(this);
             }
