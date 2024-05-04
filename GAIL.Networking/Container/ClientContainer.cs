@@ -91,13 +91,10 @@ public class ClientContainer : IDisposable {
         List<byte> data = [];
         while (!Closed) {
             int i;
-            NetworkStream.Read
             if ((i=NetworkStream!.ReadByte())==-1) {
                 break;
             }
             byte b = Convert.ToByte(i);
-            if (b == PacketParser.NewPacket && data[^1]!=PacketParser.NewPacket) {
-            }
         }
     }
     /// <summary>
@@ -106,6 +103,17 @@ public class ClientContainer : IDisposable {
     /// <param name="packet">The packet to send to the server.</param>
     public void SendPacket(Packet packet) {
         OnPacketSent?.Invoke(this, packet);
+        
+        NetworkStream!.Write([.. PacketParser.GetBytesFromPacketID(PacketParser.GetPacketID(packet)), .. packet.Format()]);
+    }
+
+    /// <summary>
+    /// Sends a packet to the server (asynchronous).
+    /// </summary>
+    /// <param name="packet">The packet to send to the server.</param>
+    public async Task SendPacketAsync(Packet packet) {
+        OnPacketSent?.Invoke(this, packet);
+        await NetworkStream!.WriteAsync((byte[])[.. PacketParser.GetBytesFromPacketID(PacketParser.GetPacketID(packet)), .. packet.Format()]);
     }
 
     /// <summary>

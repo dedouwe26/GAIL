@@ -4,6 +4,8 @@ using System.Net.Sockets;
 
 namespace GAIL.Networking.Server;
 
+// TODO: send asynchronous
+
 /// <summary>
 /// This is a server that listens for packets.
 /// </summary>

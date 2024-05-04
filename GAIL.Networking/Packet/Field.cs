@@ -24,8 +24,8 @@ public abstract class Field<T> where T : notnull {
     /// <summary>
     /// Creates the raw data from this Field.
     /// </summary>
-    /// <returns>If it is an object and the raw data.</returns>
-    public abstract FormatData Format();
+    /// <returns>The raw data.</returns>
+    public abstract byte[] Format();
     /// <summary>
     /// Creates a <typeparamref name="T"/> from the raw data.
     /// </summary>
@@ -36,7 +36,14 @@ public abstract class Field<T> where T : notnull {
     /// The value of this field.
     /// </summary>
     public T Value { get { return value!;} set { this.value = value; } }
-    public abstract bool HasFixedSize { get; }
+    /// <summary>
+    /// True if the value always has a fixed size.
+    /// </summary>
+    public virtual bool HasFixedSize { get { return FixedSize!=null; } }
+    /// <summary>
+    /// The fixed size of the value if it has one (in bytes).
+    /// </summary>
+    public abstract uint? FixedSize { get; }
     private T? value;
     /// <summary>
     /// The type of this field (type of the parser / formatter).
