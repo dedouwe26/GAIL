@@ -285,7 +285,7 @@ public static class PacketParser {
     /// <param name="isClosed">If it should stop and return.</param>
     /// <param name="onPacket">The callback for when a packet has been received. Returns true if it should stop.</param>
     /// <returns>True if it was successfull, otherwise false.</returns>
-    public static bool Parse(Stream stream, Func<bool> isClosed, Func<Packet, bool> onPacket) {
+    public static async ValueTask<bool> Parse(Stream stream, Func<bool> isClosed, Func<Packet, bool> onPacket) {
         if (!stream.CanRead) { return false; }
         
         bool isInPacket = false;
@@ -297,7 +297,7 @@ public static class PacketParser {
         while (!isClosed()) {
             if (!isInPacket) {
                 buffer = new byte[4];
-                if (stream.Read(buffer, 0, 4) >= 0) {
+                if (await stream.ReadAsync(buffer.AsMemory()) >= 0) {
                     continue;
                 }
                 packetID = GetPacketID(buffer);
@@ -317,13 +317,13 @@ public static class PacketParser {
             
             if (size == null) {
                 buffer = new byte[4];
-                if (stream.Read(buffer, 0, 4) >= 0) {
+                if (await stream.ReadAsync(buffer.AsMemory()) >= 0) {
                     continue;
                 }
                 size = BitConverter.IsLittleEndian ? BitConverter.ToUInt32(buffer) : BitConverter.ToUInt32([.. buffer.Reverse()]);
             }
             buffer = new byte[size.Value];
-            if (stream.Read(buffer, 0, checked((int)size)) >= 0) {
+            if (await stream.ReadAsync(buffer.AsMemory()) >= 0) {
                 continue;
             }
             fields.Add(Decode(buffer, format[formatIndex]));

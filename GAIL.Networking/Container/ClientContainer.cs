@@ -110,8 +110,8 @@ public class ClientContainer : IDisposable {
         listenThread.Start();
         return true;
     }
-    private void Listen() {
-        PacketParser.Parse(NetworkStream!, () => Closed, (Packet p) => {
+    private async void Listen() {
+        await PacketParser.Parse(NetworkStream!, () => Closed, (Packet p) => {
             OnPacket?.Invoke(this, p);
             if (p is DisconnectPacket) {
                 OnDisconnect?.Invoke(this, true, (p as DisconnectPacket)!.AdditionalData);

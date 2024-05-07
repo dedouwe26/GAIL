@@ -257,27 +257,18 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
 
 
     private void Listen() {
-        tcpListener.BeginAcceptTcpClient(ListenConnection, null);
-        tcpListener.EndAcceptTcpClient()
         while (!Closed) {
             
             Connection connection = new(tcpListener.AcceptTcpClient());
             connections.Add(connection.ID, connection);
             OnConnect?.Invoke(this, connection);
-            ThreadPool.QueueUserWorkItem(ListenConnection, connection);
+            ListenConnection(connection);
         }
     }
 
-    private void ListenConnection(IAsyncResult result)
-    {
-        throw new NotImplementedException();
-    }
-
-    private void ListenConnection(object? state) {
-        Connection connection = (Connection)state!;
-
+    private async void ListenConnection(Connection connection) {
         try {
-            PacketParser.Parse(connection.Stream, () => Closed, (Packet p) => {
+            await PacketParser.Parse(connection.Stream, () => Closed, (Packet p) => {
                 OnPacket?.Invoke(this, connection, p);
                 if (p is DisconnectPacket) {
                     connections.Remove(connection.ID);
