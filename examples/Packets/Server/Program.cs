@@ -1,23 +1,45 @@
 using System.Net;
+using examples.Packets.Shared;
 using GAIL.Networking;
 using GAIL.Networking.Server;
+using OxDED.Terminal;
 
-namespace examples.Packets.Client;
+namespace examples.Packets.Server;
 
 class Program {
+    public static void Main(string[] args) {
+        ServerContainer server = NetworkManager.CreateServer(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 3003));
 
-    public static async void Main(string[] args) {
-        ServerContainer server = await NetworkManager.CreateServer(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 3002));
-
+        // Listening to events
         server.OnPacket+=OnPacket;
-        server.OnConnect+=OnConnect;
+        server.OnDisconnect+=OnDisconnect;
+
+        // Don't forget to start the server.
+        Terminal.WriteLine("Started listening...", new Style{ foregroundColor = Color.Green});
+        server.Start();
     }
 
-    private static void OnConnect(ServerContainer server, Connection connection) {
-        throw new NotImplementedException();
+    private static void OnDisconnect(ServerContainer server, Connection connection, bool byClient, byte[] additionalData) {
+        Terminal.WriteLine(connection.GetData<string>() + " left.");
     }
 
     private static void OnPacket(ServerContainer server, Connection connection, Packet packet) {
-        throw new NotImplementedException();
+        if (packet is RegisterPacket registerPacket) {
+
+            // Checks if there already is a name set (registered).
+            if (connection.GetData<string>() == null) {
+                // Sets the data of the connection.
+                connection.SetData(registerPacket.name);
+                Terminal.WriteLine(registerPacket.name + " joined.");
+            }
+        } else if (packet is MessagePacket messagePacket) {
+            // Ensure that the client is registered.
+            if (connection.data == null) { return; }
+
+            Terminal.WriteLine($"<{connection.GetData<string>()}> : {messagePacket.message}");
+
+            // Send a NameMessagePacket back to all the clients.
+            server.BroadcastPacket(new NameMessagePacket(connection.GetData<string>()!, messagePacket.message));
+        }
     }
 }

@@ -36,7 +36,12 @@ public class Connection : IDisposable {
     /// The user-set data.
     /// </summary>
     public object? data = null;
+    /// <summary>
+    /// True if this connection is closed.
+    /// </summary>
+    public bool IsClosed { get; private set;}
     internal Connection(TcpClient client) {
+        IsClosed = false;
         if (client.Client.RemoteEndPoint == null) {
             throw new ArgumentException("Client is not connected", nameof(client));
         }
@@ -74,10 +79,13 @@ public class Connection : IDisposable {
 
     /// <inheritdoc/>
     /// <remarks>
-    /// Destroys the server-side tcp client and stream. Please use <see cref="ServerContainer.Disconnect(Connection)"/> to disconnect from a client.
+    /// Destroys the server-side tcp client and stream. Please use <see cref="ServerContainer.Disconnect(Connection, byte[])"/> to disconnect from a client.
     /// </remarks>
     public void Dispose() {
+        if (IsClosed) { return; }
         Stream.Close();
         TcpClient.Close();
+        IsClosed = true;
+        GC.SuppressFinalize(this);
     }
 }

@@ -14,20 +14,23 @@ public abstract class Packet {
     /// Creates a packet from the raw bytes.
     /// </summary>
     /// <param name="data">The bytes to parse.</param>
-    public Packet(byte[] data) { Parse(data); }
+    public Packet(List<Field> data) { Parse(data); }
     /// <summary>
-    /// Formats a packet and turns it into raw data.
+    /// The format of this packets (types of the field types).
     /// </summary>
-    /// <returns>The raw data that it is turned into.</returns>
-    public abstract byte[] Format();
+    public abstract Type[] Format { get; }
     /// <summary>
-    /// Sets all the data in this packet from the raw data.
+    /// Gets all the fields of this packet.
     /// </summary>
-    /// <param name="data">The raw data to convert.</param>
-    public abstract void Parse(byte[] data);
+    /// <returns>All the fields of this packet.</returns>
+    public abstract List<Field> GetFields();
     /// <summary>
-    /// Gets the ID of this Packet.
+    /// Creates this packet from all the fields.
     /// </summary>
-    /// <returns>The ID of this Packet.</returns>
-    public uint GetID() { return PacketParser.GetPacketID(this); }
+    /// <param name="fields">The fields to create the packet from.</param>
+    public abstract void Parse(List<Field> fields);
+    /// <summary>
+    /// The ID of this packet.
+    /// </summary>
+    public uint ID { get => PacketParser.GetPacketID(this); }
 }

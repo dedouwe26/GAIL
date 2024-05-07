@@ -5,6 +5,18 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "C#: Packets-Client Debug",
+            "type": "dotnet",
+            "request": "launch",
+            "projectPath": "${workspaceFolder}/examples/Packets/Client/Client.csproj"
+        },
+        {
+            "name": "C#: Packets-Server Debug",
+            "type": "dotnet",
+            "request": "launch",
+            "projectPath": "${workspaceFolder}/examples/Packets/Server/Server.csproj"
+        },
+        {
             "name": "C#: HelloTriangle Debug",
             "type": "dotnet",
             "request": "launch",

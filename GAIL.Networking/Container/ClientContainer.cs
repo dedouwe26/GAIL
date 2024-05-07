@@ -77,55 +77,95 @@ public class ClientContainer : IDisposable {
     }
 
     /// <summary>
-    /// Starts listening.
+    /// Starts listening (asynchronous).
     /// </summary>
-    public async Task Start() {
-        await tcpClient.ConnectAsync(Server);
-        OnConnect?.Invoke(this);
+    /// <returns>True if connected successfully.</returns>
+    public async ValueTask<bool> StartAsync() {
+        try {
+            await tcpClient.ConnectAsync(Server);
+        } catch (SocketException) {
+            return false;
+        }
         NetworkStream = tcpClient.GetStream();
         Closed = false;
+        OnConnect?.Invoke(this);
         listenThread = new Thread(Listen);
         listenThread.Start();
+        return true;
+    }
+    /// <summary>
+    /// Starts listening.
+    /// </summary>
+    /// <returns>True if connected successfully.</returns>
+    public bool Start() {
+        try {
+            tcpClient.Connect(Server);
+        } catch (SocketException) {
+            return false;
+        }
+        NetworkStream = tcpClient.GetStream();
+        Closed = false;
+        OnConnect?.Invoke(this);
+        listenThread = new Thread(Listen);
+        listenThread.Start();
+        return true;
     }
     private void Listen() {
-        List<byte> data = [];
-        while (!Closed) {
-            int i;
-            if ((i=NetworkStream!.ReadByte())==-1) {
-                break;
+        PacketParser.Parse(NetworkStream!, () => Closed, (Packet p) => {
+            OnPacket?.Invoke(this, p);
+            if (p is DisconnectPacket) {
+                OnDisconnect?.Invoke(this, true, (p as DisconnectPacket)!.AdditionalData);
+                Dispose();
+                return true;
             }
-            byte b = Convert.ToByte(i);
-        }
+            return false;
+        });
     }
     /// <summary>
     /// Sends a packet to the server.
     /// </summary>
     /// <param name="packet">The packet to send to the server.</param>
     public void SendPacket(Packet packet) {
+        NetworkStream!.Write(PacketParser.FormatPacket(packet));
+        NetworkStream.Flush();
         OnPacketSent?.Invoke(this, packet);
-        
-        NetworkStream!.Write([.. PacketParser.GetBytesFromPacketID(PacketParser.GetPacketID(packet)), .. packet.Format()]);
     }
 
     /// <summary>
     /// Sends a packet to the server (asynchronous).
     /// </summary>
     /// <param name="packet">The packet to send to the server.</param>
-    public async Task SendPacketAsync(Packet packet) {
+    public async ValueTask SendPacketAsync(Packet packet) {
+        await NetworkStream!.WriteAsync(PacketParser.FormatPacket(packet));
+        await NetworkStream.FlushAsync();
         OnPacketSent?.Invoke(this, packet);
-        await NetworkStream!.WriteAsync((byte[])[.. PacketParser.GetBytesFromPacketID(PacketParser.GetPacketID(packet)), .. packet.Format()]);
     }
 
     /// <summary>
     /// Disconnects from the server and disposes everything.
     /// </summary>
-    public void Stop() {
-        OnDisconnect?.Invoke(this, false);
+    /// <param name="additionalData">The optional additional data.</param>
+    public void Stop(byte[]? additionalData = null) {
+        additionalData ??= [];
+        OnDisconnect?.Invoke(this, false, additionalData);
+        SendPacket(new DisconnectPacket(additionalData));
+        Dispose();
+    }
+    /// <summary>
+    /// Disconnects from the server and disposes everything (asynchronous).
+    /// </summary>
+    /// <param name="additionalData">The optional additional data send to the server.</param>
+    public async ValueTask StopAsync(byte[]? additionalData = null) {
+        additionalData ??= [];
+        OnDisconnect?.Invoke(this, false, additionalData);
+        await SendPacketAsync(new DisconnectPacket(additionalData ?? []));
         Dispose();
     }
     /// <inheritdoc/>
     /// <remarks>
-    /// Disconnects from the server and disposes everything, <b>will not call the ClientContainer.OnDisconnect event</b>.
+    /// <b>&gt;&gt;&gt; Please use </b><see cref="Stop"/> &lt;&lt;&lt;<para/>
+    /// <b>&gt;&gt;&gt; Will not call the ClientContainer.OnDisconnect event and will not send a </b><see cref="DisconnectPacket"/>.<para/>
+    /// Disconnects from the server and disposes everything.
     /// </remarks>
     public void Dispose() {
         Closed = true;

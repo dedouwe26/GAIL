@@ -6,15 +6,12 @@ namespace GAIL.Networking.Parser;
 /// A float field for Packets, please use <see cref="ByteField"/> if there are multiple booleans in the packet.
 /// </summary>
 public class BoolField : Field<bool> {
-    static BoolField() {
-        PacketParser.RegisterField(new BoolField());
-    }
     /// <inheritdoc/>
     public BoolField() {}
     /// <inheritdoc/>
     public BoolField(bool value) : base(value) { }
     /// <inheritdoc/>
-    public BoolField(byte[] data) : base(data) { }
+    public BoolField(RawData data) : base(data) { }
 
     /// <inheritdoc/>
     public override uint? FixedSize => 1;
@@ -26,25 +23,19 @@ public class BoolField : Field<bool> {
 
     /// <inheritdoc/>
     public override bool Parse(byte[] data) {
-        if (data[0]!=0||data[0]!=1) {
-            throw new FormatException("byte isn't 0 or 1.");
-        }
-        return data[0]==1;
+        return data[0]!=0;
     }
 }
 /// <summary>
 /// A float field for Packets.
 /// </summary>
 public class FloatField : Field<float> {
-    static FloatField() {
-        PacketParser.RegisterField(new FloatField());
-    }
     /// <inheritdoc/>
     public FloatField() {}
     /// <inheritdoc/>
     public FloatField(float value) : base(value) { }
     /// <inheritdoc/>
-    public FloatField(byte[] data) : base(data) { }
+    public FloatField(RawData data) : base(data) { }
 
     /// <inheritdoc/>
     public override uint? FixedSize => 4;
@@ -62,15 +53,12 @@ public class FloatField : Field<float> {
 /// A list field for Packets.
 /// </summary>
 public class DoubleField : Field<double> {
-    static DoubleField() {
-        PacketParser.RegisterField(new DoubleField());
-    }
     /// <inheritdoc/>
     public DoubleField() {}
     /// <inheritdoc/>
     public DoubleField(double value) : base(value) { }
     /// <inheritdoc/>
-    public DoubleField(byte[] data) : base(data) { }
+    public DoubleField(RawData data) : base(data) { }
     /// <inheritdoc/>
     public override uint? FixedSize => 8;
     /// <inheritdoc/>
@@ -87,15 +75,12 @@ public class DoubleField : Field<double> {
 /// A byte field for Packets.
 /// </summary>
 public class ByteField : Field<byte> {
-    static ByteField() {
-        PacketParser.RegisterField(new ByteField());
-    }
     /// <inheritdoc/>
     public ByteField() {}
     /// <inheritdoc/>
     public ByteField(byte value) : base(value) { }
     /// <inheritdoc/>
-    public ByteField(byte[] data) : base(data) { }
+    public ByteField(RawData data) : base(data) { }
     /// <inheritdoc/>
     public override uint? FixedSize => 1;
     /// <inheritdoc/>
@@ -112,15 +97,12 @@ public class ByteField : Field<byte> {
 /// A short field for Packets.
 /// </summary>
 public class ShortField : Field<short> {
-    static ShortField() {
-        PacketParser.RegisterField(new ShortField());
-    }
     /// <inheritdoc/>
     public ShortField() {}
     /// <inheritdoc/>
     public ShortField(short value) : base(value) { }
     /// <inheritdoc/>
-    public ShortField(byte[] data) : base(data) { }
+    public ShortField(RawData data) : base(data) { }
     /// <inheritdoc/>
     public override uint? FixedSize => 2;
     /// <inheritdoc/>
@@ -136,15 +118,12 @@ public class ShortField : Field<short> {
 /// A int field for Packets.
 /// </summary>
 public class IntField : Field<int> {
-    static IntField() {
-        PacketParser.RegisterField(new IntField());
-    }
     /// <inheritdoc/>
     public IntField() {}
     /// <inheritdoc/>
     public IntField(int value) : base(value) { }
     /// <inheritdoc/>
-    public IntField(byte[] data) : base(data) { }
+    public IntField(RawData data) : base(data) { }
     /// <inheritdoc/>
     public override uint? FixedSize => 4;
     /// <inheritdoc/>
@@ -160,15 +139,12 @@ public class IntField : Field<int> {
 /// A long field for Packets.
 /// </summary>
 public class LongField : Field<long> {
-    static LongField() {
-        PacketParser.RegisterField(new LongField());
-    }
     /// <inheritdoc/>
     public LongField() {}
     /// <inheritdoc/>
     public LongField(long value) : base(value) { }
     /// <inheritdoc/>
-    public LongField(byte[] data) : base(data) { }
+    public LongField(RawData data) : base(data) { }
     /// <inheritdoc/>
     public override uint? FixedSize => 8;
     /// <inheritdoc/>
@@ -184,15 +160,12 @@ public class LongField : Field<long> {
 /// A signed byte field for Packets.
 /// </summary>
 public class SByteField : Field<sbyte> {
-    static SByteField() {
-        PacketParser.RegisterField(new SByteField());
-    }
     /// <inheritdoc/>
     public SByteField() {}
     /// <inheritdoc/>
     public SByteField(sbyte value) : base(value) { }
     /// <inheritdoc/>
-    public SByteField(byte[] data) : base(data) { }
+    public SByteField(RawData data) : base(data) { }
     /// <inheritdoc/>
     public override uint? FixedSize => 1;
     /// <inheritdoc/>
@@ -208,15 +181,12 @@ public class SByteField : Field<sbyte> {
 /// A unsigned short field for Packets.
 /// </summary>
 public class UShortField : Field<ushort> {
-    static UShortField() {
-        PacketParser.RegisterField(new UShortField());
-    }
     /// <inheritdoc/>
     public UShortField() {}
     /// <inheritdoc/>
     public UShortField(ushort value) : base(value) { }
     /// <inheritdoc/>
-    public UShortField(byte[] data) : base(data) { }
+    public UShortField(RawData data) : base(data) { }
     /// <inheritdoc/>
     public override uint? FixedSize => 2;
     /// <inheritdoc/>
@@ -232,15 +202,12 @@ public class UShortField : Field<ushort> {
 /// A unsigned int field for Packets.
 /// </summary>
 public class UIntField : Field<uint> {
-    static UIntField() {
-        PacketParser.RegisterField(new UIntField());
-    }
     /// <inheritdoc/>
     public UIntField() {}
     /// <inheritdoc/>
     public UIntField(uint value) : base(value) { }
     /// <inheritdoc/>
-    public UIntField(byte[] data) : base(data) { }
+    public UIntField(RawData data) : base(data) { }
     /// <inheritdoc/>
     public override uint? FixedSize => 4;
     /// <inheritdoc/>
@@ -256,15 +223,12 @@ public class UIntField : Field<uint> {
 /// A unsigned long field for Packets.
 /// </summary>
 public class ULongField : Field<ulong> {
-    static ULongField() {
-        PacketParser.RegisterField(new ULongField());
-    }
     /// <inheritdoc/>
     public ULongField() {}
     /// <inheritdoc/>
     public ULongField(ulong value) : base(value) { }
     /// <inheritdoc/>
-    public ULongField(byte[] data) : base(data) { }
+    public ULongField(RawData data) : base(data) { }
     /// <inheritdoc/>
     public override uint? FixedSize => 8;
     /// <inheritdoc/>
@@ -278,18 +242,39 @@ public class ULongField : Field<ulong> {
 }
 
 /// <summary>
+/// A byte array field for Packets.
+/// </summary>
+public class BytesField : Field<byte[]> {
+    /// <inheritdoc/>
+    public BytesField() {}
+    /// <inheritdoc/>
+    public BytesField(byte[] value) : base(value) { }
+    /// <inheritdoc/>
+    public BytesField(RawData data) : base(data) { }
+
+    /// <inheritdoc/>
+    public override uint? FixedSize => null;
+
+    /// <inheritdoc/>
+    public override byte[] Format() {
+        return BitConverter.IsLittleEndian ? Value : [.. Value.Reverse()];
+    }
+    /// <inheritdoc/>
+    public override byte[] Parse(byte[] data) {
+        return BitConverter.IsLittleEndian ? data : [.. data.Reverse()];
+    }
+}
+
+/// <summary>
 /// A string field for Packets.
 /// </summary>
 public class StringField : Field<string> {
-    static StringField() {
-        PacketParser.RegisterField(new StringField());
-    }
     /// <inheritdoc/>
     public StringField() {}
     /// <inheritdoc/>
     public StringField(string value) : base(value) { }
     /// <inheritdoc/>
-    public StringField(byte[] data) : base(data) { }
+    public StringField(RawData data) : base(data) { }
     /// <inheritdoc/>
     public override uint? FixedSize => null;
     /// <inheritdoc/>
@@ -305,16 +290,13 @@ public class StringField : Field<string> {
 /// <summary>
 /// A list field for Packets.
 /// </summary>
-public class ListField : Field<List<Field<object>>> {
-    static ListField() {
-        PacketParser.RegisterField(new ListField());
-    }
+public class ListField : Field<List<Field>> {
     /// <inheritdoc/>
     public ListField() {}
     /// <inheritdoc/>
-    public ListField(List<Field<object>> value) : base(value) { }
+    public ListField(List<Field> value) : base(value) { }
     /// <inheritdoc/>
-    public ListField(byte[] data) : base(data) { }
+    public ListField(RawData data) : base(data) { }
 
     /// <inheritdoc/>
     public override uint? FixedSize => null;
@@ -326,9 +308,9 @@ public class ListField : Field<List<Field<object>>> {
     }
 
     /// <inheritdoc/>
-    public override List<Field<object>> Parse(byte[] data) {
+    public override List<Field> Parse(byte[] data) {
         Type type = GetType().GetGenericArguments()[0].GetGenericArguments()[0];
-        List<Field<object>> list = [];
+        List<Field> list = [];
         
         int dataIndex = 0;
         foreach (byte b in data) {

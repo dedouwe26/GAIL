@@ -15,7 +15,8 @@ namespace GAIL.Networking.Client {
     /// </summary>
     /// <param name="client">The connected client.</param>
     /// <param name="byServer">True if the server disconnected.</param>
-    public delegate void DisconnectCallback(ClientContainer client, bool byServer);
+    /// <param name="additionalData">The optional additional data.</param>
+    public delegate void DisconnectCallback(ClientContainer client, bool byServer, byte[] additionalData);
     /// <summary>
     /// An callback for when the client has stopped.
     /// </summary>
@@ -54,7 +55,8 @@ namespace GAIL.Networking.Server {
     /// <param name="server">The server.</param>
     /// <param name="connection">The disconnected client.</param>
     /// <param name="byClient">True if the client disconnected.</param>
-    public delegate void DisconnectCallback(ServerContainer server, Connection connection, bool byClient);
+    /// <param name="additionalData">The optional additional data.</param>
+    public delegate void DisconnectCallback(ServerContainer server, Connection connection, bool byClient, byte[] additionalData);
     /// <summary>
     /// An callback for when the server stopped listening.
     /// </summary>
