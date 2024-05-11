@@ -10,7 +10,6 @@ This library is built using Vulkan, OpenAL and GLFW for the graphics, audio and 
 </ul>
 
 It now also has Networking with packets 🛜 and data saving with storage files 🗄️. And GAIL is built using <a href="https://github.com/dotnet/Silk.NET">Silk.NET</a>. <br/>
-There also is a <a href="https://github.com/dedouwe26/GAIL2D/">2D version</a> that i'm working on.
 
 When you find a bug 🪲 or when you have a question ❓, please add a new issue in the <a href="https://github.com/dedouwe26/issues">issues tab</a>.<br/>
 In the <a href="https://github.com/dedouwe26/GAIL/wiki">wiki</a> 📙 you can find resources and examples to help you learn GAIL.
