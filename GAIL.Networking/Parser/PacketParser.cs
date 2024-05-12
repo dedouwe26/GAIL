@@ -7,6 +7,26 @@ namespace GAIL.Networking.Parser;
 /// Can convert data, for the GAIL Networking.
 /// </summary>
 public static class PacketParser {
+    static PacketParser() {
+        // All built-in fields
+        RegisterField(new BoolField());
+        RegisterField(new FloatField());
+        RegisterField(new DoubleField());
+        RegisterField(new ByteField());
+        RegisterField(new ShortField());
+        RegisterField(new IntField());
+        RegisterField(new LongField());
+        RegisterField(new SByteField());
+        RegisterField(new UShortField());
+        RegisterField(new UIntField());
+        RegisterField(new ULongField());
+        RegisterField(new BytesField());
+        RegisterField(new StringField());
+        RegisterField(new ListField());
+
+        // All built-in packets.
+        RegisterPacket(new DisconnectPacket());
+    }
     private record struct PacketData(ConstructorInfo Constructor, Type[] Format);
     private record struct FieldData(ConstructorInfo FromT, ConstructorInfo FromData, uint? FixedSize);
     private static readonly Dictionary<Type, FieldData> Fields = [];
@@ -15,13 +35,13 @@ public static class PacketParser {
 
     #region Constructors
     private static ConstructorInfo GetConstructor(Packet p) {
-        return p.GetType().GetConstructor([typeof(List<Field>)]) ?? throw new InvalidOperationException($"Packet ({p.GetType().Name}) does not contain a List<Field> constructor. Add this: '{p.GetType().Name}(List<Field> fields) : base(fields)  {'{'} {'}'}'");
+        return p.GetType().GetConstructor([typeof(List<Field>)]) ?? throw new InvalidOperationException($"Packet ({p.GetType().Name}) does not contain a List<Field> constructor. Add this: 'public {p.GetType().Name}(List<Field> fields) : base(fields)  {'{'} {'}'}'");
     }
     private static ConstructorInfo GetTypeConstructor<T>(Field<T> field) where T : notnull {
-        return field.GetType().GetConstructor([typeof(T)]) ?? throw new InvalidOperationException("The field has no constructor for creating a field from "+typeof(T).Name);
+        return field.GetType().GetConstructor([typeof(T)]) ?? throw new InvalidOperationException($"The field has no constructor for creating a field from {typeof(T).Name}. Add this: 'public {field.GetType().Name}({typeof(T).Name} value) : base(value)  {'{'} {'}'}'");
     }
     private static ConstructorInfo GetRawConstructor<T>(Field<T> field) where T : notnull {
-        return field.GetType().GetConstructor([typeof(RawData)]) ?? throw new InvalidOperationException("The field has no constructor for creating a field from (raw data)");
+        return field.GetType().GetConstructor([typeof(RawData)]) ?? throw new InvalidOperationException($"The field has no constructor for creating a field from raw data. Add this: 'public {field.GetType().Name}(RawData data) : base(data)  {'{'} {'}'}'");
     }
     #endregion Constructors
 
@@ -83,7 +103,7 @@ public static class PacketParser {
     /// <exception cref="InvalidOperationException"></exception>
     public static Packet CreatePacket(uint packetID, List<Field> fields) {
         if (Packets.Count <= packetID) {
-            throw new InvalidOperationException("Invalid packet ID: "+packetID);
+            throw new InvalidOperationException($"Invalid packet ID: {packetID}, is it registered?");
         }
         PacketData packetData = Packets[packetID];
         return (packetData.Constructor.Invoke([fields]) as Packet)!;
@@ -104,7 +124,7 @@ public static class PacketParser {
     /// <exception cref="InvalidOperationException"></exception>
     public static Type[] GetPacketFormat(uint packetID) {
         if (!Packets.TryGetValue(packetID, out PacketData data)) {
-            throw new InvalidOperationException("Invalid packet ID: "+packetID);
+            throw new InvalidOperationException($"Invalid packet ID: {packetID}, is it registered?");
         }
         return data.Format;
     }
@@ -125,12 +145,11 @@ public static class PacketParser {
     /// <exception cref="ArgumentException"></exception>
     /// <exception cref="InvalidOperationException"></exception>
     public static Field CreateFieldFromType(Type type, object data) {
-
         if (!Fields.TryGetValue(type, out FieldData ctor)) {
-            throw new ArgumentException("No field found for type: "+type.Name, nameof(type));
+            throw new ArgumentException($"No field found for type: {type.Name}, is it registered?", nameof(type));
         }
         if (ctor.FromT == null) {
-            throw new ArgumentException("No field found for type: "+type.Name, nameof(type));
+            throw new ArgumentException($"No field found for type: {type.Name}, is it registered?", nameof(type));
         }
         object obj = ctor.FromT!.Invoke([data]);
 
@@ -157,7 +176,7 @@ public static class PacketParser {
     /// <exception cref="InvalidOperationException"></exception>
     public static Field CreateFieldFromType(Type type, RawData data) {
         if (!Fields.TryGetValue(type, out FieldData ctor)) {
-            throw new ArgumentException("No field found for type: "+type.Name, nameof(type));
+            throw new ArgumentException($"No field found for type: {type.Name}, is it registered?", nameof(type));
         }
         object obj = ctor.FromData.Invoke([data]);
         if (obj is not Field) {
@@ -178,6 +197,7 @@ public static class PacketParser {
     }
     #endregion   Create
 
+    // TODO: Multiple types of fields per type e.g: UTF8Field (string), UniField (string)
     /// <summary>
     /// Registers a field.
     /// </summary>
@@ -204,7 +224,7 @@ public static class PacketParser {
     /// <exception cref="InvalidOperationException" />
     public static uint? GetFixedSize(Type type) {
         if (!Fields.TryGetValue(type, out FieldData fieldData)) {
-            throw new InvalidOperationException("Could not find a field with type: "+type.Name);
+            throw new ArgumentException($"No field found for type: {type.Name}, is it registered?", nameof(type));
         }
         return fieldData.FixedSize;
     }
@@ -285,7 +305,7 @@ public static class PacketParser {
     /// <param name="isClosed">If it should stop and return.</param>
     /// <param name="onPacket">The callback for when a packet has been received. Returns true if it should stop.</param>
     /// <returns>True if it was successfull, otherwise false.</returns>
-    public static async ValueTask<bool> Parse(Stream stream, Func<bool> isClosed, Func<Packet, bool> onPacket) {
+    public static bool Parse(Stream stream, Func<bool> isClosed, Func<Packet, bool> onPacket) {
         if (!stream.CanRead) { return false; }
         
         bool isInPacket = false;
@@ -297,7 +317,7 @@ public static class PacketParser {
         while (!isClosed()) {
             if (!isInPacket) {
                 buffer = new byte[4];
-                if (await stream.ReadAsync(buffer.AsMemory()) >= 0) {
+                if (stream.Read(buffer) <= 0) {
                     continue;
                 }
                 packetID = GetPacketID(buffer);
@@ -317,13 +337,13 @@ public static class PacketParser {
             
             if (size == null) {
                 buffer = new byte[4];
-                if (await stream.ReadAsync(buffer.AsMemory()) >= 0) {
+                if (stream.Read(buffer) <= 0) {
                     continue;
                 }
                 size = BitConverter.IsLittleEndian ? BitConverter.ToUInt32(buffer) : BitConverter.ToUInt32([.. buffer.Reverse()]);
             }
             buffer = new byte[size.Value];
-            if (await stream.ReadAsync(buffer.AsMemory()) >= 0) {
+            if (stream.Read(buffer) <= 0) {
                 continue;
             }
             fields.Add(Decode(buffer, format[formatIndex]));

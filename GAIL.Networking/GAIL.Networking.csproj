@@ -10,7 +10,7 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageDescription>GAIL is a library with graphics, audio and input. This is the network part of GAIL Delta.</PackageDescription>
+    <PackageDescription>GAIL is a library with graphics, audio and input. This is the extra network part.</PackageDescription>
     <PackageTags>Networking;library;GAIL</PackageTags>
     <Authors>0xDED</Authors>
     <RepositoryUrl>https://github.com/dedouwe26/GAIL.git</RepositoryUrl> 

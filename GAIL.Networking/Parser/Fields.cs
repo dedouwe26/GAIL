@@ -240,7 +240,6 @@ public class ULongField : Field<ulong> {
         return BitConverter.IsLittleEndian ? BitConverter.ToUInt64(data) : BitConverter.ToUInt64(data.Reverse().ToArray());
     }
 }
-
 /// <summary>
 /// A byte array field for Packets.
 /// </summary>
@@ -264,7 +263,6 @@ public class BytesField : Field<byte[]> {
         return BitConverter.IsLittleEndian ? data : [.. data.Reverse()];
     }
 }
-
 /// <summary>
 /// A string field for Packets.
 /// </summary>
@@ -286,7 +284,6 @@ public class StringField : Field<string> {
         return BitConverter.IsLittleEndian ? Encoding.UTF8.GetString(data) : Encoding.UTF8.GetString(data.Reverse().ToArray());
     }
 }
-
 /// <summary>
 /// A list field for Packets.
 /// </summary>
@@ -313,10 +310,11 @@ public class ListField : Field<List<Field>> {
         List<Field> list = [];
         
         int dataIndex = 0;
+        uint size;
+        uint? fixedSize;
         foreach (byte b in data) {
-            uint? fixedSize = PacketParser.GetFixedSize(type);
-
-            uint size;
+            fixedSize = PacketParser.GetFixedSize(type);
+            
             if (fixedSize == null) {
                 size = BitConverter.ToUInt32(data.Skip(dataIndex).Take(4).ToArray());
                 dataIndex += 4;

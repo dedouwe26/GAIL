@@ -84,6 +84,7 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
         try {
             tcpListener.Start();
         } catch (SocketException) {
+            // TODO: handle
             return false;
         }
         OnStart?.Invoke(this);
@@ -262,13 +263,15 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
             Connection connection = new(tcpListener.AcceptTcpClient());
             connections.Add(connection.ID, connection);
             OnConnect?.Invoke(this, connection);
-            ListenConnection(connection);
+            ThreadPool.QueueUserWorkItem(ListenConnection, connection);
         }
     }
 
-    private async void ListenConnection(Connection connection) {
+    private void ListenConnection(object? state) {
+        Connection connection = (Connection)state!;
         try {
-            await PacketParser.Parse(connection.Stream, () => Closed, (Packet p) => {
+            // TODO: handle exceptions
+            PacketParser.Parse(connection.Stream, () => Closed, (Packet p) => {
                 OnPacket?.Invoke(this, connection, p);
                 if (p is DisconnectPacket) {
                     connections.Remove(connection.ID);
@@ -279,7 +282,7 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
                 return false;
             });
         } catch (IOException) {
-            
+            // TODO: handle
         }
         
     }

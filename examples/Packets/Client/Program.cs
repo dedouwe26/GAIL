@@ -7,11 +7,13 @@ using OxDED.Terminal;
 namespace examples.Packets.Client;
 
 class Program {
-    public static void Main(string[] args) {
+    public static async Task Main(string[] args) {
+        // Registers all three packets.
+        Shared.Packets.RegisterPackets();
+
         // Ask for port for the client to connect on.
         Terminal.Write("Port of client: ");
-        // string port = Terminal.ReadLine()!;
-        string port = "3001";
+        string port = Terminal.ReadLine()!;
 
         // Creating a client.
         ClientContainer client = NetworkManager.CreateClient(
@@ -25,7 +27,7 @@ class Program {
         client.OnStop+=OnStop;
 
         // Don't forget to start the client.
-        client.Start();
+        await client.StartAsync();
     }
 
     private static void OnStop(ClientContainer client) {
@@ -36,14 +38,12 @@ class Program {
     private static async void OnConnect(ClientContainer client) {
         // Send register packet.
         Terminal.Write("Connected. Enter name: ");
-        // string name = Terminal.ReadLine()!;
-        string name = "hi";
+        string name = Terminal.ReadLine()!;
         await client.SendPacketAsync(new RegisterPacket(name));
 
         // Send a new message back.
         Terminal.Write("Message: ");
-        // Terminal.ReadLine()!
-        await client.SendPacketAsync(new MessagePacket("hi"));
+        await client.SendPacketAsync(new MessagePacket(Terminal.ReadLine()!));
     }
 
     private static void OnPacket(ClientContainer client, Packet packet) {

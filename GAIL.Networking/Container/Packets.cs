@@ -6,27 +6,20 @@ namespace GAIL.Networking;
 /// A DisconnectPacket used byt <see cref="Client.ClientContainer"/> and <see cref="Server.ServerContainer"/>
 /// </summary>
 public class DisconnectPacket : Packet {
-    static DisconnectPacket() {
-        PacketParser.RegisterField(new BytesField());
-        PacketParser.RegisterPacket(new DisconnectPacket());
-    }
-
     /// <inheritdoc/>
     public override Type[] Format { get => [typeof(byte[])]; }
 
     /// <summary>
     /// The optional additional data.
     /// </summary>
-    public byte[] AdditionalData;
+    public byte[] AdditionalData = [];
 
+    /// <summary>
+    /// Creates an empty disconnect packet.
+    /// </summary>
+    public DisconnectPacket() { }
     /// <inheritdoc/>
-    public DisconnectPacket() {
-        AdditionalData = [];
-    }
-    /// <inheritdoc/>
-    public DisconnectPacket(byte[] additionalData) {
-        AdditionalData = additionalData;
-    }
+    public DisconnectPacket(byte[] additionalData) { }
     /// <inheritdoc/>
     public DisconnectPacket(List<Field> fields) : base(fields)  { AdditionalData = []; }
 

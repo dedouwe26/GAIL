@@ -84,6 +84,7 @@ public class ClientContainer : IDisposable {
         try {
             await tcpClient.ConnectAsync(Server);
         } catch (SocketException) {
+            // TODO: handle
             return false;
         }
         NetworkStream = tcpClient.GetStream();
@@ -101,6 +102,7 @@ public class ClientContainer : IDisposable {
         try {
             tcpClient.Connect(Server);
         } catch (SocketException) {
+            // TODO: handle
             return false;
         }
         NetworkStream = tcpClient.GetStream();
@@ -110,8 +112,9 @@ public class ClientContainer : IDisposable {
         listenThread.Start();
         return true;
     }
-    private async void Listen() {
-        await PacketParser.Parse(NetworkStream!, () => Closed, (Packet p) => {
+    private void Listen() {
+        // TODO: handle exceptions
+        PacketParser.Parse(NetworkStream!, () => Closed, (Packet p) => {
             OnPacket?.Invoke(this, p);
             if (p is DisconnectPacket) {
                 OnDisconnect?.Invoke(this, true, (p as DisconnectPacket)!.AdditionalData);

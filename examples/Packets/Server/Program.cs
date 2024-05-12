@@ -1,6 +1,7 @@
 using System.Net;
 using examples.Packets.Shared;
 using GAIL.Networking;
+using GAIL.Networking.Parser;
 using GAIL.Networking.Server;
 using OxDED.Terminal;
 
@@ -8,6 +9,9 @@ namespace examples.Packets.Server;
 
 class Program {
     public static void Main(string[] args) {
+        // Registers all three packets.
+        Shared.Packets.RegisterPackets();
+
         ServerContainer server = NetworkManager.CreateServer(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 3003));
 
         // Listening to events
@@ -15,7 +19,7 @@ class Program {
         server.OnDisconnect+=OnDisconnect;
 
         // Don't forget to start the server.
-        Terminal.WriteLine("Started listening...", new Style{ foregroundColor = Color.Green});
+        Terminal.WriteLine("Started listening...", new Style{ ForegroundColor = Color.Green});
         server.Start();
     }
 

@@ -8,19 +8,28 @@
             "name": "C#: Packets-Client Debug",
             "type": "dotnet",
             "request": "launch",
-            "projectPath": "${workspaceFolder}/examples/Packets/Client/Client.csproj"
+            "projectPath": "${workspaceFolder}\\examples\\Packets\\Client\\Client.csproj",
+            "windows": {
+                "projectPath": "${workspaceFolder}\\examples\\Packets\\Client\\Client.csproj"
+            }
         },
         {
             "name": "C#: Packets-Server Debug",
             "type": "dotnet",
             "request": "launch",
-            "projectPath": "${workspaceFolder}/examples/Packets/Server/Server.csproj"
+            "projectPath": "${workspaceFolder}/examples/Packets/Server/Server.csproj",
+            "windows": {
+                "projectPath": "${workspaceFolder}\\examples\\Packets\\Server\\Server.csproj"
+            }
         },
         {
             "name": "C#: HelloTriangle Debug",
             "type": "dotnet",
             "request": "launch",
-            "projectPath": "${workspaceFolder}/examples/HelloTriangle/HelloTriangle.csproj"
+            "projectPath": "${workspaceFolder}/examples/HelloTriangle/HelloTriangle.csproj",
+            "windows": {
+                "projectPath": "${workspaceFolder}\\examples\\HelloTriangle\\HelloTriangle.csproj"
+            }
         }
 
     ]
