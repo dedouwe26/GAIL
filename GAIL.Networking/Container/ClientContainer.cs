@@ -113,7 +113,7 @@ public class ClientContainer : IDisposable {
         return true;
     }
     private void Listen() {
-        // TODO: handle exceptions
+        // TODO: handle exceptions (IOException)
         PacketParser.Parse(NetworkStream!, () => Closed, (Packet p) => {
             OnPacket?.Invoke(this, p);
             if (p is DisconnectPacket) {

@@ -2,6 +2,7 @@ using System.Net;
 using examples.Packets.Shared;
 using GAIL.Networking;
 using GAIL.Networking.Client;
+using GAIL.Networking.Parser;
 using OxDED.Terminal;
 
 namespace examples.Packets.Client;
@@ -34,27 +35,38 @@ class Program {
         // Clears whole screen
         Terminal.WriteLine("Stopped.");
     }
-
+    private static async ValueTask ReadMessage(ClientContainer client) {
+        // Send a new message back.
+        Terminal.Write("Message: ");
+        string message = Terminal.ReadLine()!;
+        if (message.StartsWith("/exit ")) {
+            // Sends custom data.
+            // Field is just for dealing with strings and endianness,
+            // you could also use BitConverter.
+            await client.StopAsync(new StringField(message[6..]).Format());
+        } else {
+            await client.SendPacketAsync(new MessagePacket(message));
+        }
+    }
     private static async void OnConnect(ClientContainer client) {
         // Send register packet.
         Terminal.Write("Connected. Enter name: ");
         string name = Terminal.ReadLine()!;
+        // Sends a register packet with the name.
         await client.SendPacketAsync(new RegisterPacket(name));
+        // Usage
+        Terminal.WriteLine("Enter /exit ... to exit with text");
 
-        // Send a new message back.
-        Terminal.Write("Message: ");
-        await client.SendPacketAsync(new MessagePacket(Terminal.ReadLine()!));
+        await ReadMessage(client);
     }
 
-    private static void OnPacket(ClientContainer client, Packet packet) {
+    private static async void OnPacket(ClientContainer client, Packet packet) {
         // Check if packet is a message packet.
         if (packet is NameMessagePacket messagePacket) {
             // Append message to messages.
             Terminal.WriteLine($"<{messagePacket.name}> : {messagePacket.message}");
 
-            // Send a new message back.
-            Terminal.Write("Message: ");
-            client.SendPacket(new MessagePacket(Terminal.ReadLine()!));
+            await ReadMessage(client);
         }
     }
 }

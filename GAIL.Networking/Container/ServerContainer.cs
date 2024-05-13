@@ -5,8 +5,6 @@ using GAIL.Networking.Parser;
 
 namespace GAIL.Networking.Server;
 
-// TODO: send asynchronous
-
 /// <summary>
 /// This is a server that listens for packets.
 /// </summary>
@@ -64,6 +62,7 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
 
     private Thread? listenThread;
     private ServerContainer(IPEndPoint ip) {
+        Closed = true;
         IP = ip;
         tcpListener = new TcpListener(ip);
         
@@ -87,6 +86,7 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
             // TODO: handle
             return false;
         }
+        Closed = false;
         OnStart?.Invoke(this);
         listenThread = new Thread(Listen);
         listenThread.Start();
@@ -259,16 +259,15 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
 
     private void Listen() {
         while (!Closed) {
-            
-            Connection connection = new(tcpListener.AcceptTcpClient());
-            connections.Add(connection.ID, connection);
-            OnConnect?.Invoke(this, connection);
-            ThreadPool.QueueUserWorkItem(ListenConnection, connection);
+            tcpListener.BeginAcceptTcpClient(ListenConnection, null);
         }
+        
     }
 
-    private void ListenConnection(object? state) {
-        Connection connection = (Connection)state!;
+    private void ListenConnection(IAsyncResult result) {
+        Connection connection = new(tcpListener.EndAcceptTcpClient(result));
+        connections.Add(connection.ID, connection);
+        OnConnect?.Invoke(this, connection);
         try {
             // TODO: handle exceptions
             PacketParser.Parse(connection.Stream, () => Closed, (Packet p) => {
