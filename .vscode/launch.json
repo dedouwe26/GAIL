@@ -7,6 +7,7 @@
         {
             "name": "C#: Packets-Client Debug",
             "type": "dotnet",
+            "preLaunchTask": "GAIL Networking: Test",
             "request": "launch",
             "projectPath": "${workspaceFolder}\\examples\\Packets\\Client\\Client.csproj",
             "windows": {
@@ -16,6 +17,7 @@
         {
             "name": "C#: Packets-Server Debug",
             "type": "dotnet",
+            "preLaunchTask": "GAIL Networking: Test",
             "request": "launch",
             "projectPath": "${workspaceFolder}/examples/Packets/Server/Server.csproj",
             "windows": {
@@ -25,6 +27,7 @@
         {
             "name": "C#: HelloTriangle Debug",
             "type": "dotnet",
+            "preLaunchTask": "GAIL Networking: Test",
             "request": "launch",
             "projectPath": "${workspaceFolder}/examples/HelloTriangle/HelloTriangle.csproj",
             "windows": {

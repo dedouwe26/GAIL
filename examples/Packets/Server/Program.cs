@@ -1,7 +1,6 @@
 using System.Net;
 using examples.Packets.Shared;
 using GAIL.Networking;
-using GAIL.Networking.Parser;
 using GAIL.Networking.Server;
 using OxDED.Terminal;
 

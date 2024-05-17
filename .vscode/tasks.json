@@ -1,0 +1,83 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "GAIL: Build",
+			"dependsOn": "GAIL: Test",
+			"group": "build",
+			"command": "dotnet build",
+			"options": {
+				"cwd": "${workspaceFolder}/GAIL"
+			}
+		},
+		{
+			"label": "GAIL: Package",
+			"dependsOn": "GAIL: Test",
+			"group": "build",
+			"command": "dotnet pack",
+			"options": {
+				"cwd": "${workspaceFolder}/GAIL"
+			}
+		},
+		{
+			"label": "GAIL: Test",
+			"group": "test",
+			"command": "dotnet test",
+			"options": {
+				"cwd": "${workspaceFolder}/Tests/GAIL.Tests"
+			}
+		},
+		{
+			"label": "GAIL Networking: Build",
+			"dependsOn": "GAIL: Test",
+			"group": "build",
+			"command": "dotnet build",
+			"options": {
+				"cwd": "${workspaceFolder}/GAIL.Networking"
+			}
+		},
+		{
+			"label": "GAIL Networking: Package",
+			"dependsOn": "GAIL: Test",
+			"group": "build",
+			"command": "dotnet pack",
+			"options": {
+				"cwd": "${workspaceFolder}/GAIL.Networking"
+			}
+		},
+		{
+			"label": "GAIL Networking: Test",
+			"group": "test",
+			"command": "dotnet test",
+			"options": {
+				"cwd": "${workspaceFolder}/Tests/GAIL.Networking.Tests"
+			}
+		},
+		{
+			"label": "GAIL Storage: Build",
+			"dependsOn": "GAIL: Test",
+			"group": "build",
+			"command": "dotnet build",
+			"options": {
+				"cwd": "${workspaceFolder}/GAIL.Storage"
+			}
+		},
+		{
+			"label": "GAIL Storage: Package",
+			"dependsOn": "GAIL: Test",
+			"group": "build",
+			"command": "dotnet pack",
+			"options": {
+				"cwd": "${workspaceFolder}/GAIL.Storage"
+			}
+		},
+		{
+			"label": "GAIL Storage: Test",
+			"group": "test",
+			"command": "dotnet test",
+			"options": {
+				"cwd": "${workspaceFolder}/Tests/GAIL.Storage.Tests"
+			}
+		}
+	]
+}
