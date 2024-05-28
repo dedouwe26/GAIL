@@ -2,15 +2,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\GAIL.Networking\GAIL.Networking.csproj" />
-    <ProjectReference Include="..\Shared\Shared.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="0xDED.Terminal" Version="3.1.4" />
+    <ProjectReference Include="..\..\..\GAIL\GAIL.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
