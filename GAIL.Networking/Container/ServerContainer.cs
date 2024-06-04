@@ -2,6 +2,8 @@ using System.Collections.ObjectModel;
 using System.Net;
 using System.Net.Sockets;
 using GAIL.Networking.Parser;
+using OxDED.Terminal;
+using OxDED.Terminal.Logging;
 
 namespace GAIL.Networking.Server;
 
@@ -12,11 +14,22 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
     /// <summary>
     /// Creates a server.
     /// </summary>
-    /// <param name="ip">The IP end point to listen for (IP address and port).</param>
+    /// <param name="ip">The IP end point to listen on (IP address and port).</param>
+    /// <param name="enableLogging">If the server should start logging.</param>
+    /// <param name="logger">The logger to use (default: ID: GAIL.Networking.Server.{ Connection.CreateID( IP ) } ).</param>
     /// <returns>The created server.</returns>
-    public static ServerContainer Create(IPEndPoint ip) {
-        return new(ip);
+    public static ServerContainer Create(IPEndPoint ip, bool enableLogging = false, Logger? logger = null) {
+        ServerContainer server = new(ip);
+        if (enableLogging) {
+            server.SetLogger(logger);
+        }
+        return server;
     }
+    /// <summary>
+    /// The logger of this server.
+    /// Set it using <see cref="SetLogger"/>
+    /// </summary>
+    public Logger? Logger { get; private set; }
     /// <summary>
     /// The IP end point that the server is listening on (IP address and port).
     /// </summary>
@@ -54,6 +67,10 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
     /// An event that is called when a packet is sent.
     /// </summary>
     public event PacketSentCallback? OnPacketSent;
+    /// <summary>
+    /// An event for when an exception is thrown (only IOException, SocketException).
+    /// </summary>
+    public event ExceptionCallback? OnException;
 
     /// <summary>
     /// If the server is closed.
@@ -82,8 +99,9 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
     public bool Start() {
         try {
             tcpListener.Start();
-        } catch (SocketException) {
-            // TODO: handle
+        } catch (SocketException e) {
+            Logger?.LogFatal("Unable to start listening: \""+e.Message+"\".");
+            OnException?.Invoke(e);
             return false;
         }
         Closed = false;
@@ -93,6 +111,30 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
         return true;
     }
 
+    /// <summary>
+    /// Sets the logger of this server.
+    /// </summary>
+    /// <param name="logger">The logger for this server ( default: ID: GAIL.Networking.Server.{ Connection.CreateID( IP ) } ).</param>
+    /// <param name="disable">If it should disable the logging.</param>
+    public void SetLogger(Logger? logger = null, bool disable = false) {
+        Logger = disable ? null : (logger ?? new Logger(
+            $"GAIL.Networking.Server.{Connection.CreateID(IP)}",
+            "Networking Server",
+            Severity.Info,
+            new () {
+                [typeof(TerminalTarget)] = new TerminalTarget()
+            }
+        ));
+        
+        if (Logger?.HasTarget(typeof(TerminalTarget)) ?? false) {
+            Logger.GetTarget<TerminalTarget>().Format = "<{0}>: ("+Color.DarkBlue.ToForegroundANSI()+"{2}"+ANSI.Styles.ResetAll+")[{5}"+ANSI.Styles.Bold+"{3}"+ANSI.Styles.ResetAll+"] : {5}{4}"+ANSI.Styles.ResetAll;
+            Logger.GetTarget<TerminalTarget>().NameFormat =  "{0} - {1}";
+        }
+        if (Logger?.HasTarget(typeof(FileTarget)) ?? false) {
+            Logger.GetTarget<FileTarget>().Format = "<{0}>: ({2})[{3}] : {4}";
+            Logger.GetTarget<FileTarget>().NameFormat =  "{0} - {1}";
+        }
+    }
 
     #region Send
     
@@ -258,18 +300,18 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
 
 
     private void Listen() {
-        while (!Closed) {
-            tcpListener.BeginAcceptTcpClient(ListenConnection, null);
-        }
-        
+        tcpListener.BeginAcceptTcpClient(new(ListenConnection), null);
     }
 
     private void ListenConnection(IAsyncResult result) {
+        if (Closed) {return;}
+        // Dispatch new.
+        tcpListener.BeginAcceptTcpClient(new(ListenConnection), null);
+
         Connection connection = new(tcpListener.EndAcceptTcpClient(result));
         connections.Add(connection.ID, connection);
         OnConnect?.Invoke(this, connection);
         try {
-            // TODO: handle exceptions
             PacketParser.Parse(connection.Stream, () => Closed, (Packet p) => {
                 OnPacket?.Invoke(this, connection, p);
                 if (p is DisconnectPacket) {
@@ -280,8 +322,9 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
                 }
                 return false;
             });
-        } catch (IOException) {
-            // TODO: handle
+        } catch (IOException e) {
+            Logger?.LogFatal("Could not read from network stream: \""+e.Message+"\".");
+            OnException?.Invoke(e);
         }
         
     }

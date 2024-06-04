@@ -13,12 +13,11 @@ public static class Packets {
 }
 
 public class MessagePacket : Packet {
-    public override Type[] Format => [typeof(string)];
+    // The format of this packet (baseplate fields).
+    public override Field[] Format => [new StringField()];
     // Assign default values (for empty constructor).
     public string message = "";
-    static MessagePacket() {
-        PacketParser.RegisterField(new StringField());
-    }
+
     // Empty constructor for registering.
     public MessagePacket() { }
     public MessagePacket(string message) {
@@ -27,16 +26,16 @@ public class MessagePacket : Packet {
     // You can call Parse method directly.
     public MessagePacket(List<Field> fields)  { Parse(fields); }
 
-    public override List<Field> GetFields() {
+    public override List<Field> GetFields() { // Create the fields (in the format above).
         return [new StringField(message)];
     }
 
-    public override void Parse(List<Field> fields) {
+    public override void Parse(List<Field> fields) { // Assign the values back.
         message = (string)fields[0].BaseValue;
     }
 }
 public class NameMessagePacket : Packet {
-    public override Type[] Format => [typeof(string), typeof(string)];
+    public override Field[] Format => [new StringField(), new StringField()];
 
     public string message = "";
     public string name = "";
@@ -61,7 +60,7 @@ public class NameMessagePacket : Packet {
     }
 }
 public class RegisterPacket : Packet {
-    public override Type[] Format => [typeof(string)];
+    public override Field[] Format => [new StringField()];
 
     public string name = "";
     static RegisterPacket() {

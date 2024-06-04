@@ -1,3 +1,11 @@
+namespace GAIL.Networking {
+    /// <summary>
+    /// An callback for when an exception is thrown (only IOException and SocketException).
+    /// </summary>
+    /// <param name="exception">The exception that is thrown (only IOException and SocketException).</param>
+    public delegate void ExceptionCallback(Exception exception);
+}
+
 namespace GAIL.Networking.Client {
     /// <summary>
     /// An callback for when a packet is received.

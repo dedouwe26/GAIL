@@ -7,7 +7,7 @@ namespace GAIL.Networking;
 /// </summary>
 public class DisconnectPacket : Packet {
     /// <inheritdoc/>
-    public override Type[] Format { get => [typeof(byte[])]; }
+    public override Field[] Format { get => [new BytesField()]; }
 
     /// <summary>
     /// The optional additional data.
@@ -18,10 +18,13 @@ public class DisconnectPacket : Packet {
     /// Creates an empty disconnect packet.
     /// </summary>
     public DisconnectPacket() { }
+    /// <summary>
+    /// Creates a disconnect packet with additional data.
+    /// </summary>
+    /// <param name="additionalData">The additional data to send.</param>
+    public DisconnectPacket(byte[] additionalData) { AdditionalData = additionalData; }
     /// <inheritdoc/>
-    public DisconnectPacket(byte[] additionalData) { }
-    /// <inheritdoc/>
-    public DisconnectPacket(List<Field> fields) : base(fields)  { AdditionalData = []; }
+    public DisconnectPacket(List<Field> fields) : base(fields)  { }
 
     /// <inheritdoc/>
     public override List<Field> GetFields() {

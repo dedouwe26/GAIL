@@ -21,14 +21,13 @@ public static class PacketParser {
         RegisterField(new ULongField());
         RegisterField(new BytesField());
         RegisterField(new StringField());
-        RegisterField(new ListField());
 
         // All built-in packets.
         RegisterPacket(new DisconnectPacket());
     }
-    private record struct PacketData(ConstructorInfo Constructor, Type[] Format);
-    private record struct FieldData(ConstructorInfo FromT, ConstructorInfo FromData, uint? FixedSize);
-    private static readonly Dictionary<Type, FieldData> Fields = [];
+    private record struct PacketData(ConstructorInfo Constructor, Field[] Format);
+    private record struct FieldData(ConstructorInfo FromT, ConstructorInfo FromData);
+    private static readonly Dictionary<Field, FieldData> Fields = [];
     private static readonly Dictionary<uint, PacketData> Packets = [];
 
 
@@ -121,7 +120,7 @@ public static class PacketParser {
     /// <param name="packetID">The ID of the packet.</param>
     /// <returns>The format of the packet.</returns>
     /// <exception cref="InvalidOperationException"></exception>
-    public static Type[] GetPacketFormat(uint packetID) {
+    public static Field[] GetPacketFormat(uint packetID) {
         if (!Packets.TryGetValue(packetID, out PacketData data)) {
             throw new InvalidOperationException($"Invalid packet ID: {packetID}, is it registered?");
         }
@@ -138,44 +137,34 @@ public static class PacketParser {
     /// <summary>
     /// Creates a field from the data.
     /// </summary>
-    /// <param name="type">The type of the data.</param>
+    /// <param name="field">The baseplate field (what field to use).</param>
     /// <param name="data">The data.</param>
     /// <returns>The created field.</returns>
     /// <exception cref="ArgumentException"></exception>
     /// <exception cref="InvalidOperationException"></exception>
-    public static Field CreateFieldFromType(Type type, object data) {
-        if (!Fields.TryGetValue(type, out FieldData ctor)) {
-            throw new ArgumentException($"No field found for type: {type.Name}, is it registered?", nameof(type));
+    public static Field CreateField(Field field, object data) {
+        if (!Fields.TryGetValue(field, out FieldData fieldData)) {
+            throw new ArgumentException($"No field found for type: {field.GetType().Name}, is it registered?", nameof(field));
         }
-        if (ctor.FromT == null) {
-            throw new ArgumentException($"No field found for type: {type.Name}, is it registered?", nameof(type));
+        if (fieldData.FromT == null) {
+            throw new ArgumentException($"No field found for type: {field.GetType().Name}, is it registered?", nameof(field));
         }
-        object obj = ctor.FromT!.Invoke([data]);
+        object obj = fieldData.FromT.Invoke([data]);
 
         return (obj as Field)!;
     }
-    /// <summary>
-    /// Creates a field from the data.
-    /// </summary>
-    /// <typeparam name="T">The type of the data.</typeparam>
-    /// <param name="data">The data.</param>
-    /// <returns>The created field.</returns>
-    /// <exception cref="ArgumentException"></exception>
-    /// <exception cref="InvalidOperationException"></exception>
-    public static Field<T> CreateFieldFromType<T>(T data) where T : notnull {
-        return (CreateFieldFromType(typeof(T), data) as Field<T>)!;
-    }
+
     /// <summary>
     /// Creates a field from an type.
     /// </summary>
-    /// <param name="type">The value type of the field.</param>
+    /// <param name="field">The baseplate field (what field to use).</param>
     /// <param name="data">The raw data for the field.</param>
     /// <returns>The created field.</returns>
     /// <exception cref="ArgumentException"></exception>
     /// <exception cref="InvalidOperationException"></exception>
-    public static Field CreateFieldFromType(Type type, RawData data) {
-        if (!Fields.TryGetValue(type, out FieldData ctor)) {
-            throw new ArgumentException($"No field found for type: {type.Name}, is it registered?", nameof(type));
+    public static Field CreateField(Field field, RawData data) {
+        if (!Fields.TryGetValue(field, out FieldData ctor)) {
+            throw new ArgumentException($"No field found for type: {field.GetType().Name}, is it registered?", nameof(field));
         }
         object obj = ctor.FromData.Invoke([data]);
         if (obj is not Field) {
@@ -183,20 +172,9 @@ public static class PacketParser {
         }
         return (obj as Field)!;
     }
-    /// <summary>
-    /// Creates a field from an type.
-    /// </summary>
-    /// <typeparam name="T">The value type of the field.</typeparam>
-    /// <param name="data">The raw data for the field.</param>
-    /// <returns>The created field.</returns>
-    /// <exception cref="ArgumentException"></exception>
-    /// <exception cref="InvalidOperationException"></exception>
-    public static Field<T> CreateFieldFromType<T>(RawData data) where T : notnull {
-        return (CreateFieldFromType(typeof(T), data) as Field<T>)!;
-    }
+
     #endregion   Create
 
-    // TODO: Multiple types of fields per type e.g: UTF8Field (string), UniField (string)
     /// <summary>
     /// Registers a field.
     /// </summary>
@@ -206,96 +184,27 @@ public static class PacketParser {
     /// <exception cref="InvalidOperationException"/>
     public static bool RegisterField<T>(Field<T> field) where T : notnull {
         if (field == null) {return false;}
-        if (Fields.ContainsKey(typeof(T))) {return false;}
-        Fields.Add(typeof(T), new (
-            GetTypeConstructor(field), 
-            GetRawConstructor(field),
-            field.FixedSize
+        if (Fields.ContainsKey(field)) {return false;}
+        Fields.Add(field, new (
+            GetTypeConstructor(field),
+            GetRawConstructor(field)
         ));
         return true;
     }
 
     /// <summary>
-    /// Gets the fixed size of a field if it has one.
+    /// Checks if that field baseplate is registered.
     /// </summary>
-    /// <param name="type">The type of the field type.</param>
-    /// <returns>The fixed size.</returns>
-    /// <exception cref="InvalidOperationException" />
-    public static uint? GetFixedSize(Type type) {
-        if (!Fields.TryGetValue(type, out FieldData fieldData)) {
-            throw new ArgumentException($"No field found for type: {type.Name}, is it registered?", nameof(type));
-        }
-        return fieldData.FixedSize;
-    }
-    /// <summary>
-    /// Checks if there is a field for type <paramref name="type"/>
-    /// </summary>
-    /// <param name="type">The type of the field type.</param>
+    /// <param name="field">The baseplate field (what field to use).</param>
     /// <returns>True if there is one.</returns>
-    public static bool ContainsFieldType(Type type) {
-        return Fields.ContainsKey(type);
-    }
-    /// <summary>
-    /// Checks if there is a field for type <typeparamref name="T"/>
-    /// </summary>
-    /// <typeparam name="T">The type of the field type.</typeparam>
-    /// <returns>True if there is one.</returns>
-    public static bool ContainsFieldType<T>() where T : notnull {
-        return ContainsFieldType(typeof(T));
+    public static bool ContainsField(Field field) {
+        return Fields.ContainsKey(field);
     }
 
     #endregion Fields
 
     
     #region Parser
-    
-    #region Obsolete
-    #if false
-    /// <summary>
-    /// Reads the length of the next field (see: <see cref="WriteLength"/>).
-    /// </summary>
-    /// <param name="currentByte">The current byte in an array.</param>
-    /// <param name="nextByte">The function to get the next byte.</param>
-    /// <returns>The length of the next field.</returns>
-    public static uint ReadLength(byte currentByte, Func<byte> nextByte) {
-        byte data = (byte)(0b_1111_1110 & currentByte);
-        if ((0b_0000_0001 & currentByte) == 1) {
-            return (uint)(data >>> 1);
-        } else {
-            return ((uint)((data >>> 1) << 7)) | ReadLength(nextByte(), nextByte);
-        }
-    }
-    #endif
-    #endregion Obsolete
-    
-    /// <summary>
-    /// Parses the raw data into fields.
-    /// </summary>
-    /// <param name="data">The raw data to parse.</param>
-    /// <param name="format">The format of the fields.</param>
-    /// <returns>All the parsed fields.</returns>
-    public static List<Field> ParseAll(byte[] data, Type[] format) {
-        List<Field> fields = [];
-        
-        if (data.Length <= 0) {
-            return fields;
-        }
-
-        int dataIndex = 0;
-        foreach (Type type in format) {
-            uint? fixedSize = GetFixedSize(type);
-            uint size;
-            if (fixedSize == null) {
-                size = BitConverter.IsLittleEndian ? BitConverter.ToUInt32(data.Skip(dataIndex).Take(4).ToArray()) : BitConverter.ToUInt32(data.Skip(dataIndex).Take(4).Reverse().ToArray());
-                dataIndex += 4;
-            } else {
-                size = fixedSize.Value;
-            }
-            fields.Add(Decode(data.Skip(dataIndex).Take(checked((int)size)).ToArray(), type));
-        }
-
-        return fields;
-    }
 
     /// <summary>
     /// Parses the stream for packets.
@@ -310,7 +219,7 @@ public static class PacketParser {
         bool isInPacket = false;
         uint packetID = 0;
         List<Field> fields = [];
-        Type[] format = [];
+        Field[] format = [];
         int formatIndex = 0;
         byte[] buffer;
         while (!isClosed()) {
@@ -332,7 +241,7 @@ public static class PacketParser {
                 continue;
             }
             
-            uint? size = GetFixedSize(format[formatIndex]);
+            uint? size = format[formatIndex].FixedSize;
             
             if (size == null) {
                 buffer = new byte[4];
@@ -402,19 +311,10 @@ public static class PacketParser {
     /// Decodes a field, without the non-fixed uint size.
     /// </summary>
     /// <param name="data">The raw data.</param>
-    /// <param name="type">The type of the field type.</param>
+    /// <param name="field">The field baseplate.</param>
     /// <returns>The decoded field.</returns>
-    public static Field Decode(byte[] data, Type type) {
-        return CreateFieldFromType(type, new RawData{ data = data });
-    }
-    /// <summary>
-    /// Decodes a field, without the non-fixed uint size.
-    /// </summary>
-    /// <typeparam name="T">The type of the field type.</typeparam>
-    /// <param name="data">The raw data.</param>
-    /// <returns>The decoded field.</returns>
-    public static Field<T> Decode<T>(byte[] data) where T : notnull {
-        return (Decode(data, typeof(T)) as Field<T>)!;
+    public static Field Decode(byte[] data, Field field) {
+        return CreateField(field, new RawData{ data = data });
     }
 
     #endregion Parser

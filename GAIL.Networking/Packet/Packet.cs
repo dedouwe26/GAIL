@@ -16,9 +16,9 @@ public abstract class Packet {
     /// <param name="data">The bytes to parse.</param>
     public Packet(List<Field> data) { Parse(data); }
     /// <summary>
-    /// The format of this packets (types of the field types).
+    /// The format of this packets (field baseplates).
     /// </summary>
-    public abstract Type[] Format { get; }
+    public abstract Field[] Format { get; }
     /// <summary>
     /// Gets all the fields of this packet.
     /// </summary>
