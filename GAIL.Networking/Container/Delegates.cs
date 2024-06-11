@@ -1,12 +1,9 @@
-namespace GAIL.Networking {
+namespace GAIL.Networking.Client {
     /// <summary>
     /// An callback for when an exception is thrown (only IOException and SocketException).
     /// </summary>
     /// <param name="exception">The exception that is thrown (only IOException and SocketException).</param>
     public delegate void ExceptionCallback(Exception exception);
-}
-
-namespace GAIL.Networking.Client {
     /// <summary>
     /// An callback for when a packet is received.
     /// </summary>
@@ -39,6 +36,12 @@ namespace GAIL.Networking.Client {
 }
 
 namespace GAIL.Networking.Server {
+    /// <summary>
+    /// An callback for when an exception is thrown (only IOException and SocketException).
+    /// </summary>
+    /// <param name="exception">The exception that is thrown (only IOException and SocketException).</param>
+    /// <param name="connection">The connection where the exception occured in (if there is one).</param>
+    public delegate void ExceptionCallback(Exception exception, Connection? connection);
     /// <summary>
     /// An callback for when a packet is received.
     /// </summary>

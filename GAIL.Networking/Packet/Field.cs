@@ -19,6 +19,10 @@ public abstract class Field {
     /// <param name="data">The raw data to create this field from.</param>
     public Field(RawData data) { BaseValue = BaseParse(data.data); }
     /// <summary>
+    /// The key for identifing a field.
+    /// </summary>
+    public virtual string Key { get => GetType().FullName!; }
+    /// <summary>
     /// Creates the raw data from this Field.
     /// </summary>
     /// <returns>The raw data.</returns>

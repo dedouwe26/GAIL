@@ -3,81 +3,78 @@
 	"tasks": [
 		{
 			"label": "GAIL: Build",
-			"dependsOn": "GAIL: Test",
 			"group": "build",
-			"command": "dotnet build",
-			"options": {
-				"cwd": "${workspaceFolder}/GAIL"
-			}
+			"command": "dotnet",
+			"args": ["build", "${workspaceFolder}/GAIL.csproj"]
 		},
 		{
 			"label": "GAIL: Package",
 			"dependsOn": "GAIL: Test",
 			"group": "build",
-			"command": "dotnet pack",
-			"options": {
-				"cwd": "${workspaceFolder}/GAIL"
-			}
+			"command": "dotnet",
+			"args": ["pack", "${workspaceFolder}/GAIL.csproj"]
 		},
 		{
 			"label": "GAIL: Test",
 			"group": "test",
-			"command": "dotnet test",
-			"options": {
-				"cwd": "${workspaceFolder}/Tests/GAIL.Tests"
-			}
+			"command": "dotnet",
+			"args": ["test", "${workspaceFolder}/Tests/GAIL.Tests.csproj"]
 		},
 		{
 			"label": "GAIL Networking: Build",
-			"dependsOn": "GAIL: Test",
 			"group": "build",
-			"command": "dotnet build",
-			"options": {
-				"cwd": "${workspaceFolder}/GAIL.Networking"
-			}
+			"command": "dotnet",
+			"args": ["build", "${workspaceFolder}/GAIL.Networking.csproj"]
 		},
 		{
 			"label": "GAIL Networking: Package",
-			"dependsOn": "GAIL: Test",
+			"dependsOn": "GAIL Networking: Test",
 			"group": "build",
-			"command": "dotnet pack",
-			"options": {
-				"cwd": "${workspaceFolder}/GAIL.Networking"
-			}
+			"command": "dotnet",
+			"args": ["pack", "${workspaceFolder}/GAIL.Networking.csproj"]
 		},
 		{
 			"label": "GAIL Networking: Test",
 			"group": "test",
-			"command": "dotnet test",
-			"options": {
-				"cwd": "${workspaceFolder}/Tests/GAIL.Networking.Tests"
-			}
+			"command": "dotnet",
+			"args": ["test", "${workspaceFolder}/Tests/GAIL.Networking.Tests.csproj"]
 		},
 		{
 			"label": "GAIL Storage: Build",
-			"dependsOn": "GAIL: Test",
 			"group": "build",
-			"command": "dotnet build",
-			"options": {
-				"cwd": "${workspaceFolder}/GAIL.Storage"
-			}
+			"command": "dotnet",
+			"args": ["build", "${workspaceFolder}/GAIL.Storage.csproj"]
 		},
 		{
 			"label": "GAIL Storage: Package",
-			"dependsOn": "GAIL: Test",
+			"dependsOn": "GAIL Storage: Test",
 			"group": "build",
-			"command": "dotnet pack",
-			"options": {
-				"cwd": "${workspaceFolder}/GAIL.Storage"
-			}
+			"command": "dotnet",
+			"args": ["pack", "${workspaceFolder}/GAIL.Storage.csproj"]
 		},
 		{
 			"label": "GAIL Storage: Test",
 			"group": "test",
-			"command": "dotnet test",
-			"options": {
-				"cwd": "${workspaceFolder}/Tests/GAIL.Storage.Tests"
-			}
+			"command": "dotnet",
+			"args": ["test", "${workspaceFolder}/Tests/GAIL.Storage.Tests.csproj"]
+		},
+		{
+			"label": "Build examples.Packets.Server",
+			"group": "build",
+			"command": "dotnet",
+			"args": ["build", "${workspaceFolder}/examples/Packets/Server/Server.csproj"]
+		},
+		{
+			"label": "Build examples.Packets.Client",
+			"group": "build",
+			"command": "dotnet",
+			"args": ["build", "${workspaceFolder}/examples/Packets/Client/Client.csproj"]
+		},
+		{
+			"label": "Build examples.Packets.Client2",
+			"group": "build",
+			"command": "dotnet",
+			"args": ["build", "${workspaceFolder}/examples/Packets/Client2/Client2.csproj"]
 		}
 	]
 }

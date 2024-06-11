@@ -6,34 +6,43 @@
     "configurations": [
         {
             "name": "C#: Packets-Client Debug",
-            "type": "dotnet",
-            "preLaunchTask": "GAIL Networking: Test",
+            "type": "coreclr",
             "request": "launch",
-            "projectPath": "${workspaceFolder}\\examples\\Packets\\Client\\Client.csproj",
-            "windows": {
-                "projectPath": "${workspaceFolder}\\examples\\Packets\\Client\\Client.csproj"
-            }
+            "preLaunchTask": "Build examples.Packets.Client",
+            "program": "${workspaceFolder}/examples/Packets/Client/bin/Debug/net8.0/Client.dll",
+            "cwd": "${workspaceFolder}",
+            "stopAtEntry": false,
+            "console": "integratedTerminal"
         },
         {
             "name": "C#: Packets-Server Debug",
-            "type": "dotnet",
-            "preLaunchTask": "GAIL Networking: Test",
+            "type": "coreclr",
             "request": "launch",
-            "projectPath": "${workspaceFolder}/examples/Packets/Server/Server.csproj",
-            "windows": {
-                "projectPath": "${workspaceFolder}\\examples\\Packets\\Server\\Server.csproj"
-            }
+            "preLaunchTask": "Build examples.Packets.Server",
+            "program": "${workspaceFolder}/examples/Packets/Server/bin/Debug/net8.0/Server.dll",
+            "cwd": "${workspaceFolder}",
+            "stopAtEntry": false,
+            "console": "integratedTerminal"
         },
         {
-            "name": "C#: HelloTriangle Debug",
-            "type": "dotnet",
-            "preLaunchTask": "GAIL Networking: Test",
+            "name": "C#: Packets-Client2 Debug",
+            "type": "coreclr",
             "request": "launch",
-            "projectPath": "${workspaceFolder}/examples/HelloTriangle/HelloTriangle.csproj",
-            "windows": {
-                "projectPath": "${workspaceFolder}\\examples\\HelloTriangle\\HelloTriangle.csproj"
-            }
-        }
+            "preLaunchTask": "Build examples.Packets.Client2",
+            "program": "${workspaceFolder}/examples/Packets/Client2/bin/Debug/net8.0/Client2.dll",
+            "cwd": "${workspaceFolder}",
+            "stopAtEntry": false,
+            "console": "integratedTerminal"
+        },
+        // {
+        //     "name": "C#: HelloTriangle Debug",
+        //     "type": "dotnet",
+        //     "request": "launch",
+        //     "projectPath": "${workspaceFolder}\\examples\\HelloTriangle\\HelloTriangle.csproj",
+        //     "windows": {
+        //         "projectPath": "${workspaceFolder}\\examples\\HelloTriangle\\HelloTriangle.csproj"
+        //     }
+        // }
 
     ]
 }

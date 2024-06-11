@@ -27,7 +27,7 @@ public static class PacketParser {
     }
     private record struct PacketData(ConstructorInfo Constructor, Field[] Format);
     private record struct FieldData(ConstructorInfo FromT, ConstructorInfo FromData);
-    private static readonly Dictionary<Field, FieldData> Fields = [];
+    private static readonly Dictionary<string, FieldData> Fields = [];
     private static readonly Dictionary<uint, PacketData> Packets = [];
 
 
@@ -134,39 +134,41 @@ public static class PacketParser {
 
     #region   Create
     
+    private static FieldData GetFieldData(string ID) {
+        if (!Fields.TryGetValue(ID, out FieldData fieldData)) {
+            throw new ArgumentException($"No field ID found: {ID}, is it registered?", nameof(ID));
+        }
+        return fieldData;
+    }
+
     /// <summary>
     /// Creates a field from the data.
     /// </summary>
-    /// <param name="field">The baseplate field (what field to use).</param>
+    /// <param name="ID">The ID of the field to create.</param>
     /// <param name="data">The data.</param>
     /// <returns>The created field.</returns>
     /// <exception cref="ArgumentException"></exception>
     /// <exception cref="InvalidOperationException"></exception>
-    public static Field CreateField(Field field, object data) {
-        if (!Fields.TryGetValue(field, out FieldData fieldData)) {
-            throw new ArgumentException($"No field found for type: {field.GetType().Name}, is it registered?", nameof(field));
-        }
+    public static Field CreateField(string ID, object data) {
+        FieldData fieldData = GetFieldData(ID);
         if (fieldData.FromT == null) {
-            throw new ArgumentException($"No field found for type: {field.GetType().Name}, is it registered?", nameof(field));
+            throw new ArgumentException($"No field ID found: {ID}, is it registered?", nameof(ID));
         }
         object obj = fieldData.FromT.Invoke([data]);
-
         return (obj as Field)!;
     }
 
     /// <summary>
     /// Creates a field from an type.
     /// </summary>
-    /// <param name="field">The baseplate field (what field to use).</param>
+    /// <param name="ID">The ID of the field to create.</param>
     /// <param name="data">The raw data for the field.</param>
     /// <returns>The created field.</returns>
     /// <exception cref="ArgumentException"></exception>
     /// <exception cref="InvalidOperationException"></exception>
-    public static Field CreateField(Field field, RawData data) {
-        if (!Fields.TryGetValue(field, out FieldData ctor)) {
-            throw new ArgumentException($"No field found for type: {field.GetType().Name}, is it registered?", nameof(field));
-        }
-        object obj = ctor.FromData.Invoke([data]);
+    public static Field CreateField(string ID, RawData data) {
+        FieldData fieldData = GetFieldData(ID);
+        object obj = fieldData.FromData.Invoke([data]);
         if (obj is not Field) {
             throw new InvalidOperationException("Constructor of field is not for field");
         }
@@ -181,11 +183,10 @@ public static class PacketParser {
     /// <typeparam name="T">The type of the field type.</typeparam>
     /// <param name="field">An instance of the Field, only used for getting a constructor and the fixed size.</param>
     /// <returns>True if it was a success.</returns>
-    /// <exception cref="InvalidOperationException"/>
     public static bool RegisterField<T>(Field<T> field) where T : notnull {
         if (field == null) {return false;}
-        if (Fields.ContainsKey(field)) {return false;}
-        Fields.Add(field, new (
+        if (Fields.ContainsKey(field.Key)) {return false;}
+        Fields.Add(field.Key, new (
             GetTypeConstructor(field),
             GetRawConstructor(field)
         ));
@@ -193,12 +194,12 @@ public static class PacketParser {
     }
 
     /// <summary>
-    /// Checks if that field baseplate is registered.
+    /// Checks if that field type is registered.
     /// </summary>
-    /// <param name="field">The baseplate field (what field to use).</param>
+    /// <param name="ID">The field ID.</param>
     /// <returns>True if there is one.</returns>
-    public static bool ContainsField(Field field) {
-        return Fields.ContainsKey(field);
+    public static bool ContainsField(string ID) {
+        return Fields.ContainsKey(ID);
     }
 
     #endregion Fields
@@ -225,7 +226,8 @@ public static class PacketParser {
         while (!isClosed()) {
             if (!isInPacket) {
                 buffer = new byte[4];
-                if (stream.Read(buffer) <= 0) {
+                if (isClosed()) { break; }
+                if (stream.Read(buffer) <= 0) { // FIXME: Server: ObjectDisposedException
                     continue;
                 }
                 packetID = GetPacketID(buffer);
@@ -244,6 +246,7 @@ public static class PacketParser {
             uint? size = format[formatIndex].FixedSize;
             
             if (size == null) {
+                if (isClosed()) { break; }
                 buffer = new byte[4];
                 if (stream.Read(buffer) <= 0) {
                     continue;
@@ -251,10 +254,15 @@ public static class PacketParser {
                 size = BitConverter.IsLittleEndian ? BitConverter.ToUInt32(buffer) : BitConverter.ToUInt32([.. buffer.Reverse()]);
             }
             buffer = new byte[size.Value];
-            if (stream.Read(buffer) <= 0) {
-                continue;
+
+            if (!(size.Value < 1)) {
+                if (isClosed()) { break; }
+                if (stream.Read(buffer) <= 0) {
+                    continue;
+                }
             }
-            fields.Add(Decode(buffer, format[formatIndex]));
+
+            fields.Add(Decode(buffer, format[formatIndex].Key));
 
             if (format.Length <= (++formatIndex)) {
                 if (onPacket(CreatePacket(packetID, fields))) { break; }
@@ -311,10 +319,10 @@ public static class PacketParser {
     /// Decodes a field, without the non-fixed uint size.
     /// </summary>
     /// <param name="data">The raw data.</param>
-    /// <param name="field">The field baseplate.</param>
+    /// <param name="ID">The ID of the field to decode.</param>
     /// <returns>The decoded field.</returns>
-    public static Field Decode(byte[] data, Field field) {
-        return CreateField(field, new RawData{ data = data });
+    public static Field Decode(byte[] data, string ID) {
+        return CreateField(ID, new RawData{ data = data });
     }
 
     #endregion Parser

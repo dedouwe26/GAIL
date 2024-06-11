@@ -76,8 +76,6 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
     /// If the server is closed.
     /// </summary>
     public bool Closed {get; private set;}
-
-    private Thread? listenThread;
     private ServerContainer(IPEndPoint ip) {
         Closed = true;
         IP = ip;
@@ -93,7 +91,7 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
     }
 
     /// <summary>
-    /// Starts the server.
+    /// Starts the server (doesn't block the thread).
     /// </summary>
     /// <returns>True if it started listening (and no other program on <see cref="IP"/>).</returns>
     public bool Start() {
@@ -101,13 +99,12 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
             tcpListener.Start();
         } catch (SocketException e) {
             Logger?.LogFatal("Unable to start listening: \""+e.Message+"\".");
-            OnException?.Invoke(e);
+            OnException?.Invoke(e, null);
             return false;
         }
         Closed = false;
         OnStart?.Invoke(this);
-        listenThread = new Thread(Listen);
-        listenThread.Start();
+        Listen();
         return true;
     }
 
@@ -143,7 +140,8 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
     /// </summary>
     /// <param name="packet">The packet to send to the client.</param>
     /// <param name="connection">The connection to send the packet to.</param>
-    public void SendPacket(Packet packet, Connection connection) {
+    public void SendPacket(Packet packet, Connection connection) { // TODO: add exception handling at ALL send methods.
+        if (Closed) { return; }
         connection.Stream.Write(PacketParser.FormatPacket(packet));
         connection.Stream.Flush();
         OnPacketSent?.Invoke(this, connection, packet);
@@ -156,6 +154,7 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
     /// <param name="ID">The ID of the connection to send the packet to.</param>
     /// <returns>True if an connection has been found, otherwise false.</returns>
     public bool SendPacket(Packet packet, byte[] ID) {
+        if (Closed) { return false; }
         if (!connections.TryGetValue(ID, out Connection? connection)) {
             return false;
         }
@@ -168,6 +167,7 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
     /// </summary>
     /// <param name="packet">The packet to broadcast.</param>
     public void BroadcastPacket(Packet packet) {
+        if (Closed) { return; }
         foreach (Connection connection in connections.Values) {
             SendPacket(packet, connection);
         }
@@ -184,6 +184,7 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
     /// <param name="packet">The packet to send to the client.</param>
     /// <param name="connection">The connection to send the packet to.</param>
     public async ValueTask SendPacketAsync(Packet packet, Connection connection) {
+        if (Closed) { return; }
         await connection.Stream.WriteAsync(PacketParser.FormatPacket(packet));
         await connection.Stream.FlushAsync();
         OnPacketSent?.Invoke(this, connection, packet);
@@ -196,6 +197,7 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
     /// <param name="ID">The ID of the connection to send the packet to.</param>
     /// <returns>True if an connection has been found, otherwise false.</returns>
     public async ValueTask<bool> SendPacketAsync(Packet packet, byte[] ID) {
+        if (Closed) { return false; }
         if (!connections.TryGetValue(ID, out Connection? connection)) {
             return false;
         }
@@ -208,6 +210,7 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
     /// </summary>
     /// <param name="packet">The packet to broadcast.</param>
     public async ValueTask BroadcastPacketAsync(Packet packet) {
+        if (Closed) { return; }
         foreach (Connection connection in connections.Values) {
             await SendPacketAsync(packet, connection);
         }
@@ -224,6 +227,7 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
     /// <param name="connection"></param>
     /// <param name="additionalData">The additional data for disconnection (default: empty).</param>
     public void Disconnect(Connection connection, byte[]? additionalData = null) {
+        if (Closed) { return; }
         additionalData ??= [];
         SendPacket(new DisconnectPacket(additionalData), connection);
         connections.Remove(connection.ID);
@@ -238,6 +242,7 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
     /// <param name="ID">The ID of the connection used to disconnect the client.</param>
     /// <returns>True if an connection has been found, otherwise false.</returns>
     public bool Disconnect(byte[] ID) {
+        if (Closed) { return false; }
         if (!connections.TryGetValue(ID, out Connection? connection)) {
             return false;
         }
@@ -249,6 +254,7 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
     /// Kicks or disconnects all clients from this server.
     /// </summary>
     public void DisconnectAll() {
+        if (Closed) { return; }
         foreach (Connection connection in connections.Values) {
             Disconnect(connection);
         }
@@ -265,6 +271,7 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
     /// <param name="connection"></param>
     /// <param name="additionalData">The additional data for disconnection (default: empty).</param>
     public async ValueTask DisconnectAsync(Connection connection, byte[]? additionalData = null) {
+        if (Closed) { return; }
         additionalData ??= [];
         await SendPacketAsync(new DisconnectPacket(additionalData), connection);
         connections.Remove(connection.ID);
@@ -279,6 +286,7 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
     /// <returns>True if an connection has been found, otherwise false.</returns>
     /// <param name="additionalData">The additional data for disconnection (default: empty).</param>
     public async ValueTask<bool> DisconnectAsync(byte[] ID, byte[]? additionalData = null) {
+        if (Closed) { return false; }
         if (!connections.TryGetValue(ID, out Connection? connection)) {
             return false;
         }
@@ -291,6 +299,7 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
     /// </summary>
     /// <param name="additionalData">The additional data for disconnection (default: empty).</param>
     public async ValueTask DisconnectAllAsync(byte[]? additionalData = null) {
+        if (Closed) { return; }
         foreach (Connection connection in connections.Values) {
             await DisconnectAsync(connection, additionalData);
         }
@@ -300,19 +309,22 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
 
 
     private void Listen() {
+        if (Closed) { return; }
         tcpListener.BeginAcceptTcpClient(new(ListenConnection), null);
     }
 
     private void ListenConnection(IAsyncResult result) {
         if (Closed) {return;}
-        // Dispatch new.
-        tcpListener.BeginAcceptTcpClient(new(ListenConnection), null);
 
         Connection connection = new(tcpListener.EndAcceptTcpClient(result));
+
+        // Dispatch new.
+        Listen();
+        
         connections.Add(connection.ID, connection);
         OnConnect?.Invoke(this, connection);
         try {
-            PacketParser.Parse(connection.Stream, () => Closed, (Packet p) => {
+            PacketParser.Parse(connection.Stream, () => Closed || connection.Closed, (Packet p) => {
                 OnPacket?.Invoke(this, connection, p);
                 if (p is DisconnectPacket) {
                     connections.Remove(connection.ID);
@@ -322,9 +334,9 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
                 }
                 return false;
             });
-        } catch (IOException e) {
-            Logger?.LogFatal("Could not read from network stream: \""+e.Message+"\".");
-            OnException?.Invoke(e);
+        } catch (IOException e) { // FIXME: // FIXME: when stopping (from server).
+            Logger?.LogWarning($"Could not read from network stream (connection ID: {BitConverter.ToString(connection.ID).Replace("-", "")}): \"{e.Message}\".");
+            OnException?.Invoke(e, connection);
         }
         
     }
@@ -341,6 +353,7 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
     /// Stops listening and disconnects all clients.
     /// </remarks>
     public void Dispose() {
+        if (Closed) { return; }
         DisconnectAll();
         Closed = true;
         tcpListener.Stop();
@@ -359,6 +372,7 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
     /// Stops listening and disconnects all clients (asynchronous).
     /// </remarks>
     public async ValueTask DisposeAsync() {
+        if (Closed) { return; }
         await DisconnectAllAsync();
         Closed = true;
         tcpListener.Stop();

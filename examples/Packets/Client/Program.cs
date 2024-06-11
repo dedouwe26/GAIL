@@ -17,9 +17,10 @@ class Program {
         string port = Terminal.ReadLine()!;
 
         // Creating a client.
-        ClientContainer client = NetworkManager.CreateClient(
+        ClientContainer client = ClientContainer.Create(
             new IPEndPoint(IPAddress.Parse("127.0.0.1"), 3003), // The server endpoint.
-            new IPEndPoint(IPAddress.Parse("127.0.0.1"), int.Parse(port)) // The local endpoint (where the client is listening).
+            new IPEndPoint(IPAddress.Parse("127.0.0.1"), int.Parse(port)), // The local endpoint (where the client is listening).
+            true // Enables logging.
         );
 
         // Listen to events.

@@ -7,25 +7,41 @@ using OxDED.Terminal;
 namespace examples.Packets.Server;
 
 class Program {
+    private static readonly ManualResetEvent mre = new(false);
     public static void Main(string[] args) {
         // Registers all three packets.
         Shared.Packets.RegisterPackets();
 
-        ServerContainer server = NetworkManager.CreateServer(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 3003));
+        ServerContainer server = ServerContainer.Create(
+            new IPEndPoint(IPAddress.Parse("127.0.0.1"), 3003), // The endpoint to listen on.
+            true // Enables logging.
+        );
 
         // Listening to events
         server.OnPacket+=OnPacket;
         server.OnDisconnect+=OnDisconnect;
 
+        // Stop when key pressed.
+        Terminal.OnKeyPress+=async (ConsoleKey key, char ch, bool alt, bool shift, bool control) => {
+            await server.StopAsync();
+            mre.Set();
+        };
+
         // Don't forget to start the server.
         Terminal.WriteLine("Started listening...", new Style{ ForegroundColor = Color.Green});
+
+        // Starts listening (non-thread blocking).
         server.Start();
+
+        Terminal.ListenForKeys = true;
+
+        mre.WaitOne(); // Block the thread.
     }
 
     private static void OnDisconnect(ServerContainer server, Connection connection, bool byClient, byte[] additionalData) {
         Terminal.WriteLine(connection.GetData<string>() + " left.");
     }
-
+    
     private static void OnPacket(ServerContainer server, Connection connection, Packet packet) {
         if (packet is RegisterPacket registerPacket) {
 

@@ -17,12 +17,15 @@ public class ClientContainer : IDisposable {
     /// <param name="local">The local end point (for different port, etc).</param>
     /// <param name="enableLogging">If the client should start logging.</param>
     /// <param name="logger">The logger to use (default: ID: GAIL.Networking.Client.{ Connection.CreateID( localEndpoint ) } ).</param>
-    /// <returns>The created client.</returns>
-    public static ClientContainer Create(IPEndPoint server, IPEndPoint? local = null, bool enableLogging = false, Logger? logger = null) {
-        ClientContainer client = new(server, local);
-        if (enableLogging) {
-            client.SetLogger(logger);
+    /// <returns>The created client, if it didn't fail.</returns>
+    public static ClientContainer? Create(IPEndPoint server, IPEndPoint? local = null, bool enableLogging = false, Logger? logger = null) {
+        ClientContainer client;
+        try {
+            client = new(server, local, enableLogging, logger);
+        } catch (SocketException) {
+            return null;
         }
+        
         return client;
     }
     /// <summary>
@@ -75,14 +78,24 @@ public class ClientContainer : IDisposable {
     /// If the connection is closed.
     /// </summary>
     public bool Closed {get; private set;}
-    private ClientContainer(IPEndPoint server, IPEndPoint? local) {
+    /// <exception cref="SocketException"/>
+    private ClientContainer(IPEndPoint server, IPEndPoint? local, bool enableLogging = false, Logger? logger = null) {
         Server = server;
         Closed = true;
-        if (local == null) {
-            tcpClient = new TcpClient();
-        } else {
-            tcpClient = new TcpClient(local);
+        if (enableLogging) {
+            SetLogger(logger);
         }
+        try {
+            if (local == null) {
+                tcpClient = new TcpClient();
+            } else {
+                tcpClient = new TcpClient(local);
+            }
+        } catch (SocketException e) {
+            logger?.LogFatal("Unable to initiate the socket: '"+e.Message+"'");
+            throw;
+        }
+        
         IP = (tcpClient.Client.LocalEndPoint! as IPEndPoint)!;
     }
 
@@ -144,7 +157,8 @@ public class ClientContainer : IDisposable {
         try {
             tcpClient.Connect(Server);
         } catch (SocketException e) {
-            // TODO: handle
+            Logger?.LogFatal("Unable to connect to server: \""+e.Message+"\".");
+            OnException?.Invoke(e);
             return false;
         }
         NetworkStream = tcpClient.GetStream();
@@ -155,18 +169,17 @@ public class ClientContainer : IDisposable {
         return true;
     }
     private void Listen() {
-        // TODO: handle exceptions (IOException)
         try {
             PacketParser.Parse(NetworkStream!, () => Closed, (Packet p) => {
                 OnPacket?.Invoke(this, p);
-                if (p is DisconnectPacket) {
-                    OnDisconnect?.Invoke(this, true, (p as DisconnectPacket)!.AdditionalData);
+                if (p is DisconnectPacket dp) {
+                    OnDisconnect?.Invoke(this, true, dp.AdditionalData);
                     Dispose();
                     return true;
                 }
                 return false;
             });
-        } catch (IOException e) {
+        } catch (IOException e) { // FIXME: when stopping (from client).
             Logger?.LogError("Could not read from network stream: \""+e.Message+"\".");
             OnException?.Invoke(e);
         }
@@ -176,7 +189,8 @@ public class ClientContainer : IDisposable {
     /// Sends a packet to the server.
     /// </summary>
     /// <param name="packet">The packet to send to the server.</param>
-    public void SendPacket(Packet packet) {
+    public void SendPacket(Packet packet) { // TODO: add exception handling at ALL send methods.
+        if (Closed) { return; }
         NetworkStream!.Write(PacketParser.FormatPacket(packet));
         NetworkStream.Flush();
         OnPacketSent?.Invoke(this, packet);
@@ -187,6 +201,7 @@ public class ClientContainer : IDisposable {
     /// </summary>
     /// <param name="packet">The packet to send to the server.</param>
     public async ValueTask SendPacketAsync(Packet packet) {
+        if (Closed) { return; }
         await NetworkStream!.WriteAsync(PacketParser.FormatPacket(packet));
         await NetworkStream.FlushAsync();
         OnPacketSent?.Invoke(this, packet);
@@ -197,6 +212,7 @@ public class ClientContainer : IDisposable {
     /// </summary>
     /// <param name="additionalData">The optional additional data.</param>
     public void Stop(byte[]? additionalData = null) {
+        if (Closed) { return; }
         additionalData ??= [];
         OnDisconnect?.Invoke(this, false, additionalData);
         SendPacket(new DisconnectPacket(additionalData));
@@ -207,6 +223,7 @@ public class ClientContainer : IDisposable {
     /// </summary>
     /// <param name="additionalData">The optional additional data send to the server.</param>
     public async ValueTask StopAsync(byte[]? additionalData = null) {
+        if (Closed) { return; }
         additionalData ??= [];
         OnDisconnect?.Invoke(this, false, additionalData);
         await SendPacketAsync(new DisconnectPacket(additionalData ?? []));
@@ -219,6 +236,7 @@ public class ClientContainer : IDisposable {
     /// Disconnects from the server and disposes everything.
     /// </remarks>
     public void Dispose() {
+        if (Closed) { return; }
         Closed = true;
         NetworkStream!.Close();
         tcpClient.Close();

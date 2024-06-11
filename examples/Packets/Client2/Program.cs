@@ -4,7 +4,6 @@ using GAIL.Networking;
 using GAIL.Networking.Client;
 using OxDED.Terminal;
 
-// object locker;
 // Registers all three packets.
 Packets.RegisterPackets();
 
@@ -13,18 +12,31 @@ Terminal.Write("Port of client: ");
 string port = Terminal.ReadLine()!;
 
 // Creating a client.
-ClientContainer client = NetworkManager.CreateClient(
+ClientContainer client = ClientContainer.Create(
     new IPEndPoint(IPAddress.Parse("127.0.0.1"), 3003), // The server endpoint.
-    new IPEndPoint(IPAddress.Parse("127.0.0.1"), int.Parse(port)) // The local endpoint (where the client is listening).
+    new IPEndPoint(IPAddress.Parse("127.0.0.1"), int.Parse(port)), // The local endpoint (where the client is listening).
+    true // Enables logging.
 );
 
 // Listen to events.
 client.OnPacket+=OnPacket;
 client.OnConnect+=OnConnect;
+client.OnPacketSent+=OnPacketSent;
+
+
+
 client.OnStop+=OnStop;
 
-Terminal.OnKeyPress += (ConsoleKey key, char keyChar, bool alt, bool shift, bool control) => {
-    client.SendPacket(new MessagePacket("test"));
+
+Terminal.OnKeyPress += async (ConsoleKey key, char keyChar, bool alt, bool shift, bool control) => {
+    // Send packet when key pressed
+    
+    if (control && key == ConsoleKey.X) { // Stopping on CTRL+X
+        Terminal.WriteLine("Stopping...");
+        await client.StopAsync();
+    } else {
+        client.SendPacket(new MessagePacket("test"));
+    }
 };
 
 Terminal.ListenForKeys = true;
@@ -34,9 +46,16 @@ await client.StartAsync();
 
 
 static void OnStop(ClientContainer client) {
-    // Clears whole screen
     Terminal.WriteLine("Stopped.");
+    Terminal.ListenForKeys = false;
 }
+
+static void OnPacketSent(ClientContainer client, Packet packet) {
+    if (packet is DisconnectPacket) {
+        Terminal.WriteLine("disconnecting...");
+    }
+}
+
 static async void OnConnect(ClientContainer client) {
     // Send register packet.
     Terminal.Write("Connected. Enter name: ");
