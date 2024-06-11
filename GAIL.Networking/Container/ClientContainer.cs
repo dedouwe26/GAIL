@@ -138,7 +138,7 @@ public class ClientContainer : IDisposable {
         try {
             await tcpClient.ConnectAsync(Server);
         } catch (SocketException e) {
-            Logger?.LogFatal("Unable to connect to server: \""+e.Message+"\".");
+            Logger?.LogFatal("Unable to connect to server: '"+e.Message+"'.");
             OnException?.Invoke(e);
             return false;
         }
@@ -157,7 +157,7 @@ public class ClientContainer : IDisposable {
         try {
             tcpClient.Connect(Server);
         } catch (SocketException e) {
-            Logger?.LogFatal("Unable to connect to server: \""+e.Message+"\".");
+            Logger?.LogFatal("Unable to connect to server: '"+e.Message+"'.");
             OnException?.Invoke(e);
             return false;
         }
@@ -180,7 +180,7 @@ public class ClientContainer : IDisposable {
                 return false;
             });
         } catch (IOException e) { // FIXME: when stopping (from client).
-            Logger?.LogError("Could not read from network stream: \""+e.Message+"\".");
+            Logger?.LogError("Could not read from network stream: '"+e.Message+"'.");
             OnException?.Invoke(e);
         }
         
@@ -189,10 +189,15 @@ public class ClientContainer : IDisposable {
     /// Sends a packet to the server.
     /// </summary>
     /// <param name="packet">The packet to send to the server.</param>
-    public void SendPacket(Packet packet) { // TODO: add exception handling at ALL send methods.
+    public void SendPacket(Packet packet) {
         if (Closed) { return; }
-        NetworkStream!.Write(PacketParser.FormatPacket(packet));
-        NetworkStream.Flush();
+        try {
+            NetworkStream!.Write(PacketParser.FormatPacket(packet));
+        } catch (IOException e) {
+            Logger?.LogError("Could not send packet: '"+e.Message+"'.");
+            OnException?.Invoke(e);
+        }
+        NetworkStream!.Flush();
         OnPacketSent?.Invoke(this, packet);
     }
 
@@ -202,8 +207,13 @@ public class ClientContainer : IDisposable {
     /// <param name="packet">The packet to send to the server.</param>
     public async ValueTask SendPacketAsync(Packet packet) {
         if (Closed) { return; }
-        await NetworkStream!.WriteAsync(PacketParser.FormatPacket(packet));
-        await NetworkStream.FlushAsync();
+        try {
+            await NetworkStream!.WriteAsync(PacketParser.FormatPacket(packet));
+        } catch (IOException e) {
+            Logger?.LogError("Could not send packet: '"+e.Message+"'.");
+            OnException?.Invoke(e);
+        }
+        await NetworkStream!.FlushAsync();
         OnPacketSent?.Invoke(this, packet);
     }
 

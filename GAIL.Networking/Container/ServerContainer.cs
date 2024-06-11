@@ -98,7 +98,7 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
         try {
             tcpListener.Start();
         } catch (SocketException e) {
-            Logger?.LogFatal("Unable to start listening: \""+e.Message+"\".");
+            Logger?.LogFatal("Unable to start listening: '"+e.Message+"'.");
             OnException?.Invoke(e, null);
             return false;
         }
@@ -142,7 +142,12 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
     /// <param name="connection">The connection to send the packet to.</param>
     public void SendPacket(Packet packet, Connection connection) { // TODO: add exception handling at ALL send methods.
         if (Closed) { return; }
-        connection.Stream.Write(PacketParser.FormatPacket(packet));
+        try {
+            connection.Stream.Write(PacketParser.FormatPacket(packet));
+        } catch (IOException e) {
+            Logger?.LogError($"Could not send packet (connection ID: {BitConverter.ToString(connection.ID).Replace("-", "")}): '{e.Message}'.");
+            OnException?.Invoke(e, connection);
+        }
         connection.Stream.Flush();
         OnPacketSent?.Invoke(this, connection, packet);
     }
@@ -335,7 +340,7 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
                 return false;
             });
         } catch (IOException e) { // FIXME: // FIXME: when stopping (from server).
-            Logger?.LogWarning($"Could not read from network stream (connection ID: {BitConverter.ToString(connection.ID).Replace("-", "")}): \"{e.Message}\".");
+            Logger?.LogWarning($"Could not read from network stream (connection ID: {BitConverter.ToString(connection.ID).Replace("-", "")}): '{e.Message}'.");
             OnException?.Invoke(e, connection);
         }
         
