@@ -340,6 +340,9 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
                 return false;
             });
         } catch (IOException e) { // FIXME: // FIXME: when stopping (from server).
+            if (Closed || connection.Closed) {
+                return;
+            }
             Logger?.LogWarning($"Could not read from network stream (connection ID: {BitConverter.ToString(connection.ID).Replace("-", "")}): '{e.Message}'.");
             OnException?.Invoke(e, connection);
         }

@@ -180,6 +180,9 @@ public class ClientContainer : IDisposable {
                 return false;
             });
         } catch (IOException e) { // FIXME: when stopping (from client).
+            if (Closed) {
+                return;
+            }
             Logger?.LogError("Could not read from network stream: '"+e.Message+"'.");
             OnException?.Invoke(e);
         }
