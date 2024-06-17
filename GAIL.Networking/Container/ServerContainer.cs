@@ -362,6 +362,7 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
     /// </remarks>
     public void Dispose() {
         if (Closed) { return; }
+        Logger?.LogDebug("Disposing");
         DisconnectAll();
         Closed = true;
         tcpListener.Stop();

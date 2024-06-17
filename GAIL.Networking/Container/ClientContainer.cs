@@ -237,6 +237,7 @@ public class ClientContainer : IDisposable {
     /// <param name="additionalData">The optional additional data send to the server.</param>
     public async ValueTask StopAsync(byte[]? additionalData = null) {
         if (Closed) { return; }
+        Logger?.LogDebug("Stopping");
         additionalData ??= [];
         OnDisconnect?.Invoke(this, false, additionalData);
         await SendPacketAsync(new DisconnectPacket(additionalData ?? []));
@@ -250,6 +251,7 @@ public class ClientContainer : IDisposable {
     /// </remarks>
     public void Dispose() {
         if (Closed) { return; }
+        Logger?.LogDebug("Disposing");
         Closed = true;
         NetworkStream!.Close();
         tcpClient.Close();
