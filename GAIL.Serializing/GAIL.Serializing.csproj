@@ -9,15 +9,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="GAIL.Storage.nuspec" Pack="true" PackagePath="\" />
-    <None Include="../README.md" Pack="true" PackagePath="\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="0xDED.Terminal" Version="4.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\GAIL.Serializing\GAIL.Serializing.csproj" />
   </ItemGroup>
 </Project>
