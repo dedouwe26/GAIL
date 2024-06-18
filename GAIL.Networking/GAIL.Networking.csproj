@@ -5,25 +5,16 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PublishTrimmed>true</PublishTrimmed>
-    <PackageId>GAIL.Networking</PackageId>
-    <Version>1.0.0</Version>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageDescription>GAIL is a library with graphics, audio and input. This is the extra network part.</PackageDescription>
-    <PackageTags>Networking;library;GAIL</PackageTags>
-    <Authors>0xDED</Authors>
-    <RepositoryUrl>https://github.com/dedouwe26/GAIL.git</RepositoryUrl> 
-    <RepositoryType>git</RepositoryType>
     <!-- <NoWarn>1591</NoWarn> -->
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="../README.md" Pack="true" PackagePath="\" />
+    <None Include="GAIL.Networking.nuspec" Pack="true" PackagePath="\" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="0xDED.Terminal" Version="3.1.4" />
+    <PackageReference Include="0xDED.Terminal" Version="4.0.0" />
   </ItemGroup>
 
 </Project>

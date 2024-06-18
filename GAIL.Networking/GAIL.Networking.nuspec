@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+    <metadata>
+        <id>GAIL.Networking</id>
+        <version>1.0.0</version>
+        <description>GAIL is a library with graphics, audio and input. This is the extra network part.</description>
+        <authors>0xDED</authors>
+        <owners>0xDED</owners>
+        <license type="expression">MIT</license>
+        <projectUrl>https://github.com/dedouwe26/GAIL</projectUrl>
+        <iconUrl>https://raw.githubusercontent.com/dedouwe26/GAIL/main/MiniLogo.png</iconUrl>
+        <icon>MiniLogo.png</icon>
+        <readme>README.md</readme>
+        <tags>Networking library GAIL</tags>
+        <repository type="git" url="https://github.com/dedouwe26/GAIL.git"/>
+    </metadata>
+    <files>
+        <file src="..\MiniLogo.png" target="\" />
+        <file src="..\README.md" target="\" />
+    </files>
+    <dependencies>
+        <dependency id="0xDED.Terminal" version="4.0.0" />
+    </dependencies>
+</package>

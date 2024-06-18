@@ -11,20 +11,19 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageDescription>GAIL is a library with graphics, audio and input.</PackageDescription>
-    <PackageTags>Graphics;Audio;Input;library;GAIL</PackageTags>
+    <PackageDescription></PackageDescription>
+    <PackageTags></PackageTags>
     <Authors>0xDED</Authors>
     <RepositoryUrl>https://github.com/dedouwe26/GAIL.git</RepositoryUrl> 
     <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="../README.md" Pack="true" PackagePath="\" />
-    <PackageReference Include="0xDED.Terminal" Version="3.1.4" />
-    <PackageReference Include="Silk.NET" Version="2.20.0" />
-    <PackageReference Include="Silk.NET.Assimp" Version="2.20.0" />
+  <None Include="GAIL.nuspec" Pack="true" PackagePath="\" />
+    <PackageReference Include="0xDED.Terminal" Version="4.0.0" />
+    <PackageReference Include="Silk.NET" Version="2.20.0" /> <!-- TODO: Subdivide Silk.NET into smaller pieces (also in nuspec). -->
+    <PackageReference Include="Silk.NET.Assimp" Version="2.20.0" /> <!-- is this used? -->
     <PackageReference Include="Silk.NET.OpenAL.Extensions.EXT" Version="2.20.0" />
-    <PackageReference Include="Silk.NET.SPIRV" Version="2.20.0" />
     <PackageReference Include="Silk.NET.Vulkan.Extensions.EXT" Version="2.20.0" />
   </ItemGroup>
 

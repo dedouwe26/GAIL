@@ -5,19 +5,14 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PublishTrimmed>true</PublishTrimmed>
-    <PackageId>GAIL.Storage</PackageId>
-    <Version>1.0.0</Version>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageDescription>GAIL is a library with graphics, audio and input. This is the storage (file saves) part of GAIL Delta.</PackageDescription>
-    <PackageTags>Storage;library;GAIL</PackageTags>
-    <Authors>0xDED</Authors>
-    <RepositoryUrl>https://github.com/dedouwe26/GAIL.git</RepositoryUrl> 
-    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="../README.md" Pack="true" PackagePath="\"/>
+    <None Include="GAIL.Storage.nuspec" Pack="true" PackagePath="\" />
+    <None Include="../README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="0xDED.Terminal" Version="4.0.0" />
   </ItemGroup>
 </Project>
