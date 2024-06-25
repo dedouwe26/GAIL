@@ -1,4 +1,5 @@
 using GAIL.Networking.Parser;
+using GAIL.Serializing;
 
 namespace GAIL.Networking;
 
@@ -7,7 +8,7 @@ namespace GAIL.Networking;
 /// </summary>
 public class DisconnectPacket : Packet {
     /// <inheritdoc/>
-    public override Field[] Format { get => [new BytesField()]; }
+    public override SerializableInfo[] Format { get => [BytesSerializable.Info]; }
 
     /// <summary>
     /// The optional additional data.
@@ -24,14 +25,14 @@ public class DisconnectPacket : Packet {
     /// <param name="additionalData">The additional data to send.</param>
     public DisconnectPacket(byte[] additionalData) { AdditionalData = additionalData; }
     /// <inheritdoc/>
-    public DisconnectPacket(List<Field> fields) : base(fields)  { }
+    public DisconnectPacket(List<ISerializable> fields) : base(fields)  { }
 
     /// <inheritdoc/>
-    public override List<Field> GetFields() {
-        return [new BytesField(AdditionalData)];
+    public override List<ISerializable> GetFields() {
+        return [new BytesSerializable(AdditionalData)];
     }
     /// <inheritdoc/>
-    public override void Parse(List<Field> fields) {
-        AdditionalData = (byte[])fields[0].BaseValue;
+    public override void Parse(List<ISerializable> fields) {
+        AdditionalData = (fields[0] as BytesSerializable)!.Value;
     }
 }

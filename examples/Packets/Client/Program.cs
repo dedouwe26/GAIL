@@ -1,8 +1,10 @@
 using System.Net;
+using System.Runtime.Serialization;
 using examples.Packets.Shared;
 using GAIL.Networking;
 using GAIL.Networking.Client;
 using GAIL.Networking.Parser;
+using GAIL.Serializing;
 using OxDED.Terminal;
 
 namespace examples.Packets.Client;
@@ -17,11 +19,16 @@ class Program {
         string port = Terminal.ReadLine()!;
 
         // Creating a client.
-        ClientContainer client = ClientContainer.Create(
+        ClientContainer? client = ClientContainer.Create(
             new IPEndPoint(IPAddress.Parse("127.0.0.1"), 3003), // The server endpoint.
             new IPEndPoint(IPAddress.Parse("127.0.0.1"), int.Parse(port)), // The local endpoint (where the client is listening).
             true // Enables logging.
         );
+
+        // Connection failed, so return.
+        if (client == null) {
+            return;
+        }
 
         // Listen to events.
         client.OnPacket+=OnPacket;
@@ -44,7 +51,7 @@ class Program {
             // Sends custom data.
             // Field is just for dealing with strings and endianness,
             // you could also use BitConverter.
-            await client.StopAsync(new StringField(message[6..]).Format());
+            await client.StopAsync(new StringSerializable(message[6..]).Serialize());
         } else {
             await client.SendPacketAsync(new MessagePacket(message));
         }

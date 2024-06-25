@@ -74,7 +74,7 @@ public class Connection : IDisposable {
     /// <returns>The user-set data.</returns>
     public T? GetData<T>() where T : notnull {
         if (data == null) { return default; }
-        return (T)data!;
+        return (T)data;
     }
 
     /// <inheritdoc/>

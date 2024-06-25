@@ -82,21 +82,21 @@ public class ClientContainer : IDisposable {
     private ClientContainer(IPEndPoint server, IPEndPoint? local, bool enableLogging = false, Logger? logger = null) {
         Server = server;
         Closed = true;
-        if (enableLogging) {
-            SetLogger(logger);
-        }
         try {
             if (local == null) {
                 tcpClient = new TcpClient();
             } else {
                 tcpClient = new TcpClient(local);
             }
+
+            IP = (tcpClient.Client.LocalEndPoint! as IPEndPoint)!;
+            if (enableLogging) {
+                SetLogger(logger);
+            }
         } catch (SocketException e) {
             logger?.LogFatal("Unable to initiate the socket: '"+e.Message+"'");
             throw;
         }
-        
-        IP = (tcpClient.Client.LocalEndPoint! as IPEndPoint)!;
     }
 
     /// <summary>
@@ -170,7 +170,7 @@ public class ClientContainer : IDisposable {
     }
     private void Listen() {
         try {
-            PacketParser.Parse(NetworkStream!, () => Closed, (Packet p) => {
+            NetworkParser.Parse(NetworkStream!, () => Closed, (Packet p) => {
                 OnPacket?.Invoke(this, p);
                 if (p is DisconnectPacket dp) {
                     OnDisconnect?.Invoke(this, true, dp.AdditionalData);
@@ -195,7 +195,7 @@ public class ClientContainer : IDisposable {
     public void SendPacket(Packet packet) {
         if (Closed) { return; }
         try {
-            NetworkStream!.Write(PacketParser.FormatPacket(packet));
+            NetworkStream!.Write(NetworkParser.FormatPacket(packet));
         } catch (IOException e) {
             Logger?.LogError("Could not send packet: '"+e.Message+"'.");
             OnException?.Invoke(e);
@@ -211,7 +211,7 @@ public class ClientContainer : IDisposable {
     public async ValueTask SendPacketAsync(Packet packet) {
         if (Closed) { return; }
         try {
-            await NetworkStream!.WriteAsync(PacketParser.FormatPacket(packet));
+            await NetworkStream!.WriteAsync(NetworkParser.FormatPacket(packet));
         } catch (IOException e) {
             Logger?.LogError("Could not send packet: '"+e.Message+"'.");
             OnException?.Invoke(e);

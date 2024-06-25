@@ -12,21 +12,22 @@ Terminal.Write("Port of client: ");
 string port = Terminal.ReadLine()!;
 
 // Creating a client.
-ClientContainer client = ClientContainer.Create(
+ClientContainer? client = ClientContainer.Create(
     new IPEndPoint(IPAddress.Parse("127.0.0.1"), 3003), // The server endpoint.
     new IPEndPoint(IPAddress.Parse("127.0.0.1"), int.Parse(port)), // The local endpoint (where the client is listening).
     true // Enables logging.
 );
 
+// Connection failed, so return.
+if (client == null) {
+    return;
+}
+
 // Listen to events.
 client.OnPacket+=OnPacket;
 client.OnConnect+=OnConnect;
 client.OnPacketSent+=OnPacketSent;
-
-
-
 client.OnStop+=OnStop;
-
 
 Terminal.OnKeyPress += async (ConsoleKey key, char keyChar, bool alt, bool shift, bool control) => {
     // Send packet when key pressed

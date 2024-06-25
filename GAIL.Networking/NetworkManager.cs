@@ -13,8 +13,8 @@ public static class NetworkManager {
     /// </summary>
     /// <param name="server">The server end point (IP address and port).</param>
     /// <param name="local">The local end point (for different port, etc).</param>
-    /// <returns>The created client.</returns>
-    public static ClientContainer CreateClient(IPEndPoint server, IPEndPoint? local = null) {
+    /// <returns>The created client, if it didn't fail.</returns>
+    public static ClientContainer? CreateClient(IPEndPoint server, IPEndPoint? local = null) {
         return ClientContainer.Create(server, local);
     }
     /// <summary>
@@ -23,9 +23,9 @@ public static class NetworkManager {
     /// <param name="host">The hostname of the server.</param>
     /// <param name="port">The port of the server.</param>
     /// <param name="local">The local end point (for different port, etc).</param>
-    /// <returns>The created client.</returns>
+    /// <returns>The created client, if it didn't fail.</returns>
     /// <exception cref="ArgumentException"></exception>
-    public static ClientContainer CreateClient(string host, int port, IPEndPoint? local = null) {
+    public static ClientContainer? CreateClient(string host, int port, IPEndPoint? local = null) {
         IPAddress[] addresses = Dns.GetHostAddresses(host);
         if (addresses.Length < 1) { throw new ArgumentException("Could not get IP address.", nameof(host)); }
         return CreateClient(new IPEndPoint(addresses[0], port), local);
