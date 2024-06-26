@@ -9,15 +9,6 @@ namespace GAIL.Storage;
 /// </summary>
 public abstract class Field : ChildNode, ISerializable {
     /// <summary>
-    /// Creates a field from a serializable.
-    /// </summary>
-    /// <param name="key">The key of the new field.</param>
-    /// <param name="serializable">The serializable to base the field on.</param>
-    /// <returns>The new field that is based on that serializable.</returns>
-    public static SimpleField FromSerializable(string key, ISerializable serializable) {
-        return new SimpleField(key, serializable);
-    }
-    /// <summary>
     /// Creates a new field, with a key.
     /// </summary>
     /// <param name="key">The key of this field.</param>

@@ -18,35 +18,35 @@ public class BoolSerializable : ISerializable {
     /// <summary>
     /// The first boolean (msb).
     /// </summary>
-    public bool B1 => (Value & 0x80) != 0;
+    public bool B1 { get => (Value & 0x80) != 0; set { if (value) { Value |= 0x80; } else { Value &= 0x7f; } } }
     /// <summary>
     /// The second boolean.
     /// </summary>
-    public bool B2 => (Value & 0x40) != 0;
+    public bool B2 { get => (Value & 0x40) != 0; set { if (value) { Value |= 0x40; } else { Value &= 0xbf; } } }
     /// <summary>
     /// The third boolean.
     /// </summary>
-    public bool B3 => (Value & 0x20) != 0;
+    public bool B3 { get => (Value & 0x20) != 0; set { if (value) { Value |= 0x20; } else { Value &= 0xdf; } } }
     /// <summary>
     /// The fourth boolean.
     /// </summary>
-    public bool B4 => (Value & 0x10) != 0;
+    public bool B4 { get => (Value & 0x10) != 0; set { if (value) { Value |= 0x10; } else { Value &= 0xef; } } }
     /// <summary>
     /// The fifth boolean.
     /// </summary>
-    public bool B5 => (Value & 0x08) != 0;
+    public bool B5 { get => (Value & 0x08) != 0; set { if (value) { Value |= 0x08; } else { Value &= 0xf7; } } }
     /// <summary>
     /// The sixth boolean.
     /// </summary>
-    public bool B6 => (Value & 0x04) != 0;
+    public bool B6 { get => (Value & 0x04) != 0; set { if (value) { Value |= 0x04; } else { Value &= 0xfb; } } }
     /// <summary>
     /// The seventh boolean.
     /// </summary>
-    public bool B7 => (Value & 0x02) != 0;
+    public bool B7 { get => (Value & 0x02) != 0; set { if (value) { Value |= 0x02; } else { Value &= 0xfd; } } }
     /// <summary>
-    /// The eighth boolean.
+    /// The eighth boolean (lsb).
     /// </summary>
-    public bool B8 => (Value & 0x01) != 0;
+    public bool B8 { get => (Value & 0x01) != 0; set { if (value) { Value |= 0x01; } else { Value &= 0xfe; } } }
     /// <summary>
     /// Creates a new serializable (stores 8 bools in 1 byte).
     /// </summary>
@@ -59,8 +59,14 @@ public class BoolSerializable : ISerializable {
     /// <param name="b7">The seventh boolean.</param>
     /// <param name="b8">The eighth boolean (lsb).</param>
     public BoolSerializable(bool b1, bool b2=false, bool b3=false, bool b4=false, bool b5=false, bool b6=false, bool b7=false, bool b8=false) {
-        Value = (byte)((b1 == true ? 0x80 : 0x00) | (b2 == true ? 0x40 : 0x00) | (b3 == true ? 0x20 : 0x00) | (b4 == true ? 0x10 : 0x00)
-             | (b5 == true ? 0x08 : 0x00) | (b6 == true ? 0x04 : 0x00) | (b7 == true ? 0x02 : 0x00) | (b8 == true ? 0x01 : 0x00));
+        B1 = b1;
+        B2 = b2;
+        B3 = b3;
+        B4 = b4;
+        B5 = b5;
+        B6 = b6;
+        B7 = b7;
+        B8 = b8;
     }
     /// <inheritdoc/>
     public uint? FixedSize => 1;

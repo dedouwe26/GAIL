@@ -53,13 +53,45 @@ public class SimpleField : SerializableField<ISerializable> {
 /// <inheritdoc/>
 public class BoolField : SerializableField<BoolSerializable> {
     /// <summary>
-    /// The value of this field.
+    /// The value of this serializable.
     /// </summary>
-    public bool Value => Serializable.Value;
+    public byte Value { get => Serializable.Value; set => Serializable.Value = value; }
+    /// <summary>
+    /// The first boolean (msb).
+    /// </summary>
+    public bool B1 { get => Serializable.B1; set => Serializable.B1 = value; }
+    /// <summary>
+    /// The second boolean.
+    /// </summary>
+    public bool B2 { get => Serializable.B2; set => Serializable.B2 = value; }
+    /// <summary>
+    /// The third boolean.
+    /// </summary>
+    public bool B3 { get => Serializable.B3; set => Serializable.B3 = value; }
+    /// <summary>
+    /// The fourth boolean.
+    /// </summary>
+    public bool B4 { get => Serializable.B4; set => Serializable.B4 = value; }
+    /// <summary>
+    /// The fifth boolean.
+    /// </summary>
+    public bool B5 { get => Serializable.B5; set => Serializable.B5 = value; }
+    /// <summary>
+    /// The sixth boolean.
+    /// </summary>
+    public bool B6 { get => Serializable.B6; set => Serializable.B6 = value; }
+    /// <summary>
+    /// The seventh boolean.
+    /// </summary>
+    public bool B7 { get => Serializable.B7; set => Serializable.B7 = value; }
+    /// <summary>
+    /// The eighth boolean (lsb).
+    /// </summary>
+    public bool B8 { get => Serializable.B8; set => Serializable.B8 = value; }
     /// <inheritdoc/>
-    public BoolField(string key, bool value) : base(key, new (value)) { }
+    public BoolField(string key, bool b1, bool b2=false, bool b3=false, bool b4=false, bool b5=false, bool b6=false, bool b7=false, bool b8=false) : base(key, new (b1, b2, b3, b4, b5, b6, b7, b8)) { }
     /// <inheritdoc/>
-    public BoolField(string key, IParentNode parent, bool value) : base(key, parent, new (value)) { }
+    public BoolField(string key, IParentNode parent, bool b1, bool b2=false, bool b3=false, bool b4=false, bool b5=false, bool b6=false, bool b7=false, bool b8=false) : base(key, parent, new (b1, b2, b3, b4, b5, b6, b7, b8)) { }
 }
 
 /// <inheritdoc/>
@@ -68,9 +100,9 @@ public class FloatField : SerializableField<FloatSerializable> {
     /// The value of this field.
     /// </summary>
     public float Value => Serializable.Value;
-    /// <inheritdoc/>
+    ///
     public FloatField(string key, float value) : base(key, new (value)) { }
-    /// <inheritdoc/>
+    ///
     public FloatField(string key, IParentNode parent, float value) : base(key, parent, new (value)) { }
 }
 /// <inheritdoc/>
