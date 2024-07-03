@@ -170,7 +170,7 @@ public class ClientContainer : IDisposable {
     }
     private void Listen() {
         try {
-            NetworkParser.Parse(NetworkStream!, () => Closed, (Packet p) => {
+            NetworkParser.Parse(NetworkStream!, () => Closed, (Packet p) => { // TODO: handle return value.
                 OnPacket?.Invoke(this, p);
                 if (p is DisconnectPacket dp) {
                     OnDisconnect?.Invoke(this, true, dp.AdditionalData);
@@ -179,7 +179,7 @@ public class ClientContainer : IDisposable {
                 }
                 return false;
             });
-        } catch (IOException e) { // FIXME: when stopping (from client).
+        } catch (IOException e) {
             if (Closed) {
                 return;
             }
@@ -195,7 +195,7 @@ public class ClientContainer : IDisposable {
     public void SendPacket(Packet packet) {
         if (Closed) { return; }
         try {
-            NetworkStream!.Write(NetworkParser.FormatPacket(packet));
+            NetworkParser.Serialize(NetworkStream!, packet);
         } catch (IOException e) {
             Logger?.LogError("Could not send packet: '"+e.Message+"'.");
             OnException?.Invoke(e);
@@ -211,7 +211,7 @@ public class ClientContainer : IDisposable {
     public async ValueTask SendPacketAsync(Packet packet) {
         if (Closed) { return; }
         try {
-            await NetworkStream!.WriteAsync(NetworkParser.FormatPacket(packet));
+            NetworkParser.Serialize(NetworkStream!, packet); // TODO?: this isnt really async.
         } catch (IOException e) {
             Logger?.LogError("Could not send packet: '"+e.Message+"'.");
             OnException?.Invoke(e);
@@ -245,8 +245,8 @@ public class ClientContainer : IDisposable {
     }
     /// <inheritdoc/>
     /// <remarks>
-    /// <b>&gt;&gt;&gt; Please use </b><see cref="Stop"/> &lt;&lt;&lt;<para/>
-    /// <b>&gt;&gt;&gt; Will not call the ClientContainer.OnDisconnect event and will not send a </b><see cref="DisconnectPacket"/>.<para/>
+    /// <b>Please use </b><see cref="Stop"/><para/>
+    /// <b>Will not call the ClientContainer.OnDisconnect event and will not send a </b><see cref="DisconnectPacket"/>.<para/>
     /// Disconnects from the server and disposes everything.
     /// </remarks>
     public void Dispose() {

@@ -34,6 +34,16 @@
             "stopAtEntry": false,
             "console": "integratedTerminal"
         },
+        {
+            "name": "C#: Storage Debug",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "Build examples.Storage",
+            "program": "${workspaceFolder}/examples/Storage/bin/Debug/net8.0/Storage.dll",
+            "cwd": "${workspaceFolder}",
+            "stopAtEntry": false,
+            "console": "integratedTerminal"
+        },
         // {
         //     "name": "C#: HelloTriangle Debug",
         //     "type": "dotnet",

@@ -91,10 +91,10 @@ public static class NetworkParser {
     /// <summary>
     /// Serializes a packet into raw data.
     /// </summary>
-    /// <param name="stream">The stream to write to.</param>
+    /// <param name="stream">The stream to write to (doesn't close stream).</param>
     /// <param name="packet">The packet to format.</param>
     public static void Serialize(Stream stream, Packet packet) {
-        Serializer serializer = new(stream);
+        Serializer serializer = new(stream, false);
         serializer.WriteUInt(GetPacketID(packet));
 
         foreach (ISerializable field in packet.GetFields()) {
@@ -105,14 +105,14 @@ public static class NetworkParser {
     /// <summary>
     /// Parses the stream for packets.
     /// </summary>
-    /// <param name="stream">The stream to read the raw data from to parse.</param>
+    /// <param name="stream">The stream to read the raw data from to parse (doesn't close stream).</param>
     /// <param name="isClosed">If it should stop and return.</param>
     /// <param name="onPacket">The callback for when a packet has been received. Returns true if it should stop.</param>
     /// <returns>True if it was successfull, otherwise false.</returns>
     public static bool Parse(Stream stream, Func<bool> isClosed, Func<Packet, bool> onPacket) {
         Serializing.Streams.Parser parser;
         try {
-            parser = new(stream);
+            parser = new(stream, false);
         } catch (InvalidOperationException) {
             return false;
         }

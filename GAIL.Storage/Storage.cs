@@ -1,3 +1,6 @@
+using GAIL.Storage.Members;
+using GAIL.Storage.Parser;
+
 namespace GAIL.Storage;
 
 /// <summary>
@@ -12,10 +15,25 @@ public sealed class Storage : ParentNode {
     /// <summary>
     /// Loads the storage from a stream.
     /// </summary>
-    /// <param name="stream">The binary stream to read from (doesn't close the stream).</param>
+    /// <param name="stream">The stream to read from (doesn't close the stream).</param>
     /// <returns>True if it succeeded.</returns>
-    public bool Load(BinaryReader stream) {
-        return false;
+    public bool Load(Stream stream) {
+        StorageParser parser;
+
+        try {
+            parser = new(stream, false);
+        } catch (InvalidOperationException) {
+            return false;
+        }
+
+        try {
+            children = parser.Parse();
+        } catch (KeyNotFoundException) {
+            return false;
+        }
+        parser.Dispose();
+
+        return true;
     }
 
     /// <summary>
@@ -28,17 +46,25 @@ public sealed class Storage : ParentNode {
     /// <returns>True if it succeeded.</returns>
     public bool Load(string filePath) {
         using FileStream fs = new(Path.GetFullPath(filePath), FileMode.Open, FileAccess.Read);
-        using BinaryReader bs = new(fs);
-        return Load(bs);
+        return Load(fs);
     }
 
     /// <summary>
     /// Saves the storage to a stream.
     /// </summary>
-    /// <param name="stream">The binary stream to save to (doesn't close the stream).</param>
+    /// <param name="stream">The stream to save to (doesn't close the stream).</param>
     /// <returns>True if it succeeded.</returns>
-    public bool Save(BinaryWriter stream) {
-        return false;
+    public bool Save(Stream stream) {
+        StorageSerializer serializer = new(stream, false);
+
+        try {
+            serializer.Serialize(Children);
+        } catch (InvalidOperationException) {
+            return false;
+        }
+        serializer.Dispose();
+
+        return true;
     }
     
     /// <summary>
@@ -49,27 +75,10 @@ public sealed class Storage : ParentNode {
     /// <exception cref="FileNotFoundException"/>
     /// <exception cref="DirectoryNotFoundException"/>
     /// <exception cref="PathTooLongException"/>
+    /// <exception cref="UnauthorizedAccessException"/>
     /// <exception cref="IOException"/>
     public bool Save(string filePath) {
         using FileStream fs = new(Path.GetFullPath(filePath), FileMode.Create, FileAccess.Write);
-        using BinaryWriter bs = new(fs);
-        return Save(bs);
-    }
-
-    /// <inheritdoc/>
-    /// <exception cref="ArgumentException"><paramref name="node"/> is not a container or a field.</exception>
-    public override void AddChild(IChildNode node) {
-        if (node is not Container || node is not Field) {
-            throw new ArgumentException("Node is not a container or field.", nameof(node));
-        }
-        base.AddChild(node);
-    }
-    /// <inheritdoc/>
-    /// <exception cref="ArgumentException"><paramref name="node"/> is not a container or a field.</exception>
-    public override bool RemoveChild(IChildNode node) {
-        if (node is not Container || node is not Field) {
-            throw new ArgumentException("Node is not a container or field.", nameof(node));
-        }
-        return base.RemoveChild(node);
+        return Save(fs);
     }
 }

@@ -6,7 +6,7 @@ namespace GAIL.Serializing;
 /// Represents info for a serializable.
 /// </summary>
 /// <param name="FixedSize">The fixed size of the serializable.</param>
-/// <param name="Creator">The instance creator of the serializable</param>
+/// <param name="Creator">The instance creator of the serializable.</param>
 public record SerializableInfo (uint? FixedSize, Func<byte[], ISerializable> Creator);
 
 /// <summary>

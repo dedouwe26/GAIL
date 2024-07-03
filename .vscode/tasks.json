@@ -75,6 +75,12 @@
 			"group": "build",
 			"command": "dotnet",
 			"args": ["build", "${workspaceFolder}/examples/Packets/Client2/Client2.csproj"]
+		},
+		{
+			"label": "Build examples.Storage",
+			"group": "build",
+			"command": "dotnet",
+			"args": ["build", "${workspaceFolder}/examples/Storage/Storage.csproj"]
 		}
 	]
 }

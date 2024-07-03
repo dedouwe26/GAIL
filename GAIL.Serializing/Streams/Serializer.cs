@@ -94,11 +94,13 @@ public class Serializer : IDisposable {
     /// Disposes the underlying stream (if enabled).
     /// </remarks>
     public virtual void Dispose() {
-        if (Disposed || !ShouldCloseStream) { return; }
-
-        BaseStream.Close();
+        if (Disposed) { return; }
 
         Disposed = true;
+
+        if (!ShouldCloseStream) { return; }
+
+        BaseStream.Close();
         
         GC.SuppressFinalize(this);
     }

@@ -1,27 +1,60 @@
 ﻿using GAIL.Storage;
+using GAIL.Storage.Members;
 
-Storage storage = new();
+{
+    Storage storage = new();
 
-Container exampleContainer = new("container1");
-storage.AddChild(exampleContainer);
+    // Creates a new field.
+    IntField myNumber = new("MyNumber", 1248, storage);
 
-IntField exampleField = new("a field(1)", 42);
-storage.AddChild(exampleField);
+    // Creates a new container.
+    Container person = new("person", storage);
 
-StringField subField = new("childField", "hello, world!");
-storage.AddChild(subField);
-subField.SetParent(exampleContainer);
+    // Creates a new field in 'person'.
+    StringField name = new("name", "0xDED", person);
 
-storage.Save("./example.dat");
+    // Creates a new field.
+    IntField ID = new("id", Random.Shared.Next());
+    // Adds the field to the container.
+    person.AddChild(ID);
+    // ID.SetParent(person);
 
-Storage storage2 = new();
+    // Creates a list.
+    List numbers = new("numbers");
 
-storage2.Load("./example.dat");
+    // Populates the list.
+    const int amount = 5;
+    for (int i = 0; i < amount; i++) {
+        // Adds a int field to the list (can be anything). Key is ignored.
+        numbers.Add(new IntField("", Random.Shared.Next())); 
+    }
 
-IParentNode parentNode = storage2;
+    // Saves the storage to a file.
+    if (!storage.Save("./example.dat")) {
+        Console.WriteLine("Failed to save to file...");
+    }
+}
+{
+    Storage storage = new();
+    
+    // Loads the storage file.
+    storage.Load("./example.dat");
 
-StringField? child;
-if ((child = storage2.Get<StringField>("container1.childField")) == null) {
-    Console.WriteLine("No child found.");
-    return;
+    Console.WriteLine(storage.Get("MyNumber")?.Type);
+    int myNumber = storage.Get<IntField>("MyNumber")!.Value;
+    Console.WriteLine(myNumber);
+
+    string personName = storage.Get<StringField>("person.name")!.Value;
+    Console.WriteLine("Name: "+personName);
+
+    int ID = storage.Get<IntField>(["person", "id"])!.Value;
+    Console.WriteLine("ID: "+ID);
+
+    List numbers = storage.Get<List>("numbers")!;
+    foreach (IMember member in numbers) {
+        Console.WriteLine(member.Type);
+        if (member is IntField field) {
+            Console.WriteLine(field.Value);
+        }
+    }
 }

@@ -143,7 +143,7 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
     public void SendPacket(Packet packet, Connection connection) { // TODO: add exception handling at ALL send methods.
         if (Closed) { return; }
         try {
-            connection.Stream.Write(NetworkParser.FormatPacket(packet));
+            NetworkParser.Serialize(connection.Stream, packet);
         } catch (IOException e) {
             Logger?.LogError($"Could not send packet (connection ID: {BitConverter.ToString(connection.ID).Replace("-", "")}): '{e.Message}'.");
             OnException?.Invoke(e, connection);
@@ -190,7 +190,13 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
     /// <param name="connection">The connection to send the packet to.</param>
     public async ValueTask SendPacketAsync(Packet packet, Connection connection) {
         if (Closed) { return; }
-        await connection.Stream.WriteAsync(NetworkParser.FormatPacket(packet));
+        try {
+            NetworkParser.Serialize(connection.Stream, packet); // TODO?: this isnt really async.
+        } catch (IOException e) {
+            Logger?.LogError($"Could not send packet (connection ID: {BitConverter.ToString(connection.ID).Replace("-", "")}): '{e.Message}'.");
+            OnException?.Invoke(e, connection);
+        }
+        
         await connection.Stream.FlushAsync();
         OnPacketSent?.Invoke(this, connection, packet);
     }
@@ -329,7 +335,7 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
         connections.Add(connection.ID, connection);
         OnConnect?.Invoke(this, connection);
         try {
-            NetworkParser.Parse(connection.Stream, () => Closed || connection.Closed, (Packet p) => {
+            NetworkParser.Parse(connection.Stream, () => Closed || connection.Closed, (Packet p) => { // TODO: handle return value.
                 OnPacket?.Invoke(this, connection, p);
                 if (p is DisconnectPacket) {
                     connections.Remove(connection.ID);

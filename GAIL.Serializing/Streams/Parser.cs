@@ -48,10 +48,21 @@ public class Parser : IDisposable {
 
         int bytesRead = BaseStream.Read(raw);
 
-        if (bytesRead != size) {
+        if (bytesRead != Convert.ToInt32(size)) {
             throw new IndexOutOfRangeException("Could not read all bytes");
         }
         return raw;
+    }
+
+    /// <summary>
+    /// Reads raw bytes from the stream with a fixed size.
+    /// </summary>
+    /// <param name="size">The fixed size to read from the stream.</param>
+    /// <returns>The raw bytes that have been read.</returns>
+    /// <exception cref="IndexOutOfRangeException">Could not read all bytes.</exception>
+    public virtual byte[] Read(uint? size) {
+        size ??= ReadUInt();
+        return Read(size.Value);
     }
 
     /// <summary>
@@ -60,9 +71,7 @@ public class Parser : IDisposable {
     /// <param name="info">The info of the serializable on how to create and read the serializable.</param>
     /// <returns>The parsed serializable.</returns>
     public virtual ISerializable ReadSerializable(SerializableInfo info) {
-        uint size = info.FixedSize ?? ReadUInt();
-
-        byte[] raw = Read(size);
+        byte[] raw = Read(info.FixedSize);
 
         return info.Creator(raw);
     }
@@ -117,11 +126,13 @@ public class Parser : IDisposable {
     /// Disposes the underlying stream (if enabled).
     /// </remarks>
     public virtual void Dispose() {
-        if (Disposed || !ShouldCloseStream) { return; }
-        
-        BaseStream.Close();
+        if (Disposed) { return; }
 
         Disposed = true;
+
+        if (!ShouldCloseStream) { return; }
+        
+        BaseStream.Close();
 
         GC.SuppressFinalize(this);
     }

@@ -1,5 +1,7 @@
 
 using System.Collections.ObjectModel;
+using GAIL.Storage.Members;
+using GAIL.Storage.Parser;
 
 namespace GAIL.Storage;
 
@@ -10,20 +12,20 @@ public interface IParentNode {
     /// <summary>
     /// The children of this node.
     /// </summary>
-    public ReadOnlyDictionary<string, IChildNode> Children { get; }
+    public ReadOnlyDictionary<string, IMember> Children { get; }
 
     /// <summary>
     /// Gets the node of the corresponding ID. This is relative to this node.
     /// </summary>
     /// <param name="ID">The ID of the node to return (can contain dots).</param>
     /// <returns>The node if that node exists.</returns>
-    public IChildNode? Get(string ID);
+    public IMember? Get(string ID);
     /// <summary>
     /// Gets the node of the corresponding keys. This is relative to this node.
     /// </summary>
     /// <param name="keys">The list of keys for what path to take.</param>
     /// <returns>The node if that node exists.</returns>
-    public IChildNode? Get(List<string> keys);
+    public IMember? Get(List<string> keys);
 
     /// <summary>
     /// Gets the node of the corresponding ID. This is relative to this node.
@@ -31,7 +33,7 @@ public interface IParentNode {
     /// <typeparam name="T">The type of the child node.</typeparam>
     /// <param name="ID">The ID of the node to return (can contain dots).</param>
     /// <returns>The node if that node exists.</returns>
-    public T? Get<T>(string ID) where T : IChildNode;
+    public T? Get<T>(string ID) where T : IMember;
 
     /// <summary>
     /// Gets the node of the corresponding ID. This is relative to this node.
@@ -39,55 +41,25 @@ public interface IParentNode {
     /// <typeparam name="T">The type of the child node.</typeparam>
     /// <param name="keys">The list of keys for what path to take.</param>
     /// <returns>The node if that node exists.</returns>
-    public T? Get<T>(List<string> keys) where T : IChildNode;
+    public T? Get<T>(List<string> keys) where T : IMember;
 
     /// <summary>
     /// Adds a child to this node.
     /// </summary>
-    /// <param name="node">The node to add as a child.</param>
-    public void AddChild(IChildNode node);
+    /// <param name="member">The node to add as a child.</param>
+    public void AddChild(IMember member);
     /// <summary>
     /// Removes a child from this node.
     /// </summary>
     /// <param name="child">The child node to remove.</param>
     /// <returns>True it was successful. Else if it didn't find the node in the list, it is false.</returns>
-    public bool RemoveChild(IChildNode child);
+    public bool RemoveChild(IMember child);
 }
 
 /// <summary>
-/// Represents a node that can have a parent.
+/// This can contain members and is a child of a member.
 /// </summary>
-public interface IChildNode {
-    /// <summary>
-    /// The key of this node (cannot contain a dot).
-    /// </summary>
-    public string Key { get; }
-    /// <summary>
-    /// The parent of this node, null if it has no parent.
-    /// </summary>
-    public IParentNode? Parent { get; }
-
-    /// <summary>
-    /// Creates the total ID from the root (root.childnode.leafnode).
-    /// </summary>
-    /// <returns>The ID from the root.</returns>
-    public string GetID();
-
-    /// <summary>
-    /// Removes the parent.
-    /// </summary>
-    public void ClearParent();
-    /// <summary>
-    /// Sets the parent.
-    /// </summary>
-    /// <param name="parent">The new parent.</param>
-    public void SetParent(IParentNode parent);
-}
-
-/// <summary>
-/// This is a node of a node tree structure.
-/// </summary>
-public class Node : IParentNode, IChildNode {
+public abstract class Node : IParentNode, IMember {
     /// <summary>
     /// Creates a node with a key, without a parent.
     /// </summary>
@@ -110,21 +82,27 @@ public class Node : IParentNode, IChildNode {
     }
 
     /// <inheritdoc/>
-    public virtual ReadOnlyDictionary<string, IChildNode> Children => children.AsReadOnly();
-    private readonly Dictionary<string, IChildNode> children = [];
+    public virtual ReadOnlyDictionary<string, IMember> Children => children.AsReadOnly();
+    /// <summary>
+    /// The children of this node.
+    /// </summary>
+    protected Dictionary<string, IMember> children = [];
 
     /// <inheritdoc/>
     public string Key { get; private set; }
 
     /// <inheritdoc/>
     public IParentNode? Parent { get; private set; }
+    
+    /// <inheritdoc/>
+    public abstract MemberType Type { get; }
 
     /// <inheritdoc/>
     public virtual string GetID() {
         if (Parent == null) {
             return Key;
         }
-        if (Parent is IChildNode parentChild) {
+        if (Parent is IMember parentChild) {
             string? parentID = parentChild.GetID();
             return parentID+'.'+Key;
         }
@@ -142,7 +120,16 @@ public class Node : IParentNode, IChildNode {
     }
 
     /// <inheritdoc/>
+    /// <exception cref="ArgumentException"><paramref name="parent"/> is not a valid member.</exception>
     public virtual void SetParent(IParentNode parent) {
+        if (parent is IMember member) {
+            if (!StorageRegister.IsMemberRegistered(member)) {
+                throw new ArgumentException("Parent is not a valid member", nameof(parent));
+            }
+        } else if (parent is not Storage) {
+            throw new ArgumentException("Parent is not a valid member", nameof(parent));
+        }
+        
         if (Parent!=null) {
             ClearParent();
         }
@@ -153,18 +140,22 @@ public class Node : IParentNode, IChildNode {
     }
 
     /// <inheritdoc/>
-    public virtual void AddChild(IChildNode node) {
-        if (children.ContainsKey(node.Key)) { return; }
-        if (node.Parent != null) { return; }
-        children.Add(node.Key, node);
-        if (node.Parent == this) {
-            return;
+    /// <exception cref="ArgumentException"><paramref name="member"/> is not registered.</exception>
+    public virtual void AddChild(IMember member) {
+        if (!StorageRegister.IsMemberRegistered(member)) {
+            throw new ArgumentException("Member is not registered", nameof(member));
         }
-        node.SetParent(this);
+        if (children.ContainsKey(member.Key)) { return; }
+
+        children.Add(member.Key, member);
+
+        if (member.Parent != this) {
+            member.SetParent(this);
+        }
     }
 
     /// <inheritdoc/>
-    public virtual bool RemoveChild(IChildNode child) {
+    public virtual bool RemoveChild(IMember child) {
         if (!children.ContainsKey(child.Key)) { return false; }
         children.Remove(child.Key);
         if (child.Parent == this) {
@@ -174,25 +165,25 @@ public class Node : IParentNode, IChildNode {
     }
 
     /// <inheritdoc/>
-    public virtual T? Get<T>(string ID) where T : IChildNode {
+    public virtual T? Get<T>(string ID) where T : IMember {
         return (T?)Get(ID);
     }
     /// <inheritdoc/>
-    public virtual T? Get<T>(List<string> keys) where T : IChildNode {
+    public virtual T? Get<T>(List<string> keys) where T : IMember {
         return (T?)Get(keys);
     }
 
     /// <inheritdoc/>
-    public virtual IChildNode? Get(string ID) {
+    public virtual IMember? Get(string ID) {
         return Get([.. ID.Split('.')]);
     }
 
     /// <inheritdoc/>
-    public virtual IChildNode? Get(List<string> keys) {
+    public virtual IMember? Get(List<string> keys) {
         if (children.Count < 1) {
             return null;
         }
-        IChildNode? child = children!.GetValueOrDefault(keys[0]);
+        IMember? child = children!.GetValueOrDefault(keys[0]);
         if (child == null) {
             return null;
         }
@@ -208,15 +199,15 @@ public class Node : IParentNode, IChildNode {
 }
 
 /// <summary>
-/// This is a child node of a node tree structure.
+/// This is a default implementation of <see cref="IMember"/>.
 /// </summary>
-public class ChildNode : IChildNode {
+public abstract class Member : IMember {
     /// <summary>
     /// Creates a node with a key, without a parent.
     /// </summary>
     /// <param name="key">The key of this node.</param>
     /// <exception cref="InvalidOperationException">Key cannot contain a dot.</exception>
-    public ChildNode(string key)  {
+    public Member(string key)  {
         if (key.Contains('.')) {
             throw new InvalidOperationException("Invalid key, cannot contain dots");
         }
@@ -228,7 +219,7 @@ public class ChildNode : IChildNode {
     /// <param name="key">The key</param>
     /// <param name="parent"></param>
     /// <returns></returns>
-    public ChildNode(string key, IParentNode parent) : this(key) {
+    public Member(string key, IParentNode parent) : this(key) {
         SetParent(parent);
     }
 
@@ -237,13 +228,16 @@ public class ChildNode : IChildNode {
 
     /// <inheritdoc/>
     public IParentNode? Parent { get; private set; }
+    
+    /// <inheritdoc/>
+    public abstract MemberType Type { get; }
 
     /// <inheritdoc/>
     public virtual string GetID() {
         if (Parent == null) {
             return Key;
         }
-        if (Parent is IChildNode parentChild) {
+        if (Parent is IMember parentChild) {
             string? parentID = parentChild.GetID();
             return parentID+'.'+Key;
         }
@@ -261,7 +255,16 @@ public class ChildNode : IChildNode {
     }
 
     /// <inheritdoc/>
+    /// <exception cref="ArgumentException"><paramref name="parent"/> is not a valid member.</exception>
     public virtual void SetParent(IParentNode parent) {
+        if (parent is IMember member) {
+            if (!StorageRegister.IsMemberRegistered(member)) {
+                throw new ArgumentException("Parent is not a valid member", nameof(parent));
+            }
+        } else if (parent is not Storage) {
+            throw new ArgumentException("Parent is not a valid member", nameof(parent));
+        }
+    
         if (Parent!=null) {
             ClearParent();
         }
@@ -273,26 +276,33 @@ public class ChildNode : IChildNode {
 }
 
 /// <summary>
-/// This is a node of a node tree structure.
+/// This is a parent of a node tree structure.
 /// </summary>
 public class ParentNode : IParentNode {
     /// <inheritdoc/>
-    public virtual ReadOnlyDictionary<string, IChildNode> Children => children.AsReadOnly();
-    private readonly Dictionary<string, IChildNode> children = [];
+    public virtual ReadOnlyDictionary<string, IMember> Children => children.AsReadOnly();
+    /// <summary>
+    /// The children of this node.
+    /// </summary>
+    protected Dictionary<string, IMember> children = [];
 
     /// <inheritdoc/>
-    public virtual void AddChild(IChildNode node) {
-        if (children.ContainsKey(node.Key)) { return; }
-        if (node.Parent != null) { return; }
-        children.Add(node.Key, node);
-        if (node.Parent == this) {
-            return;
+    /// <exception cref="ArgumentException"><paramref name="member"/> is not registered.</exception>
+    public virtual void AddChild(IMember member) {
+        if (!StorageRegister.IsMemberRegistered(member)) {
+            throw new ArgumentException("Member is not registered", nameof(member));
         }
-        node.SetParent(this);
+        if (children.ContainsKey(member.Key)) { return; }
+        
+        children.Add(member.Key, member);
+
+        if (member.Parent != this) {
+            member.SetParent(this);
+        }
     }
 
     /// <inheritdoc/>
-    public virtual bool RemoveChild(IChildNode child) {
+    public virtual bool RemoveChild(IMember child) {
         if (!children.ContainsKey(child.Key)) { return false; }
         children.Remove(child.Key);
         if (child.Parent == this) {
@@ -301,25 +311,25 @@ public class ParentNode : IParentNode {
         return true;
     }
     /// <inheritdoc/>
-    public virtual T? Get<T>(string ID) where T : IChildNode {
+    public virtual T? Get<T>(string ID) where T : IMember {
         return (T?)Get(ID);
     }
     /// <inheritdoc/>
-    public virtual T? Get<T>(List<string> keys) where T : IChildNode {
+    public virtual T? Get<T>(List<string> keys) where T : IMember {
         return (T?)Get(keys);
     }
 
     /// <inheritdoc/>
-    public virtual IChildNode? Get(string ID) {
+    public virtual IMember? Get(string ID) {
         return Get([.. ID.Split('.')]);
     }
 
     /// <inheritdoc/>
-    public virtual IChildNode? Get(List<string> keys) {
+    public virtual IMember? Get(List<string> keys) {
         if (children.Count < 1) {
             return null;
         }
-        IChildNode? child = children!.GetValueOrDefault(keys[0]);
+        IMember? child = children!.GetValueOrDefault(keys[0]);
         if (child == null) {
             return null;
         }
