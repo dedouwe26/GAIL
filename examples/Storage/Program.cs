@@ -20,7 +20,7 @@ using GAIL.Storage.Members;
     // ID.SetParent(person);
 
     // Creates a list.
-    List numbers = new("numbers");
+    List numbers = new("numbers", storage);
 
     // Populates the list.
     const int amount = 5;

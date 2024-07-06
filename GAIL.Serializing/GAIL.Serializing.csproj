@@ -7,8 +7,4 @@
     <PublishTrimmed>true</PublishTrimmed>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="0xDED.Terminal" Version="4.0.0" />
-  </ItemGroup>
 </Project>
