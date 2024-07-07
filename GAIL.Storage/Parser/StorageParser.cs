@@ -40,7 +40,7 @@ public class StorageParser : Serializing.Streams.Parser {
     /// </summary>
     /// <param name="key">The key of the list.</param>
     /// <returns>A new parsed list.</returns>
-    protected virtual List ReadList(string key) {
+    protected virtual List ReadList(string key) { // FIXME?: reads with key
         List<IMember> children = ReadMembers(false);
 
         return new List(key, children);
@@ -85,14 +85,14 @@ public class StorageParser : Serializing.Streams.Parser {
     public virtual List<IMember> ReadMembers(bool hasKey = true) {
         IMember? member;
         try {
-            member = ReadMember();
+            member = ReadMember(hasKey);
         } catch (IndexOutOfRangeException) {
             return [];
         }
         if (member==null) {
             return [];
         } else {
-            return [member, .. ReadMembers()];
+            return [member, .. ReadMembers(hasKey)];
         }
     }
     /// <summary>

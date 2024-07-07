@@ -118,7 +118,7 @@ public class Parser : IDisposable {
     /// <returns>The parsed string.</returns> 
     /// <exception cref="InvalidCastException">The serializable is not a string.</exception>
     public virtual string ReadString() {
-        return ReadSerializable<StringSerializable>(UIntSerializable.Info).Value;
+        return ReadSerializable<StringSerializable>(StringSerializable.Info).Value;
     }
 
     /// <inheritdoc/>
