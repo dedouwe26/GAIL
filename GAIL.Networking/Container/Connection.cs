@@ -59,6 +59,14 @@ public class Connection : IDisposable {
     }
 
     /// <summary>
+    /// Converts the connection ID to a string.
+    /// </summary>
+    /// <returns>The connection ID string.</returns>
+    public string ToConnectionID() {
+        return BitConverter.ToString(ID).Replace("-", "");
+    }
+
+    /// <summary>
     /// Changes the user-set data.
     /// </summary>
     /// <typeparam name="T">The type of the data.</typeparam>
@@ -87,5 +95,10 @@ public class Connection : IDisposable {
         TcpClient.Close();
         Closed = true;
         GC.SuppressFinalize(this);
+    }
+
+    /// <inheritdoc/>
+    public override string ToString() {
+        return ToConnectionID();
     }
 }

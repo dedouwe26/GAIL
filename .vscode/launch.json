@@ -40,7 +40,7 @@
             "request": "launch",
             "preLaunchTask": "Build examples.Storage",
             "program": "${workspaceFolder}/examples/Storage/bin/Debug/net8.0/Storage.dll",
-            "cwd": "${workspaceFolder}",
+            "cwd": "${workspaceFolder}/examples/Storage/bin/Debug/net8.0/",
             "stopAtEntry": false,
             "console": "integratedTerminal"
         },

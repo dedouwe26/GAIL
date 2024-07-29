@@ -57,7 +57,7 @@ public class StorageParser : Serializing.Streams.Parser {
     /// Reads any valid member from the stream.
     /// </summary>
     /// <param name="hasKey">True if there is a key to read.</param>
-    /// <returns>The new oarsed member, null if it is an end.</returns>
+    /// <returns>The new parsed member, null if it is an end.</returns>
     public virtual IMember? ReadMember(bool hasKey = true) {
         MemberType type = ReadType();
         if (type == MemberType.End) {

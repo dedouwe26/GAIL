@@ -170,7 +170,7 @@ public class ClientContainer : IDisposable {
     }
     private void Listen() {
         try {
-            NetworkParser.Parse(NetworkStream!, () => Closed, (Packet p) => { // TODO: handle return value.
+            if (!NetworkParser.Parse(NetworkStream!, () => Closed, (Packet p) => {
                 OnPacket?.Invoke(this, p);
                 if (p is DisconnectPacket dp) {
                     OnDisconnect?.Invoke(this, true, dp.AdditionalData);
@@ -178,7 +178,10 @@ public class ClientContainer : IDisposable {
                     return true;
                 }
                 return false;
-            });
+            })) {
+                Logger?.LogFatal("Unable to start reading from network stream.");
+                OnException?.Invoke(new InvalidOperationException("Unable to start reading from network stream."));
+            }
         } catch (IOException e) {
             if (Closed) {
                 return;

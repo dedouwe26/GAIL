@@ -5,13 +5,13 @@ using GAIL.Storage.Members;
     Storage storage = new();
 
     // Creates a new field.
-    IntField myNumber = new("MyNumber", 1248, storage);
+    _ = new IntField("MyNumber", 1248, storage);
 
     // Creates a new container.
     Container person = new("person", storage);
 
     // Creates a new field in 'person'.
-    StringField name = new("name", "0xDED", person);
+    _ = new StringField("name", "0xDED", person);
 
     // Creates a new field.
     IntField ID = new("id", Random.Shared.Next());

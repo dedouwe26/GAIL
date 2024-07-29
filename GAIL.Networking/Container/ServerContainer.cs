@@ -145,7 +145,7 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
         try {
             NetworkParser.Serialize(connection.Stream, packet);
         } catch (IOException e) {
-            Logger?.LogError($"Could not send packet (connection ID: {BitConverter.ToString(connection.ID).Replace("-", "")}): '{e.Message}'.");
+            Logger?.LogError($"Could not send packet (connection ID: {connection.ToConnectionID()}): '{e.Message}'.");
             OnException?.Invoke(e, connection);
         }
         connection.Stream.Flush();
@@ -193,7 +193,7 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
         try {
             NetworkParser.Serialize(connection.Stream, packet); // TODO?: this isnt really async.
         } catch (IOException e) {
-            Logger?.LogError($"Could not send packet (connection ID: {BitConverter.ToString(connection.ID).Replace("-", "")}): '{e.Message}'.");
+            Logger?.LogError($"Could not send packet (connection ID: {connection.ToConnectionID()}): '{e.Message}'.");
             OnException?.Invoke(e, connection);
         }
         
@@ -335,7 +335,7 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
         connections.Add(connection.ID, connection);
         OnConnect?.Invoke(this, connection);
         try {
-            NetworkParser.Parse(connection.Stream, () => Closed || connection.Closed, (Packet p) => { // TODO: handle return value.
+            if (!NetworkParser.Parse(connection.Stream, () => Closed || connection.Closed, (Packet p) => { // TODO: handle return value.
                 OnPacket?.Invoke(this, connection, p);
                 if (p is DisconnectPacket) {
                     connections.Remove(connection.ID);
@@ -344,12 +344,16 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
                     return true;
                 }
                 return false;
-            });
+            })) {
+                string message = $"Unable to start reading from network stream (connection ID: {connection.ToConnectionID()}).";
+                Logger?.LogFatal(message);
+                OnException?.Invoke(new InvalidOperationException(message), connection);
+            }
         } catch (IOException e) { // FIXME: // FIXME: when stopping (from server).
             if (Closed || connection.Closed) {
                 return;
             }
-            Logger?.LogWarning($"Could not read from network stream (connection ID: {BitConverter.ToString(connection.ID).Replace("-", "")}): '{e.Message}'.");
+            Logger?.LogWarning($"Could not read from network stream (connection ID: {connection.ToConnectionID()}): '{e.Message}'.");
             OnException?.Invoke(e, connection);
         }
         

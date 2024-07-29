@@ -188,7 +188,7 @@ public abstract class Node : IParentNode, IMember {
             return null;
         }
         keys.RemoveAt(0);
-        if (keys.Count > 0) {
+        if (keys.Count <= 0) {
             return child;
         }
         if (child is IParentNode childParent) {
@@ -334,7 +334,7 @@ public class ParentNode : IParentNode {
             return null;
         }
         keys.RemoveAt(0);
-        if (keys.Count > 0) {
+        if (keys.Count <= 0) {
             return child;
         }
         if (child is IParentNode childParent) {
