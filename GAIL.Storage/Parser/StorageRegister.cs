@@ -1,11 +1,10 @@
-using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using GAIL.Storage.Members;
 
 namespace GAIL.Storage.Parser;
 
 /// <summary>
-/// A class that handles and creates members.
+/// A register that handles and creates members for storage parsing and serializing.
 /// </summary>
 public static class StorageRegister {
     private static readonly Dictionary<MemberType,FieldInfo> registeredFields = new() {

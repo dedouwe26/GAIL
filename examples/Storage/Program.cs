@@ -1,8 +1,18 @@
-﻿using GAIL.Storage;
+﻿using System.Security.Cryptography;
+using GAIL.Serializing.Formatters;
+using GAIL.Storage;
 using GAIL.Storage.Members;
 
+// Generate a key and IV for AES encryption.
+byte[] key = new byte[32];
+byte[] iv = new byte[16];
+
+RandomNumberGenerator.Fill(key);
+RandomNumberGenerator.Fill(iv);
+
 {
-    Storage storage = new();
+    // Create a new storage with a AES formatter.
+    Storage storage = new(new AESFormatter(key, iv));
 
     // Creates a new field.
     _ = new IntField("MyNumber", 1248, storage);
@@ -36,6 +46,9 @@ using GAIL.Storage.Members;
 }
 {
     Storage storage = new();
+
+    // Sets the formatter to a AES formatter.
+    storage.Formatter = new AESFormatter(key, iv);
     
     // Loads the storage file.
     storage.Load("./example.dat");

@@ -7,9 +7,9 @@ namespace examples.Packets.Shared;
 public static class Packets {
     public static void RegisterPackets() {
         // Registers packets.
-        NetworkParser.RegisterPacket(new MessagePacket());
-        NetworkParser.RegisterPacket(new NameMessagePacket());
-        NetworkParser.RegisterPacket(new RegisterPacket());
+        NetworkRegister.RegisterPacket(new MessagePacket());
+        NetworkRegister.RegisterPacket(new NameMessagePacket());
+        NetworkRegister.RegisterPacket(new RegisterPacket());
     }
 }
 

@@ -169,8 +169,9 @@ public class ClientContainer : IDisposable {
         return true;
     }
     private void Listen() {
+        NetworkParser parser = new(NetworkStream!);
         try {
-            if (!NetworkParser.Parse(NetworkStream!, () => Closed, (Packet p) => {
+            if (!parser.Parse(() => Closed, (Packet p) => {
                 OnPacket?.Invoke(this, p);
                 if (p is DisconnectPacket dp) {
                     OnDisconnect?.Invoke(this, true, dp.AdditionalData);
@@ -197,8 +198,9 @@ public class ClientContainer : IDisposable {
     /// <param name="packet">The packet to send to the server.</param>
     public void SendPacket(Packet packet) {
         if (Closed) { return; }
+        NetworkSerializer serializer = new(NetworkStream!);
         try {
-            NetworkParser.Serialize(NetworkStream!, packet);
+            serializer.WritePacket(packet);
         } catch (IOException e) {
             Logger?.LogError("Could not send packet: '"+e.Message+"'.");
             OnException?.Invoke(e);
@@ -213,8 +215,9 @@ public class ClientContainer : IDisposable {
     /// <param name="packet">The packet to send to the server.</param>
     public async ValueTask SendPacketAsync(Packet packet) {
         if (Closed) { return; }
+        NetworkSerializer serializer = new(NetworkStream!);
         try {
-            NetworkParser.Serialize(NetworkStream!, packet); // TODO?: this isnt really async.
+            serializer.WritePacket(packet); // TODO?: this isnt really async.
         } catch (IOException e) {
             Logger?.LogError("Could not send packet: '"+e.Message+"'.");
             OnException?.Invoke(e);

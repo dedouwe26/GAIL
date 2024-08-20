@@ -1,3 +1,4 @@
+using GAIL.Serializing.Streams;
 using GAIL.Storage.Members;
 using GAIL.Storage.Parser;
 
@@ -8,14 +9,20 @@ namespace GAIL.Storage;
 /// </summary>
 public sealed class Storage : ParentNode {
     /// <summary>
+    /// This is the formatter used for this storage file (default: DefaultFormatter).
+    /// </summary>
+    public IFormatter Formatter { get; set; }
+
+    /// <summary>
     /// Creates a new storage.
     /// </summary>
-    public Storage() { }
+    /// <param name="formatter">The formatter to use for encoding and decoding (default: DefaultFormatter).</param>
+    public Storage(IFormatter? formatter = null) { Formatter = formatter??new DefaultFormatter(); }
 
     /// <summary>
     /// Loads the storage from a stream.
     /// </summary>
-    /// <param name="stream">The stream to read from (doesn't close the stream).</param>
+    /// <param name="stream">The stream to read from (closes the stream).</param>
     /// <returns>True if it succeeded.</returns>
     public bool Load(Stream stream) {
         StorageParser parser;
@@ -27,7 +34,7 @@ public sealed class Storage : ParentNode {
         }
 
         try {
-            children = parser.Parse();
+            children = parser.Parse(Formatter);
         } catch (KeyNotFoundException) {
             return false;
         }
@@ -52,13 +59,13 @@ public sealed class Storage : ParentNode {
     /// <summary>
     /// Saves the storage to a stream.
     /// </summary>
-    /// <param name="stream">The stream to save to (doesn't close the stream).</param>
+    /// <param name="stream">The stream to save to (closes the stream).</param>
     /// <returns>True if it succeeded.</returns>
     public bool Save(Stream stream) {
         StorageSerializer serializer = new(stream, false);
 
         try {
-            serializer.Serialize(Children);
+            serializer.Serialize(Children, Formatter);
         } catch (InvalidOperationException) {
             return false;
         }

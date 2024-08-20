@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Net;
 using System.Net.Sockets;
 using GAIL.Networking.Parser;
+using GAIL.Serializing.Streams;
 using OxDED.Terminal;
 using OxDED.Terminal.Logging;
 
@@ -25,6 +26,7 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
         }
         return server;
     }
+
     /// <summary>
     /// The logger of this server.
     /// Set it using <see cref="SetLogger"/>
@@ -80,7 +82,6 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
         Closed = true;
         IP = ip;
         tcpListener = new TcpListener(ip);
-        
     }
 
     /// <summary>
@@ -140,14 +141,16 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
     /// </summary>
     /// <param name="packet">The packet to send to the client.</param>
     /// <param name="connection">The connection to send the packet to.</param>
-    public void SendPacket(Packet packet, Connection connection) { // TODO: add exception handling at ALL send methods.
+    public void SendPacket(Packet packet, Connection connection) {
         if (Closed) { return; }
+        NetworkSerializer serializer = new(connection.Stream);
         try {
-            NetworkParser.Serialize(connection.Stream, packet);
+            serializer.WritePacket(packet);
         } catch (IOException e) {
             Logger?.LogError($"Could not send packet (connection ID: {connection.ToConnectionID()}): '{e.Message}'.");
             OnException?.Invoke(e, connection);
         }
+        serializer.Dispose();
         connection.Stream.Flush();
         OnPacketSent?.Invoke(this, connection, packet);
     }
@@ -190,8 +193,9 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
     /// <param name="connection">The connection to send the packet to.</param>
     public async ValueTask SendPacketAsync(Packet packet, Connection connection) {
         if (Closed) { return; }
+        NetworkSerializer serializer = new(connection.Stream);
         try {
-            NetworkParser.Serialize(connection.Stream, packet); // TODO?: this isnt really async.
+            serializer.WritePacket(packet); // TODO?: this isnt really async.
         } catch (IOException e) {
             Logger?.LogError($"Could not send packet (connection ID: {connection.ToConnectionID()}): '{e.Message}'.");
             OnException?.Invoke(e, connection);
@@ -334,8 +338,9 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
         
         connections.Add(connection.ID, connection);
         OnConnect?.Invoke(this, connection);
+        NetworkParser parser = new(connection.Stream);
         try {
-            if (!NetworkParser.Parse(connection.Stream, () => Closed || connection.Closed, (Packet p) => { // TODO: handle return value.
+            if (!parser.Parse(() => Closed || connection.Closed, (Packet p) => {
                 OnPacket?.Invoke(this, connection, p);
                 if (p is DisconnectPacket) {
                     connections.Remove(connection.ID);
@@ -349,7 +354,7 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
                 Logger?.LogFatal(message);
                 OnException?.Invoke(new InvalidOperationException(message), connection);
             }
-        } catch (IOException e) { // FIXME: // FIXME: when stopping (from server).
+        } catch (IOException e) {
             if (Closed || connection.Closed) {
                 return;
             }

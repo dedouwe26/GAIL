@@ -33,5 +33,5 @@ public abstract class Packet {
     /// <summary>
     /// The ID of this packet.
     /// </summary>
-    public uint ID { get => NetworkParser.GetPacketID(this); }
+    public uint ID { get => NetworkRegister.GetPacketID(this); }
 }

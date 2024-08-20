@@ -1,4 +1,3 @@
-
 namespace GAIL.Serializing.Streams;
 
 /// <summary>
@@ -41,52 +40,58 @@ public class Serializer : IDisposable {
     /// <summary>
     /// Writes data to the stream.
     /// </summary>
-    /// <param name="buffer"></param>
-    public virtual void Write(ReadOnlySpan<byte> buffer) {
-        BaseStream.Write(buffer);
+    /// <param name="buffer">The data to write to the stream.</param>
+    /// <param name="formatter">The formatter used to encode the raw data (<paramref name="buffer"/>).</param>
+    public virtual void Write(byte[] buffer, IFormatter? formatter = null) {
+        BaseStream.Write(formatter==null ? buffer : formatter.Encode(buffer));
     }
 
     /// <summary>
     /// Writes a serializable to the stream.
     /// </summary>
     /// <param name="serializable">The serializable to write to the stream.</param>
+    /// <param name="formatter">The formatter used to encode the raw data.</param>
     /// <exception cref="InvalidOperationException">Fixed size doesn't match the actual size.</exception>
-    public virtual void WriteSerializable(ISerializable serializable) {
+    public virtual void WriteSerializable(ISerializable serializable, IFormatter? formatter = null) {
         byte[] raw = serializable.Serialize();
         if (serializable.FixedSize == null) {
-            WriteUInt(Convert.ToUInt32(raw.Length));
+            WriteUInt(Convert.ToUInt32(raw.Length), formatter);
         } else if (raw.Length != serializable.FixedSize) {
             throw new InvalidOperationException("Fixed size doesn't match the actual size");
         }
-        Write(raw);
+        Write(raw, formatter);
     }
     /// <summary>
     /// Writes a unsigned integer to the stream.
     /// </summary>
     /// <param name="value">The unsigned integer to write.</param>
-    public virtual void WriteUInt(uint value) {
+    /// <param name="formatter">The formatter used to encode the raw data.</param>
+    public virtual void WriteUInt(uint value, IFormatter? formatter = null) {
         WriteSerializable(new UIntSerializable(value));
     }
     /// <summary>
     /// Writes a byte to the stream.
     /// </summary>
     /// <param name="value">The byte to write.</param>
-    public virtual void WriteByte(byte value) {
-        WriteSerializable(new ByteSerializable(value));
+    /// <param name="formatter">The formatter used to encode the raw data.</param>
+    public virtual void WriteByte(byte value, IFormatter? formatter = null) {
+        WriteSerializable(new ByteSerializable(value), formatter);
     }
     /// <summary>
     /// Writes an integer to the stream.
     /// </summary>
     /// <param name="value">The integer to write.</param>
-    public virtual void WriteInt(int value) {
-        WriteSerializable(new IntSerializable(value));
+    /// <param name="formatter">The formatter used to encode the raw data.</param>
+    public virtual void WriteInt(int value, IFormatter? formatter = null) {
+        WriteSerializable(new IntSerializable(value), formatter);
     }
     /// <summary>
     /// Writes a string to the stream as UTF-8.
     /// </summary>
     /// <param name="value">The string to write.</param>
-    public virtual void WriteString(string value) {
-        WriteSerializable(new StringSerializable(value));
+    /// <param name="formatter">The formatter used to encode the raw data.</param>
+    public virtual void WriteString(string value, IFormatter? formatter = null) {
+        WriteSerializable(new StringSerializable(value), formatter);
     }
 
     /// <inheritdoc/>

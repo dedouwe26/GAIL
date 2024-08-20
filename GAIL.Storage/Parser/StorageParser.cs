@@ -1,4 +1,6 @@
 
+using GAIL.Serializing;
+using GAIL.Serializing.Streams;
 using GAIL.Storage.Members;
 
 namespace GAIL.Storage.Parser;
@@ -8,15 +10,20 @@ namespace GAIL.Storage.Parser;
 /// </summary>
 public class StorageParser : Serializing.Streams.Parser {
     /// <summary>
-    /// Creates a new storage parser.
+    /// The stream to read from while formatting.
     /// </summary>
-    /// <inheritdoc/>
-    public StorageParser(Stream input, bool shouldCloseStream = true) : base(input, shouldCloseStream) { }
+    public Stream InStream { get; private set; }
+
     /// <summary>
     /// Creates a new storage parser.
     /// </summary>
     /// <inheritdoc/>
-    public StorageParser(byte[] input, bool shouldCloseStream = true) : base(input, shouldCloseStream) { }
+    public StorageParser(Stream input, bool shouldCloseStream = true) : base(new MemoryStream(), shouldCloseStream) { InStream = input; }
+    /// <summary>
+    /// Creates a new storage parser.
+    /// </summary>
+    /// <inheritdoc/>
+    public StorageParser(byte[] input, bool shouldCloseStream = true) : base(new MemoryStream(), shouldCloseStream) { InStream = new MemoryStream(input); }
 
     /// <summary>
     /// Reads a member type from the stream.
@@ -51,7 +58,7 @@ public class StorageParser : Serializing.Streams.Parser {
     /// <param name="key">The key of the container.</param>
     /// <returns>A new parsed container.</returns>
     protected virtual Container ReadContainer(string key) {
-        return new Container(key, Parse());
+        return new Container(key, ReadMembers().ToDictionary(static x => x.Key, static x => x));
     }
     /// <summary>
     /// Reads any valid member from the stream.
@@ -86,7 +93,7 @@ public class StorageParser : Serializing.Streams.Parser {
         IMember? member;
         try {
             member = ReadMember(hasKey);
-        } catch (IndexOutOfRangeException) {
+        } catch (EndOfStreamException) {
             return [];
         }
         if (member==null) {
@@ -99,7 +106,29 @@ public class StorageParser : Serializing.Streams.Parser {
     /// Parses the stream.
     /// </summary>
     /// <returns>A dictionary containing the key and child.</returns>
-    public Dictionary<string, IMember> Parse() {
+    /// <param name="formatter">The formatter to use for decoding.</param>
+    public Dictionary<string, IMember> Parse(IFormatter formatter) {
+        byte[] raw = new byte[4];
+        InStream.Read(raw);
+        IntSerializable @int = new(default);
+        @int.Parse(raw);
+        raw = new byte[@int.Value];
+        InStream.Read(raw);
+        BaseStream = new MemoryStream(formatter.Decode(raw));
+
         return ReadMembers().ToDictionary(static x => x.Key, static x => x);
+    }
+
+    /// <inheritdoc/>
+    public override void Dispose() {
+        if (Disposed) { return; }
+
+        if (!ShouldCloseStream) { return; }
+        
+        BaseStream.Close();
+
+        GC.SuppressFinalize(this);
+
+        base.Dispose();
     }
 }

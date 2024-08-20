@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using GAIL.Serializing;
 using GAIL.Serializing.Streams;
 using GAIL.Storage.Members;
 
@@ -9,15 +10,18 @@ namespace GAIL.Storage.Parser;
 /// </summary>
 public class StorageSerializer : Serializer {
     /// <summary>
-    /// Creates a new storage serializer.
+    /// The stream to write to when done formatting.
     /// </summary>
-    /// <inheritdoc/>
-    public StorageSerializer(Stream output, bool shouldCloseStream = true) : base(output, shouldCloseStream) { }
+    public Stream OutStream { get; private set; }
     /// <summary>
     /// Creates a new storage serializer.
     /// </summary>
     /// <inheritdoc/>
-    public StorageSerializer(bool shouldCloseStream = true) : base(shouldCloseStream) { }
+    public StorageSerializer(Stream output, bool shouldCloseStream = true) : base(shouldCloseStream) { OutStream = output; }
+    /// <summary>
+    /// Creates a new storage serializer.
+    /// </summary>
+    public StorageSerializer(bool shouldCloseStream = true) : base(shouldCloseStream) { OutStream = new MemoryStream(); }
     /// <summary>
     /// Writes a member type to the stream.
     /// </summary>
@@ -83,11 +87,30 @@ public class StorageSerializer : Serializer {
         }
     }
     /// <summary>
-    /// Writes the children of a node to the stream.
+    /// Writes the children of a node to the stream and formats them.
     /// </summary>
     /// <param name="children">The children to write to the stream.</param>
-    public void Serialize(ReadOnlyDictionary<string, IMember> children) {
+    /// <param name="formatter">The formatter to use for encoding.</param>
+    public void Serialize(ReadOnlyDictionary<string, IMember> children, IFormatter formatter) {
         WriteChildren([.. children.Values]);
         WriteType(MemberType.End);
+        byte[] result = formatter.Encode((BaseStream as MemoryStream)!.ToArray());
+        OutStream.Write(new IntSerializable(result.Length).Serialize());
+        OutStream.Write(result);
+
+        
+        
+    }
+    /// <inheritdoc/>
+    public override void Dispose() {
+        if (Disposed) { return; }
+
+        if (!ShouldCloseStream) { return; }
+
+        OutStream.Close();
+        
+        base.Dispose();
+        
+        GC.SuppressFinalize(this);
     }
 }
