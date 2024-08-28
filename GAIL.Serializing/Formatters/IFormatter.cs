@@ -1,4 +1,4 @@
-namespace GAIL.Serializing.Streams;
+namespace GAIL.Serializing.Formatters;
 
 /// <summary>
 /// Can replace bytes for compressing or encryption.

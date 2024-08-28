@@ -1,4 +1,5 @@
 using GAIL.Serializing;
+using GAIL.Serializing.Formatters;
 
 namespace GAIL.Networking.Parser;
 
@@ -32,6 +33,21 @@ public class NetworkParser : Serializing.Streams.Parser {
                 return fields;
             }
         }
+    }
+
+    /// <summary>
+    /// Applies all the formatters to make it parsable (should call at the beginning).
+    /// </summary>
+    /// <param name="globalFormatter">The formatter used for global purposes (multiple packets).</param>
+    /// <param name="packetFormatter">The formatter used for this specific packet.</param>
+    public void Decode(IFormatter globalFormatter, IFormatter packetFormatter) {
+        byte[] raw = new byte[4];
+        InStream.Read(raw);
+        IntSerializable @int = new(default);
+        @int.Parse(raw);
+        raw = new byte[@int.Value];
+        InStream.Read(raw);
+        BaseStream = new MemoryStream(formatter.Decode(raw));
     }
 
     /// <summary>

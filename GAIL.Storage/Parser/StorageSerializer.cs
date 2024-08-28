@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using GAIL.Serializing;
+using GAIL.Serializing.Formatters;
 using GAIL.Serializing.Streams;
 using GAIL.Storage.Members;
 
@@ -86,6 +87,17 @@ public class StorageSerializer : Serializer {
             }
         }
     }
+
+    /// <summary>
+    /// Applies the formatter (should call at the end).
+    /// </summary>
+    /// <param name="formatter">The formatter to apply.</param>
+    public void Encode(IFormatter formatter) {
+        byte[] result = formatter.Encode((BaseStream as MemoryStream)!.ToArray());
+        OutStream.Write(new IntSerializable(result.Length).Serialize());
+        OutStream.Write(result);
+    }
+
     /// <summary>
     /// Writes the children of a node to the stream and formats them.
     /// </summary>
@@ -94,12 +106,8 @@ public class StorageSerializer : Serializer {
     public void Serialize(ReadOnlyDictionary<string, IMember> children, IFormatter formatter) {
         WriteChildren([.. children.Values]);
         WriteType(MemberType.End);
-        byte[] result = formatter.Encode((BaseStream as MemoryStream)!.ToArray());
-        OutStream.Write(new IntSerializable(result.Length).Serialize());
-        OutStream.Write(result);
 
-        
-        
+        Encode(formatter);
     }
     /// <inheritdoc/>
     public override void Dispose() {

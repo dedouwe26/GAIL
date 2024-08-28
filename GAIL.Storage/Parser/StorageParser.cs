@@ -1,6 +1,6 @@
 
 using GAIL.Serializing;
-using GAIL.Serializing.Streams;
+using GAIL.Serializing.Formatters;
 using GAIL.Storage.Members;
 
 namespace GAIL.Storage.Parser;
@@ -103,11 +103,10 @@ public class StorageParser : Serializing.Streams.Parser {
         }
     }
     /// <summary>
-    /// Parses the stream.
+    /// Applies the formatter to make it parsable (should call at the beginning).
     /// </summary>
-    /// <returns>A dictionary containing the key and child.</returns>
     /// <param name="formatter">The formatter to use for decoding.</param>
-    public Dictionary<string, IMember> Parse(IFormatter formatter) {
+    public void Decode(IFormatter formatter) {
         byte[] raw = new byte[4];
         InStream.Read(raw);
         IntSerializable @int = new(default);
@@ -115,6 +114,14 @@ public class StorageParser : Serializing.Streams.Parser {
         raw = new byte[@int.Value];
         InStream.Read(raw);
         BaseStream = new MemoryStream(formatter.Decode(raw));
+    }
+    /// <summary>
+    /// Parses the stream.
+    /// </summary>
+    /// <returns>A dictionary containing the key and child.</returns>
+    /// <param name="formatter">The formatter to use for decoding.</param>
+    public Dictionary<string, IMember> Parse(IFormatter formatter) {
+        Decode(formatter);
 
         return ReadMembers().ToDictionary(static x => x.Key, static x => x);
     }
