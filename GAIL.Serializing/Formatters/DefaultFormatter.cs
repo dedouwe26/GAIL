@@ -1,4 +1,4 @@
-namespace GAIL.Serializing.Streams;
+namespace GAIL.Serializing.Formatters;
 
 /// <summary>
 /// A formatter that doesn't apply any effects or formats.

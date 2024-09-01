@@ -35,6 +35,9 @@ class Program {
         client.OnConnect+=OnConnect;
         client.OnStop+=OnStop;
 
+        // Applies a formatter for all packets (note that is must happen both on the client and the server).
+        // server.GlobalFormatter = new GZipFormatter();
+
         // Don't forget to start the client.
         await client.StartAsync();
     }

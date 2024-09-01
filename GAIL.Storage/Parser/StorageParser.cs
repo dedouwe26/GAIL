@@ -47,7 +47,7 @@ public class StorageParser : Serializing.Streams.Parser {
     /// </summary>
     /// <param name="key">The key of the list.</param>
     /// <returns>A new parsed list.</returns>
-    protected virtual List ReadList(string key) { // FIXME?: reads with key
+    protected virtual List ReadList(string key) {
         List<IMember> children = ReadMembers(false);
 
         return new List(key, children);

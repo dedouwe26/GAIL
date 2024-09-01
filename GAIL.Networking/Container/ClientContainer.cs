@@ -1,8 +1,11 @@
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.Serialization;
 using GAIL.Networking.Parser;
+using GAIL.Serializing.Formatters;
 using OxDED.Terminal;
 using OxDED.Terminal.Logging;
+using IFormatter = GAIL.Serializing.Formatters.IFormatter;
 
 namespace GAIL.Networking.Client;
 
@@ -50,6 +53,12 @@ public class ClientContainer : IDisposable {
     /// The stream to write to.
     /// </summary>
     public NetworkStream? NetworkStream {get; private set;}
+
+    /// <summary>
+    /// The formatter used to encode / decode all packets.
+    /// </summary>
+    public IFormatter GlobalFormatter = new DefaultFormatter();
+
     /// <summary>
     /// An event that is called when a packet is received.
     /// </summary>
@@ -171,7 +180,7 @@ public class ClientContainer : IDisposable {
     private void Listen() {
         NetworkParser parser = new(NetworkStream!);
         try {
-            if (!parser.Parse(() => Closed, (Packet p) => {
+            if (!parser.Parse(GlobalFormatter, () => Closed, (Packet p) => {
                 OnPacket?.Invoke(this, p);
                 if (p is DisconnectPacket dp) {
                     OnDisconnect?.Invoke(this, true, dp.AdditionalData);
@@ -200,7 +209,7 @@ public class ClientContainer : IDisposable {
         if (Closed) { return; }
         NetworkSerializer serializer = new(NetworkStream!);
         try {
-            serializer.WritePacket(packet);
+            serializer.WritePacket(packet, GlobalFormatter);
         } catch (IOException e) {
             Logger?.LogError("Could not send packet: '"+e.Message+"'.");
             OnException?.Invoke(e);
@@ -217,7 +226,7 @@ public class ClientContainer : IDisposable {
         if (Closed) { return; }
         NetworkSerializer serializer = new(NetworkStream!);
         try {
-            serializer.WritePacket(packet); // TODO?: this isnt really async.
+            serializer.WritePacket(packet, GlobalFormatter); // TODO?: this isnt really async.
         } catch (IOException e) {
             Logger?.LogError("Could not send packet: '"+e.Message+"'.");
             OnException?.Invoke(e);

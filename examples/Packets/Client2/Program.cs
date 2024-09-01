@@ -42,6 +42,9 @@ Terminal.OnKeyPress += async (ConsoleKey key, char keyChar, bool alt, bool shift
 
 Terminal.ListenForKeys = true;
 
+// Applies a formatter for all packets (note that is must happen both on the client and the server).
+// server.GlobalFormatter = new GZipFormatter();
+
 // Don't forget to start the client.
 await client.StartAsync();
 

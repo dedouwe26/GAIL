@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Net;
 using System.Net.Sockets;
 using GAIL.Networking.Parser;
+using GAIL.Serializing.Formatters;
 using GAIL.Serializing.Streams;
 using OxDED.Terminal;
 using OxDED.Terminal.Logging;
@@ -45,6 +46,12 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
     /// The tcp listener back-end.
     /// </summary>
     public TcpListener tcpListener;
+
+    /// <summary>
+    /// The formatter used to encode / decode all packets.
+    /// </summary>
+    public IFormatter GlobalFormatter = new DefaultFormatter();
+
     /// <summary>
     /// An event that is called when a packet is received.
     /// </summary>
@@ -145,7 +152,7 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
         if (Closed) { return; }
         NetworkSerializer serializer = new(connection.Stream);
         try {
-            serializer.WritePacket(packet);
+            serializer.WritePacket(packet, GlobalFormatter);
         } catch (IOException e) {
             Logger?.LogError($"Could not send packet (connection ID: {connection.ToConnectionID()}): '{e.Message}'.");
             OnException?.Invoke(e, connection);
@@ -195,7 +202,7 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
         if (Closed) { return; }
         NetworkSerializer serializer = new(connection.Stream);
         try {
-            serializer.WritePacket(packet); // TODO?: this isnt really async.
+            serializer.WritePacket(packet, GlobalFormatter); // TODO?: this isnt really async.
         } catch (IOException e) {
             Logger?.LogError($"Could not send packet (connection ID: {connection.ToConnectionID()}): '{e.Message}'.");
             OnException?.Invoke(e, connection);
@@ -340,7 +347,7 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
         OnConnect?.Invoke(this, connection);
         NetworkParser parser = new(connection.Stream);
         try {
-            if (!parser.Parse(() => Closed || connection.Closed, (Packet p) => {
+            if (!parser.Parse(GlobalFormatter, () => Closed || connection.Closed, (Packet p) => {
                 OnPacket?.Invoke(this, connection, p);
                 if (p is DisconnectPacket) {
                     connections.Remove(connection.ID);

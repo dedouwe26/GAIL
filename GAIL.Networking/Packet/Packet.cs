@@ -1,5 +1,7 @@
 using GAIL.Networking.Parser;
 using GAIL.Serializing;
+using GAIL.Serializing.Formatters;
+using GAIL.Serializing.Streams;
 
 namespace GAIL.Networking;
 
@@ -7,6 +9,10 @@ namespace GAIL.Networking;
 /// Packet is an abstract class for parsing and formatting a packet.
 /// </summary>
 public abstract class Packet {
+    /// <summary>
+    /// The formatter used for encoding / decoding this packet.
+    /// </summary>
+    public virtual IFormatter Formatter => new DefaultFormatter();
     /// <summary>
     /// Creates a packet (add own data here).
     /// </summary>

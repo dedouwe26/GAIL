@@ -22,14 +22,21 @@ public class NetworkSerializer : Serializer {
     /// </summary>
     /// <inheritdoc/>
     public NetworkSerializer(bool shouldCloseStream = false) : base(shouldCloseStream) { OutStream = new MemoryStream(); }
-    
+
     /// <summary>
     /// Applies all the formatters (should call at the end).
     /// </summary>
     /// <param name="globalFormatter">The formatter used for global purposes (multiple packets).</param>
+    /// <param name="packetID">The ID of the packet (only encoded by the global encoder).</param>
     /// <param name="packetFormatter">The formatter used for this specific packet.</param>
-    public void Encode(IFormatter globalFormatter, IFormatter packetFormatter) {
-        byte[] result = globalFormatter.Encode(packetFormatter.Encode((BaseStream as MemoryStream)!.ToArray()));
+    public void Encode(IFormatter globalFormatter, uint packetID, IFormatter packetFormatter) {
+        byte[] result = globalFormatter.Encode([
+            .. new UIntSerializable(packetID).Serialize(),
+            .. packetFormatter.Encode(
+                (BaseStream as MemoryStream)!.ToArray()
+            )
+        ]);
+        
         OutStream.Write(new IntSerializable(result.Length).Serialize());
         OutStream.Write(result);
     }
@@ -39,15 +46,12 @@ public class NetworkSerializer : Serializer {
     /// </summary>
     /// <param name="packet">The packet to format.</param>
     /// <param name="globalFormatter">The formatter used for global purposes (multiple packets).</param>
-    /// <param name="packetFormatter">The formatter used for this specific packet.</param>
-    public void WritePacket(Packet packet, IFormatter globalFormatter, IFormatter packetFormatter) {
-        WriteUInt(NetworkRegister.GetPacketID(packet));
-
+    public void WritePacket(Packet packet, IFormatter globalFormatter) {
         foreach (ISerializable field in packet.GetFields()) {
             WriteSerializable(field);
         }
-
-        Encode(globalFormatter, packetFormatter);
+        uint ID = NetworkRegister.GetPacketID(packet);
+        Encode(globalFormatter, ID, NetworkRegister.GetPacketFormatter(ID));
     }
     /// <inheritdoc/>
     public override void Dispose() {

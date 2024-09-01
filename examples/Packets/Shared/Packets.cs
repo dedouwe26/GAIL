@@ -1,6 +1,7 @@
 using GAIL.Networking;
 using GAIL.Networking.Parser;
 using GAIL.Serializing;
+using GAIL.Serializing.Formatters;
 
 namespace examples.Packets.Shared;
 
@@ -36,6 +37,9 @@ public class MessagePacket : Packet {
     }
 }
 public class NameMessagePacket : Packet {
+    // Applies a AES formatter to this specific packet.
+    public override IFormatter Formatter => new AESFormatter(new byte[32].Select((_, index) => Convert.ToByte(index)).ToArray(), new byte[16].Select((_, index) => Convert.ToByte(index)).ToArray());
+
     public override SerializableInfo[] Format => [StringSerializable.Info, StringSerializable.Info];
 
     public string message = "";

@@ -2,6 +2,8 @@ using System.Net;
 using examples.Packets.Shared;
 using GAIL.Networking;
 using GAIL.Networking.Server;
+using GAIL.Serializing;
+using GAIL.Serializing.Formatters;
 using OxDED.Terminal;
 
 namespace examples.Packets.Server;
@@ -21,6 +23,9 @@ class Program {
         server.OnPacket+=OnPacket;
         server.OnDisconnect+=OnDisconnect;
 
+        // Applies a formatter for all packets (note that is must happen both on the client and the server).
+        // server.GlobalFormatter = new GZipFormatter();
+
         // Stop when key pressed.
         Terminal.OnKeyPress+=async (ConsoleKey key, char ch, bool alt, bool shift, bool control) => {
             await server.StopAsync();
@@ -39,7 +44,9 @@ class Program {
     }
 
     private static void OnDisconnect(ServerContainer server, Connection connection, bool byClient, byte[] additionalData) {
-        Terminal.WriteLine(connection.GetData<string>() + " left.");
+        StringSerializable ss = new(string.Empty);
+        ss.Parse(additionalData);
+        Terminal.WriteLine(connection.GetData<string>() + " left with message: " + ss.Value);
     }
     
     private static void OnPacket(ServerContainer server, Connection connection, Packet packet) {
