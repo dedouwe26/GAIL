@@ -23,7 +23,7 @@ namespace GAIL.Graphics.Utils
             unsafe {
                 VkNonDispatchableHandle* surfacePtr = stackalloc VkNonDispatchableHandle[1];
                 int errorCode;
-                if ((errorCode = API.Glfw.CreateWindowSurface(instance.ToHandle(), window.Window, null, surfacePtr))!=0) {
+                if ((errorCode = API.Glfw.CreateWindowSurface(((Silk.NET.Vulkan.Instance)instance).ToHandle(), window.Window, null, surfacePtr))!=0) {
                     logger.LogFatal("Vulkan: Failed to create surface: "+errorCode);
                     throw new APIBackendException("GLFW", "Failed to create surface: "+errorCode);
                 }

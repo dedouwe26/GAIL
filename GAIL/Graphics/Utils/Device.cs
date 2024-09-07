@@ -10,8 +10,8 @@ using Silk.NET.Vulkan.Extensions.KHR;
 namespace GAIL.Graphics.Utils
 {
     public struct QueueFamilyIndices {
-        public uint? GraphicsFamily { get; set; }
-        public uint? PresentFamily { get; set; }
+        public uint? GraphicsFamily { get; set; } // Can render?
+        public uint? PresentFamily { get; set; } // Can present to the surface
         public readonly bool IsComplete() {
             return GraphicsFamily.HasValue && PresentFamily.HasValue;
         }
@@ -109,14 +109,14 @@ namespace GAIL.Graphics.Utils
 
             bool extensionsSupported = CheckDeviceExtensionsSupport(device);
 
-            bool swapChainAdequate = false;
+            bool swapChainSupported = false;
             
             if (extensionsSupported) {
                 SwapChain.SupportDetails swapChainSupport = CheckSwapChainSupport(device);
-                swapChainAdequate = swapChainSupport.Formats.Length != 0 && swapChainSupport.PresentModes.Length != 0;
+                swapChainSupported = swapChainSupport.Formats.Length != 0 && swapChainSupport.PresentModes.Length != 0;
             }
 
-            return FindQueueFamilies(device).IsComplete() && extensionsSupported && swapChainAdequate;
+            return FindQueueFamilies(device).IsComplete() && extensionsSupported && swapChainSupported;
 
         }
 
@@ -175,7 +175,6 @@ namespace GAIL.Graphics.Utils
         /// <summary>
         /// Finds queue families.
         /// </summary>
-        /// <param name="vk">Vulkan API instance.</param>
         /// <param name="device">What device.</param>
         public QueueFamilyIndices FindQueueFamilies(PhysicalDevice device) {
             QueueFamilyIndices indices = new();

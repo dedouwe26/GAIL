@@ -62,4 +62,9 @@ public class Instance : IDisposable {
         API.Vk.DestroyInstance(instance, null);
         API.Vk.Dispose();
     }
+
+    ///
+    public static implicit operator Silk.NET.Vulkan.Instance(Instance instance) {
+        return instance.instance;
+    }
 }

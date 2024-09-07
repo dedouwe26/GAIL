@@ -59,6 +59,12 @@
 			"args": ["test", "${workspaceFolder}/Tests/GAIL.Storage.Tests.csproj"]
 		},
 		{
+			"label": "Build examples.HelloTriangle",
+			"group": "build",
+			"command": "dotnet",
+			"args": ["build", "${workspaceFolder}/examples/HelloTriangle/HelloTriangle.csproj"]
+		},
+		{
 			"label": "Build examples.Packets.Server",
 			"group": "build",
 			"command": "dotnet",

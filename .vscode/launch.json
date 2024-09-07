@@ -5,6 +5,16 @@
     "version": "0.2.0",
     "configurations": [
         {
+        "name": "C#: GAIL - HelloTriangle",
+        "type": "coreclr",
+        "request": "launch",
+        "preLaunchTask": "Build examples.HelloTriangle",
+        "program": "${workspaceFolder}/examples/HelloTriangle/bin/Debug/net8.0/HelloTriangle.dll",
+        "cwd": "${workspaceFolder}",
+        "stopAtEntry": false,
+        "console": "integratedTerminal"
+    },
+        {
             "name": "C#: Packets-Client Debug",
             "type": "coreclr",
             "request": "launch",
