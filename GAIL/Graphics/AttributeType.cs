@@ -1,5 +1,3 @@
-using Silk.NET.Vulkan;
-
 namespace GAIL.Graphics
 {
     /// <summary>
