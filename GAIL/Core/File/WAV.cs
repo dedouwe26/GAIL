@@ -1,6 +1,6 @@
 using GAIL.Audio;
 
-namespace GAIL.Core
+namespace GAIL.Core.File
 {
     /// <summary>
     /// Can decode a WAV file.

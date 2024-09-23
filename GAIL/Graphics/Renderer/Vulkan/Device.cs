@@ -7,7 +7,7 @@ using Silk.NET.Core.Native;
 using Silk.NET.Vulkan;
 using Silk.NET.Vulkan.Extensions.KHR;
 
-namespace GAIL.Graphics.Utils
+namespace GAIL.Graphics.Renderer.Vulkan
 {
     public struct QueueFamilyIndices {
         public uint? GraphicsFamily { get; set; } // Can render?
@@ -29,12 +29,13 @@ namespace GAIL.Graphics.Utils
         private readonly Surface surface;
         private readonly Logger Logger;
 
-        public Device(Instance instance, Logger logger, ref Surface surface) {
-            Logger = logger;
+        public Device(VulkanRenderer renderer, ref Surface surface) {
+            
+            Logger = renderer.Logger;
             this.surface = surface;
 
             Logger.LogDebug("Searching for Vulkan physical device.");
-            foreach (PhysicalDevice device in GetPhysicalDevices(instance)) {
+            foreach (PhysicalDevice device in GetPhysicalDevices(renderer.instance!)) {
                 if (IsDeviceSuitable(device)) {
                     physicalDevice = device;
                 }

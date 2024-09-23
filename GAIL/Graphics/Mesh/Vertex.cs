@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace GAIL.Graphics
+namespace GAIL.Graphics.Mesh
 {
     /// <summary>
     /// A point that exists of data (used for 3D / 2D objects).

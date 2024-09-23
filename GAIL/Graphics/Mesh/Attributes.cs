@@ -1,7 +1,7 @@
 using System.Numerics;
 using GAIL.Core;
 
-namespace GAIL.Graphics
+namespace GAIL.Graphics.Mesh
 {
     /// <summary>
     /// A basic per-vertex color attribute (Float4).

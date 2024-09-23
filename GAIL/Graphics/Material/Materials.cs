@@ -1,7 +1,7 @@
 using System.Numerics;
 using GAIL.Core;
 
-namespace GAIL.Graphics
+namespace GAIL.Graphics.Material
 {
     /// <summary>
     /// A material for color, texture and transform only (default).

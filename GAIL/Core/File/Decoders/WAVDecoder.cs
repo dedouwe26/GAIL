@@ -1,6 +1,6 @@
 using GAIL.Audio;
 
-namespace GAIL.Core
+namespace GAIL.Core.File
 {
     public static partial class WAV {
         public partial class Decoder : IDecoder<Sound> {

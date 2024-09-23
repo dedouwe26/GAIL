@@ -4,7 +4,7 @@ using OxDED.Terminal.Logging;
 using Silk.NET.Vulkan;
 using Silk.NET.Vulkan.Extensions.KHR;
 
-namespace GAIL.Graphics.Utils
+namespace GAIL.Graphics.Renderer.Vulkan
 {
     public class SwapChain : IDisposable {
         public struct SupportDetails {
@@ -23,13 +23,14 @@ namespace GAIL.Graphics.Utils
         private readonly Device device;
         private readonly Logger Logger;
 
-        public SwapChain(Instance instance, Logger logger, Surface surface, Device device, WindowManager windowManager) {
-            Logger = logger;
-            this.surface = surface;
-            this.device = device;
+        public SwapChain(VulkanRenderer renderer, WindowManager windowManager) {
+            Logger = renderer.Logger;
+            surface = renderer.surface!;
+            device = renderer.device!;
             window = windowManager;
 
-            (KhrSwapchain swapchainExtension, SwapchainKHR swapchain, Image[] images) = CreateSwapChain(instance);
+            (KhrSwapchain swapchainExtension, SwapchainKHR swapchain, Image[] images) = CreateSwapChain(renderer.instance!);
+            
             extension = swapchainExtension;
             this.swapchain = swapchain;
             this.images = images;

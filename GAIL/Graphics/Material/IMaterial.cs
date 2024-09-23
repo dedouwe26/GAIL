@@ -1,4 +1,4 @@
-namespace GAIL.Graphics
+namespace GAIL.Graphics.Material
 {
     /// <summary>
     /// This is how anything is drawn to the window, contains the shader and shader data (instanced, per model different).

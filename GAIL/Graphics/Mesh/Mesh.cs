@@ -1,6 +1,6 @@
-using GAIL.Core;
+using GAIL.Core.File;
 
-namespace GAIL.Graphics
+namespace GAIL.Graphics.Mesh
 {
     /// <summary>
     /// A 3D / 2D shape data.

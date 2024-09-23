@@ -16,6 +16,7 @@ namespace GAIL.Core
         public Matrix4x4 ToModelMatrix() {
             return Matrix4x4.CreateFromQuaternion(rotation) * Matrix4x4.CreateScale(scale) * Matrix4x4.CreateTranslation(translation);
         }
+        
         /// <inheritdoc/>
         public bool Equals(Transform? other) {
             if (other == null) { return false; }
@@ -24,6 +25,19 @@ namespace GAIL.Core
         /// <inheritdoc/>
         public override bool Equals(object? obj) { return Equals(obj as Transform); }
         /// <inheritdoc/>
-        public override int GetHashCode() { return translation.GetHashCode()+scale.GetHashCode()+rotation.GetHashCode(); }
+        public override int GetHashCode() { return translation.GetHashCode()^scale.GetHashCode()^rotation.GetHashCode(); }
+
+        ///
+        public static bool operator ==(Transform? a, Transform? b) {
+            if (a==null&&b==null) { return true; }
+            if (a==null) { return false; }
+            return a.Equals(b);
+        }
+        ///
+        public static bool operator !=(Transform? a, Transform? b) {
+            if (a==null&&b==null) { return false; }
+            if (a==null) { return true; }
+            return !a.Equals(b);
+        }
     }
 }

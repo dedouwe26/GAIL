@@ -1,6 +1,6 @@
-using GAIL.Graphics;
+using GAIL.Graphics.Mesh;
 
-namespace GAIL.Core
+namespace GAIL.Core.File
 {
     /// <summary>
     /// Can decode an OBJ file.

@@ -33,9 +33,11 @@ namespace GAIL.Core
         /// <summary>
         /// Checks if pointer is null.
         /// </summary>
-        public bool IsNull{get {
-            return pointer == null;
-        }}
+        public bool IsNull{
+            get {
+                return pointer == null;
+            }
+        }
         /// <summary>
         /// Creates a new Pointer with the type <typeparamref name="T"/>.
         /// </summary>

@@ -1,4 +1,4 @@
-namespace GAIL.Graphics
+namespace GAIL.Graphics.Mesh
 {
     /// <summary>
     /// A attribute (vertex buffer) in the shader, changes per vertex, from CPU to GPU (extend to use). <br/>

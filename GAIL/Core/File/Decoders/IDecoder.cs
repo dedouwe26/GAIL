@@ -1,4 +1,4 @@
-namespace GAIL.Core
+namespace GAIL.Core.File
 {
     /// <summary>
     /// An interface for a Decoder.

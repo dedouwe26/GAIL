@@ -4,7 +4,7 @@ using OxDED.Terminal.Logging;
 using Silk.NET.GLFW;
 using Silk.NET.Vulkan;
 
-namespace GAIL.Graphics.Utils;
+namespace GAIL.Graphics.Renderer.Vulkan;
 
 /// <summary>
 /// A vulkan utility for the vulkan instance.
@@ -14,8 +14,8 @@ public class Instance : IDisposable {
     /// Vulkan Instance.
     /// </summary>
     public Silk.NET.Vulkan.Instance instance;
-    public Instance(Logger logger, AppInfo appInfo) {
-        logger.LogDebug("Creating Vulkan Instance.");
+    public Instance(VulkanRenderer renderer, AppInfo appInfo) {
+        renderer.Logger.LogDebug("Creating Vulkan Instance.");
         unsafe {
             // Creates application info from AppInfo.
             ApplicationInfo vkInfo = new() {
@@ -47,7 +47,7 @@ public class Instance : IDisposable {
             // Creates instance.
             Result r;
             if ((r=API.Vk.CreateInstance(createInfo, null, out instance)) != Result.Success) {
-                logger.LogFatal("Vulkan: Failed to create Vulkan Instance: "+r.ToString());
+                renderer.Logger.LogFatal("Vulkan: Failed to create Vulkan Instance: "+r.ToString());
                 throw new APIBackendException("Vulkan", "Failed to create Vulkan Instance: "+r.ToString());
             };
 

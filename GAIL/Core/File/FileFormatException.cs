@@ -1,4 +1,4 @@
-namespace GAIL.Core
+namespace GAIL.Core.File
 {
     /// <summary>
     /// This is an exception that is thrown when the file format is wrong.

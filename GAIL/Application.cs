@@ -63,6 +63,10 @@ namespace GAIL
             /// </summary>
             public Logger logger;
         }
+        /// <summary>
+        /// A boolean to indicate if the application has stopped.
+        /// </summary>
+        public bool hasStopped { get; private set; }
 
         /// <summary>
         /// Creates a GAIL application.
@@ -76,6 +80,8 @@ namespace GAIL
         /// <param name="logLevel">The log level of all the loggers in this application (default: Info).</param>
         /// <param name="logTargets">All the log targets for all the loggers in this application (default: TerminalTarget).</param>
         public Application(string windowTitle = "GAIL Window", int width = 1000, int height = 600, AppInfo? appInfo = null, string audioDevice = "", string? loggerID = null, Severity logLevel = Severity.Info, Dictionary<Type, ITarget>? logTargets = null) {  
+            hasStopped = true;
+            
             globals = new() {
                 logger = new Logger(loggerID??"GAIL.App."+windowTitle.Replace(' ', '_'), "GAIL", logLevel, logTargets??new(){[typeof(TerminalTarget)] = new TerminalTarget()})
             };
@@ -88,7 +94,7 @@ namespace GAIL
                 globals.logger.GetTarget<FileTarget>().NameFormat =  "{0} - {1}";
             }
 
-            globals.logger.LogDebug("Initialising all managers.");
+            globals.logger.LogDebug("Initializing all managers.");
 
             globals.windowManager = new WindowManager(globals.logger.CreateSubLogger("Window", "Window", logLevel));
             globals.windowManager.Init(windowTitle, width, height);
@@ -107,18 +113,28 @@ namespace GAIL
         /// Starts the application, use after subscribing on events.
         /// </summary>
         public void Start() {
+            hasStopped = false;
+
             Logger.LogInfo("Starting...");
             OnLoad?.Invoke(this);
 
-            double CurrentTime = 0;
-            double lastTime = CurrentTime;
-            unsafe {
-                while (!globals.windowManager.ShouldClose) {
-                    globals.windowManager.Update();
-                    CurrentTime = WindowManager.Time;
-                    OnUpdate?.Invoke(this, CurrentTime - lastTime);
-                    lastTime = CurrentTime;
-                }
+            double CurrentTime; // Could also be WindowManager.Time
+            double lastTime = WindowManager.Time;
+
+            while (!hasStopped) {
+                CurrentTime = WindowManager.Time;
+
+                double deltaTime = CurrentTime - lastTime;
+
+                globals.windowManager.Update();
+
+                if (hasStopped) { break; }
+                if (globals.windowManager.ShouldClose) { break; }
+            
+                OnUpdate?.Invoke(this, deltaTime);
+                
+                lastTime = CurrentTime;
+                
             }
 
             Dispose();
@@ -177,13 +193,18 @@ namespace GAIL
         /// <inheritdoc/>
         /// <remarks>Stops the application (don't use this application after disposal).</remarks>
         public void Dispose() {
+            if (hasStopped) {return;}
+
+            hasStopped = true;
+
             Logger.LogInfo("Stopping...");
             OnStop?.Invoke(this);
+
             globals.audioManager.Dispose();
             globals.graphicsManager.Dispose();
             globals.inputManager.Dispose();
-
             globals.windowManager.Dispose();
+
             GC.SuppressFinalize(this);
         }
     }

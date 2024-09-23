@@ -1,4 +1,4 @@
-namespace GAIL.Graphics
+namespace GAIL.Graphics.Mesh
 {
     /// <summary>
     /// A face (triangle) of a mesh.

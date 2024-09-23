@@ -1,3 +1,4 @@
+using GAIL.Core.File;
 using Silk.NET.GLFW;
 
 namespace GAIL.Core
@@ -5,7 +6,7 @@ namespace GAIL.Core
     /// <summary>
     /// A image or texture.
     /// </summary>
-    public class Texture {
+    public class Texture : IEquatable<Texture> {
         /// <summary>
         /// The width of this texture.
         /// </summary>
@@ -78,6 +79,34 @@ namespace GAIL.Core
                     return new Image{Width = (int)Width, Height = (int)Height, Pixels = pixelArray};
                 }
             }
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(Texture? other) {
+            if (other == null) { return false; }
+            return colors==other.colors;
+        }
+        /// <inheritdoc/>
+        public override bool Equals(object? obj) {
+            return Equals(obj as Texture);
+        }
+        
+        ///
+        public static bool operator ==(Texture? a, Texture? b) {
+            if (a==null&&b==null) { return true; }
+            if (a==null) { return false; }
+            return a.Equals(b);
+        }
+        ///
+        public static bool operator !=(Texture? a, Texture? b) {
+            if (a==null&&b==null) { return false; }
+            if (a==null) { return true; }
+            return !a.Equals(b);
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode() {
+            return colors.GetHashCode();
         }
     }
 }

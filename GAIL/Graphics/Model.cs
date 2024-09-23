@@ -1,3 +1,5 @@
+using GAIL.Graphics.Material;
+
 namespace GAIL.Graphics
 {
     /// <summary>
@@ -8,7 +10,7 @@ namespace GAIL.Graphics
         /// <summary>
         /// The mesh (3D data) of this Model. 
         /// </summary>
-        public Mesh mesh;
+        public Mesh.Mesh mesh;
         /// <summary>
         /// The material (3D render data) of this Model.
         /// </summary>
@@ -18,7 +20,7 @@ namespace GAIL.Graphics
         /// </summary>
         /// <param name="mesh">The mesh to use.</param>
         /// <param name="material">The material to use.</param>
-        public Model(Mesh mesh, IMaterial material) {
+        public Model(Mesh.Mesh mesh, IMaterial material) {
             this.mesh = mesh;
             this.material = material;
         }

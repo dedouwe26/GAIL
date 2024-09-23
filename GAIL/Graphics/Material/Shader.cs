@@ -1,4 +1,4 @@
-namespace GAIL.Graphics
+namespace GAIL.Graphics.Material
 {
     /// <summary>
     /// Contains code for the GPU on how everything is drawn (per-material).
@@ -11,7 +11,7 @@ namespace GAIL.Graphics
         /// <summary>
         /// The uniform layout of this shader.
         /// </summary>
-        public List<(AttributeType type, byte[] value)> uniforms = [];
+        public List<Uniform> uniforms = [];
         /// <summary>
         /// Creates a shader.
         /// </summary>
@@ -31,11 +31,10 @@ namespace GAIL.Graphics
             GC.SuppressFinalize(this);
         }
         /// <summary>
-        /// Adds a uniform value to the shader (first uniform set will be at position 0).
+        /// Adds a uniform value to the shader.
         /// </summary>
-        /// <param name="type">The type of the uniform.</param>
-        /// <param name="value">The value of the uniform.</param>
-        public void SetUniform(AttributeType type, byte[] value) {
+        /// <param name="uniform">The uniform to sent to the shader.</param>
+        public void SetUniform(Uniform uniform) {
             throw new NotImplementedException();
         }
         /// <summary>
