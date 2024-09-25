@@ -1,3 +1,4 @@
+using GAIL.Core;
 using GAIL.Graphics.Renderer.Vulkan;
 using OxDED.Terminal.Logging;
 
@@ -35,6 +36,11 @@ public class VulkanRenderer : IRenderer {
 
     /// <inheritdoc/>
     public void Initialize(Application.Globals globals, AppInfo appInfo) {
+        if (!API.Glfw.VulkanSupported()) {
+            Logger.LogFatal("Vulkan: Not Supported!");
+            throw new APIBackendException("Vulkan", "Not Supported");
+        }
+
         instance = new Instance(this, appInfo);
         surface = new Surface(this, globals.windowManager);
         device = new Device(this, ref surface);

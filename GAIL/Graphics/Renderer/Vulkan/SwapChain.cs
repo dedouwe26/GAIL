@@ -29,11 +29,7 @@ namespace GAIL.Graphics.Renderer.Vulkan
             device = renderer.device!;
             window = windowManager;
 
-            (KhrSwapchain swapchainExtension, SwapchainKHR swapchain, Image[] images) = CreateSwapChain(renderer.instance!);
-            
-            extension = swapchainExtension;
-            this.swapchain = swapchain;
-            this.images = images;
+            CreateSwapChain(renderer.instance!);
 
             imageViews = CreateImageViews();
         }
@@ -62,20 +58,17 @@ namespace GAIL.Graphics.Renderer.Vulkan
                         LayerCount = 1,
                     }
                 };
+
                 unsafe {
-                    Result r;
-                    if ((r = API.Vk.CreateImageView(device.logicalDevice, createInfo, null, out imageViews[i])) != Result.Success) {
-                        Logger.LogDebug("Vulkan: Failed to create image view: "+r.ToString());
-                        throw new APIBackendException("Vulkan", "Failed to create image view: "+r.ToString());
-                    }
+                    _ = Utils.Check(API.Vk.CreateImageView(device.logicalDevice, createInfo, null, out imageViews[i]), Logger, "Failed to create image view", true);
                 }
             }
             return imageViews;
         }
 
-        public (KhrSwapchain swapchainExtension, SwapchainKHR swapchain, Image[] images) CreateSwapChain(Instance instance) {
+        public void CreateSwapChain(Instance instance) {
             
-            SupportDetails swapChainSupport = SwapChainSupport(device.physicalDevice);
+            SupportDetails swapChainSupport = device.CheckSwapChainSupport(device.physicalDevice);
             SurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(swapChainSupport.Formats);
             PresentModeKHR presentMode = ChoosePresentMode(swapChainSupport.PresentModes);
             extent = CreateSwapExtent(swapChainSupport.Capabilities);
@@ -118,26 +111,18 @@ namespace GAIL.Graphics.Renderer.Vulkan
                 }
 
             }
-            if (!API.Vk.TryGetDeviceExtension(instance, device.logicalDevice, out KhrSwapchain swapchainExtension)) {
+            if (!API.Vk.TryGetDeviceExtension(instance, device.logicalDevice, out extension)) {
                 Logger.LogFatal("Vulkan: Failed to get Swapchain extension!");
                 throw new APIBackendException("Vulkan", "Failed to get VK_KHR_swapchain extension.");
             }
-            Image[] images;
             unsafe {
-                Result r;
-                if ((r=swapchainExtension.CreateSwapchain(device.logicalDevice, createInfo, null, out SwapchainKHR swapchain)) != Result.Success) {
-                    Logger.LogFatal("Vulkan: Failed to create swapchain: "+r.ToString());
-                    throw new APIBackendException("Vulkan", "Failed to create swapchain: "+r.ToString());
-                }
-                swapchainExtension.GetSwapchainImages(device.logicalDevice, swapchain, ref imageCount, null);
-                images = new Image[imageCount];
-                fixed (Image* swapChainImagesPtr = images)
-                {
-                    swapchainExtension.GetSwapchainImages(device.logicalDevice, swapchain, ref imageCount, swapChainImagesPtr);
-                }
+                Utils.Check(extension.CreateSwapchain(device.logicalDevice, createInfo, null, out swapchain), Logger, "Failed to create swapchain", true);
+
+                Utils.GetArray((Pointer<Image> ptr, ref uint count) => { // NOTE: Can be wrong, because imageCount isn't passed into GetSwapchainImages.
+                    return extension.GetSwapchainImages(device.logicalDevice, swapchain, ref count, ptr);
+                }, out images, Logger, "SwapchainImages", true);
             }
             imageFormat = surfaceFormat.Format;
-            return (swapchainExtension, swapchain, images);
         }
 
         public Extent2D CreateSwapExtent(SurfaceCapabilitiesKHR capabilities) {
@@ -168,39 +153,6 @@ namespace GAIL.Graphics.Renderer.Vulkan
                 }
             }
             return surfaceFormats[0];
-        }
-        public SupportDetails SwapChainSupport(PhysicalDevice physicalDevice) {
-            SupportDetails details = new();
-
-            surface.surfaceExtension.GetPhysicalDeviceSurfaceCapabilities(physicalDevice, surface.surface, out details.Capabilities);
-
-            unsafe {
-                uint formatCount = 0;
-                surface.surfaceExtension.GetPhysicalDeviceSurfaceFormats(physicalDevice, surface.surface, ref formatCount, null);
-
-                if (formatCount != 0) {
-                    details.Formats = new SurfaceFormatKHR[formatCount];
-                    fixed (SurfaceFormatKHR* formatsPtr = details.Formats) {
-                        surface.surfaceExtension.GetPhysicalDeviceSurfaceFormats(physicalDevice, surface.surface, ref formatCount, formatsPtr);
-                    }
-                } else {
-                    details.Formats = [];
-                }
-
-                uint presentModeCount = 0;
-                surface.surfaceExtension.GetPhysicalDeviceSurfacePresentModes(physicalDevice, surface.surface, ref presentModeCount, null);
-                if (presentModeCount != 0) {
-                    details.PresentModes = new PresentModeKHR[formatCount];
-                    fixed (PresentModeKHR* modesPtr = details.PresentModes) {
-                        surface.surfaceExtension.GetPhysicalDeviceSurfacePresentModes(physicalDevice, surface.surface, ref presentModeCount, modesPtr);
-                    }
-                } else {
-                    details.PresentModes = [];
-                }
-
-                return details;
-            }
-            
         }
     
         /// <inheritdoc/>

@@ -1,9 +1,11 @@
+using System.Drawing;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using GAIL.Core;
 using OxDED.Terminal.Logging;
 using Silk.NET.Core;
 using Silk.NET.Core.Native;
+using Silk.NET.OpenGL;
 using Silk.NET.Vulkan;
 using Silk.NET.Vulkan.Extensions.KHR;
 
@@ -34,16 +36,24 @@ namespace GAIL.Graphics.Renderer.Vulkan
             Logger = renderer.Logger;
             this.surface = surface;
 
-            Logger.LogDebug("Searching for Vulkan physical device.");
+            bool oneDeviceSuitable = false;
+            Logger.LogDebug("Searching for suitable Vulkan physical device.");
             foreach (PhysicalDevice device in GetPhysicalDevices(renderer.instance!)) {
                 if (IsDeviceSuitable(device)) {
                     physicalDevice = device;
+                    oneDeviceSuitable = true;
+                    CreateLogicalDevice();
+                    break;
                 }
             }
-            CreateLogicalDevice();
+
+            if (!oneDeviceSuitable) {
+                Logger.LogFatal("Vulkan: No suitable physical device found.");
+                throw new APIBackendException("Vulkan", "No suitable physical device found");
+            }
         }
         public void CreateLogicalDevice() {
-            Logger.LogDebug("Creating Vulkan logical device");
+            Logger.LogDebug("Creating Vulkan logical device.");
             QueueFamilyIndices indices = FindQueueFamilies(physicalDevice);
 
             uint[] uniqueQueueFamilies = [ indices.GraphicsFamily!.Value, indices.PresentFamily!.Value];
@@ -74,11 +84,10 @@ namespace GAIL.Graphics.Renderer.Vulkan
                     PpEnabledExtensionNames = (byte**)SilkMarshal.StringArrayToPtr(deviceExtensions),
                     EnabledLayerCount = 0
                 };
-                Result r;
-                if ((r = API.Vk.CreateDevice(physicalDevice, in createInfo, null, out logicalDevice))!=Result.Success) {
-                    Logger.LogFatal("Vulkan: Failed to create logical device: "+r.ToString());
-                    throw new APIBackendException("Vulkan", "Failed to create logical device: "+r.ToString());
-                }
+                
+                _ = Utils.Check(API.Vk.CreateDevice(physicalDevice, in createInfo, null, out logicalDevice), Logger, "Failed to create logical device", true);
+                // NOTE: Could try other device.
+
                 API.Vk.GetDeviceQueue(logicalDevice, indices.GraphicsFamily!.Value, 0, out graphicsQueue);
                 API.Vk.GetDeviceQueue(logicalDevice, indices.PresentFamily!.Value, 0, out presentQueue);
 
@@ -89,20 +98,17 @@ namespace GAIL.Graphics.Renderer.Vulkan
         /// <param name="instance">Vulkan instance.</param>
         /// <exception cref="APIBackendException"></exception>
         public PhysicalDevice[] GetPhysicalDevices(Instance instance) {
-            uint deviceCount = 0;
-            unsafe {
-                API.Vk.EnumeratePhysicalDevices(instance, ref deviceCount, null);
-            }
-            if (deviceCount == 0) {
+            Utils.GetArray((Pointer<PhysicalDevice> pointer, ref uint count) => {
+                unsafe {
+                    return API.Vk.EnumeratePhysicalDevices(instance, ref count, pointer);
+                }
+            }, out PhysicalDevice[] devices, Logger, "PhysicalDevices", true);
+
+            if (devices.Length == 0) {
                 Logger.LogFatal("Vulkan: Failed to find GPU with Vulkan support!");
                 throw new APIBackendException("Vulkan", "Failed to find GPU with Vulkan support.");
             }
-            PhysicalDevice[] devices = new PhysicalDevice[deviceCount];
-            unsafe {
-                fixed (PhysicalDevice* devicesPtr = devices) {
-                    API.Vk.EnumeratePhysicalDevices(instance, ref deviceCount, devicesPtr);
-                }
-            }
+
             return devices;
         }
         /// <param name="device">What device.</param>
@@ -125,52 +131,43 @@ namespace GAIL.Graphics.Renderer.Vulkan
             var details = new SwapChain.SupportDetails();
 
             unsafe {
-                surface.surfaceExtension.GetPhysicalDeviceSurfaceCapabilities(device, surface.surface, out details.Capabilities);
+                _ = Utils.Check(surface.surfaceExtension.GetPhysicalDeviceSurfaceCapabilities(device, surface.surface, out details.Capabilities), Logger, "Failed to get PhysicalDevice surface capabilities", true);
 
-                uint formatCount = 0;
-                surface.surfaceExtension.GetPhysicalDeviceSurfaceFormats(device, surface.surface, ref formatCount, null);
+                // Surface formats
+                Utils.GetArray((Pointer<SurfaceFormatKHR> pointer, Pointer<uint> count) => {
+                    return surface.surfaceExtension.GetPhysicalDeviceSurfaceFormats(device, surface.surface, count, pointer);
+                }, out details.Formats, Logger, "PhysicalDeviceSurfaceFormats", true);
 
-                if (formatCount != 0) {
-                    details.Formats = new SurfaceFormatKHR[formatCount];
-                    fixed (SurfaceFormatKHR* formatsPtr = details.Formats) {
-                        surface.surfaceExtension.GetPhysicalDeviceSurfaceFormats(device, surface.surface, ref formatCount, formatsPtr);
-                    }
-                }
-                else {
-                    details.Formats = [];
-                }
-                uint presentModeCount = 0;
-                surface.surfaceExtension.GetPhysicalDeviceSurfacePresentModes(device, surface.surface, ref presentModeCount, null);
-                if (presentModeCount != 0) {
-                    details.PresentModes = new PresentModeKHR[presentModeCount];
-                    fixed (PresentModeKHR* formatsPtr = details.PresentModes) {
-                        surface.surfaceExtension.GetPhysicalDeviceSurfacePresentModes(device, surface.surface, ref presentModeCount, formatsPtr);
-                    }
-                }
-                else {
-                    details.PresentModes = [];
-                }
+                // Surface present modes
+                Utils.GetArray((Pointer<PresentModeKHR> pointer, Pointer<uint> count) => {
+                    return surface.surfaceExtension.GetPhysicalDeviceSurfacePresentModes(device, surface.surface, count, pointer);
+                }, out details.PresentModes, Logger, "PhysicalDeviceSurfacePresentModes", true);
             }
 
             return details;
         }
 
+        /// <summary>
+        /// Checks if a physical device can support all the extensions.
+        /// </summary>
+        /// <param name="device">The device to check.</param>
+        /// <returns>If the device is supported.</returns>
         public bool CheckDeviceExtensionsSupport(PhysicalDevice device) {
-            uint extentionsCount = 0;
-            unsafe {
-                API.Vk.EnumerateDeviceExtensionProperties(device, (byte*)null, ref extentionsCount, null);
-
-                ExtensionProperties[] availableExtensions = new ExtensionProperties[extentionsCount];
-                fixed (ExtensionProperties* availableExtensionsPtr = availableExtensions)
-                {
-                    API.Vk.EnumerateDeviceExtensionProperties(device, (byte*)null, ref extentionsCount, availableExtensionsPtr);
+            // Get all the extensions supported by the GPU.
+            if (!Utils.GetArray((Pointer<ExtensionProperties> pointer, ref uint count) => {
+                unsafe {
+                    return API.Vk.EnumerateDeviceExtensionProperties(device, (byte*)null, ref count, pointer);
                 }
+            }, out ExtensionProperties[] availableExtensions, Logger, "DeviceExtensionProperties", false)) {
+                return false;
+            }
 
+            // Check if all the extensions are supported.
+            unsafe {
                 HashSet<string?> availableExtensionNames = availableExtensions.Select(extension => Marshal.PtrToStringAnsi((IntPtr)extension.ExtensionName)).ToHashSet();
 
                 return deviceExtensions.All(availableExtensionNames.Contains);
             }
-            
         }
 
         /// <summary>
@@ -181,25 +178,19 @@ namespace GAIL.Graphics.Renderer.Vulkan
             QueueFamilyIndices indices = new();
 
             unsafe {
-                uint queueFamilyCount = 0;
-                API.Vk.GetPhysicalDeviceQueueFamilyProperties(device, ref queueFamilyCount, null);
-
-                QueueFamilyProperties[] queueFamilies = new QueueFamilyProperties[queueFamilyCount];
-
-                fixed (QueueFamilyProperties* queueFamiliesPtr = queueFamilies) {
-                    API.Vk.GetPhysicalDeviceQueueFamilyProperties(device, ref queueFamilyCount, queueFamiliesPtr);
-                }
+                Utils.GetArray((Pointer<QueueFamilyProperties> pointer, ref uint count) => {
+                    API.Vk.GetPhysicalDeviceQueueFamilyProperties(device, ref count, pointer);
+                    return Result.Success; // See here...
+                }, out QueueFamilyProperties[] queueFamilies, Logger, string.Empty, true); // string.Empty because Result is always success.
 
                 for (uint i = 0; i < queueFamilies.Length; i++)
                 {
                     if (queueFamilies[i].QueueFlags.HasFlag(QueueFlags.GraphicsBit)) {
                         indices.GraphicsFamily = i;
                     }
-                    Result r;
-                    if ((r=surface.surfaceExtension.GetPhysicalDeviceSurfaceSupport(device, i, surface.surface, out Bool32 presentSupport)) != Result.Success) {
-                        Logger.LogFatal("Vulkan: Unable to get surface support: "+r.ToString());
-                        throw new APIBackendException("Vulkan", "Unable to get surface support: "+r.ToString());
-                    }
+                    
+                    Utils.Check(surface.surfaceExtension.GetPhysicalDeviceSurfaceSupport(device, i, surface.surface, out Bool32 presentSupport), Logger, "Unable get physical device surface support", true);
+                    
                     if (presentSupport) {
                         indices.PresentFamily = i;
                     }

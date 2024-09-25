@@ -45,11 +45,8 @@ public class Instance : IDisposable {
             };
 
             // Creates instance.
-            Result r;
-            if ((r=API.Vk.CreateInstance(createInfo, null, out instance)) != Result.Success) {
-                renderer.Logger.LogFatal("Vulkan: Failed to create Vulkan Instance: "+r.ToString());
-                throw new APIBackendException("Vulkan", "Failed to create Vulkan Instance: "+r.ToString());
-            };
+            _ = Utils.Check(API.Vk.CreateInstance(createInfo, null, out instance), renderer.Logger, "Failed to create a Vulkan Instance", true);
+            // NOTE: not checking return value, because fatal is turned on so an exception will be thrown.
 
             // Clears unmanaged resources.
             Marshal.FreeHGlobal((IntPtr)vkInfo.PApplicationName);
@@ -60,7 +57,6 @@ public class Instance : IDisposable {
     /// <inheritdoc/>
     public unsafe void Dispose() {
         API.Vk.DestroyInstance(instance, null);
-        API.Vk.Dispose();
     }
 
     ///
