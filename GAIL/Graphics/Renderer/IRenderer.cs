@@ -1,5 +1,3 @@
-using OxDED.Terminal.Logging;
-
 namespace GAIL.Graphics.Renderer;
 
 /// <summary>

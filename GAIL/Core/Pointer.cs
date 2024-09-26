@@ -14,8 +14,7 @@ namespace GAIL.Core
         /// Creates a pointer.
         /// </summary>
         /// <param name="pointer">The pointer to make it from.</param>
-        public Pointer(T* pointer)
-        {
+        public Pointer(T* pointer) {
             this.pointer = pointer;
         }
 
@@ -23,38 +22,32 @@ namespace GAIL.Core
         /// Gets the value of the pointer.
         /// </summary>
         /// <returns>The value of the pointer.</returns>
-        public T GetValue() {
+        public readonly T GetValue() {
             return *pointer;
         }
         /// <summary>
         /// Gets the pointer itself.
         /// </summary>
         /// <returns>The actual pointer.</returns>
-        public T* GetPointer() {
+        public readonly T* GetPointer() {
             return pointer;
         }
         /// <summary>
         /// Sets a new value to the pointer.
         /// </summary>
         /// <param name="value">The new value</param>
-        public void SetValue(T value) {
-            pointer = &value;
+        public void SetValue(ref T value) {
+            fixed (T* ptr = &value) {
+                pointer = ptr;
+            }
         }
         /// <summary>
         /// Checks if pointer is null.
         /// </summary>
-        public bool IsNull{
+        public readonly bool IsNull {
             get {
                 return pointer == null;
             }
-        }
-        /// <summary>
-        /// Creates a new Pointer with the type <typeparamref name="T"/>.
-        /// </summary>
-        /// <param name="value">The value of the new pointer.</param>
-        /// <returns>The new pointer.</returns>
-        public static Pointer<T> From(T value) {
-            return new Pointer<T>(&value);
         }
         /// <summary>
         /// Creates a new Pointer from a reference with the type <typeparamref name="T"/>.

@@ -78,12 +78,10 @@ public static class Utils {
     /// <param name="arrayName">The array name if an error has been encountered (example: SwapchainImages).</param>
     /// <param name="fatal">If the program can recover after an error occured.</param>
     /// <returns>True if it was successful.</returns>
-    public static bool GetArray<T>(VulkanArrayGetterPtr<T> arrayGetter, out T[] array, Logger logger, string arrayName, bool fatal = false) where T : unmanaged {
-        // FIXME: Faulty, maybe with Pointer<T>
-        
+    public static bool GetArray<T>(VulkanArrayGetterPtr<T> arrayGetter, out T[] array, Logger logger, string arrayName, bool fatal = false) where T : unmanaged {        
         uint count = 0;
         if (!Check(
-            arrayGetter(Pointer<T>.FromNull(), Pointer<uint>.From(count)),
+            arrayGetter(Pointer<T>.FromNull(), Pointer<uint>.From(ref count)),
             logger,
             $"Failed to get array '{arrayName}' of type {typeof(T).Name}.",
             fatal
@@ -112,7 +110,6 @@ public static class Utils {
         if (count == 0) {
             return true;
         }
-        
         unsafe {
             fixed (T* arrayPtr = array) {
                 if (!Check(
