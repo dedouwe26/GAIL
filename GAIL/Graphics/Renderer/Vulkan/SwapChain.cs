@@ -116,9 +116,9 @@ namespace GAIL.Graphics.Renderer.Vulkan
                 throw new APIBackendException("Vulkan", "Failed to get VK_KHR_swapchain extension.");
             }
             unsafe {
-                Utils.Check(extension.CreateSwapchain(device.logicalDevice, createInfo, null, out swapchain), Logger, "Failed to create swapchain", true);
+                _ = Utils.Check(extension.CreateSwapchain(device.logicalDevice, createInfo, null, out swapchain), Logger, "Failed to create swapchain", true);
 
-                Utils.GetArray((Pointer<Image> ptr, ref uint count) => { // NOTE: Can be wrong, because imageCount isn't passed into GetSwapchainImages.
+                Utils.GetArray((Pointer<Image> ptr, ref uint count) => { // NOTE: There is only a minimal image count specified.
                     return extension.GetSwapchainImages(device.logicalDevice, swapchain, ref count, ptr);
                 }, out images, Logger, "SwapchainImages", true);
             }

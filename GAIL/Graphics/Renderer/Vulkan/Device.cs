@@ -32,7 +32,6 @@ namespace GAIL.Graphics.Renderer.Vulkan
         private readonly Logger Logger;
 
         public Device(VulkanRenderer renderer, ref Surface surface) {
-            
             Logger = renderer.Logger;
             this.surface = surface;
 
@@ -41,9 +40,13 @@ namespace GAIL.Graphics.Renderer.Vulkan
             foreach (PhysicalDevice device in GetPhysicalDevices(renderer.instance!)) {
                 if (IsDeviceSuitable(device)) {
                     physicalDevice = device;
-                    oneDeviceSuitable = true;
-                    CreateLogicalDevice();
-                    break;
+                    if (CreateLogicalDevice()) {
+                        oneDeviceSuitable = true;
+                        break;
+                    } else {
+                        physicalDevice = default;
+                    }
+                    
                 }
             }
 
@@ -52,7 +55,7 @@ namespace GAIL.Graphics.Renderer.Vulkan
                 throw new APIBackendException("Vulkan", "No suitable physical device found");
             }
         }
-        public void CreateLogicalDevice() {
+        public bool CreateLogicalDevice() {
             Logger.LogDebug("Creating Vulkan logical device.");
             QueueFamilyIndices indices = FindQueueFamilies(physicalDevice);
 
@@ -85,13 +88,15 @@ namespace GAIL.Graphics.Renderer.Vulkan
                     EnabledLayerCount = 0
                 };
                 
-                _ = Utils.Check(API.Vk.CreateDevice(physicalDevice, in createInfo, null, out logicalDevice), Logger, "Failed to create logical device", true);
-                // NOTE: Could try other device.
+                bool succeeded = Utils.Check(API.Vk.CreateDevice(physicalDevice, in createInfo, null, out logicalDevice), Logger, "Failed to create logical device", false);
 
-                API.Vk.GetDeviceQueue(logicalDevice, indices.GraphicsFamily!.Value, 0, out graphicsQueue);
-                API.Vk.GetDeviceQueue(logicalDevice, indices.PresentFamily!.Value, 0, out presentQueue);
+                if (succeeded) {
+                    API.Vk.GetDeviceQueue(logicalDevice, indices.GraphicsFamily!.Value, 0, out graphicsQueue);
+                    API.Vk.GetDeviceQueue(logicalDevice, indices.PresentFamily!.Value, 0, out presentQueue);
+                }
 
                 SilkMarshal.Free((nint)createInfo.PpEnabledExtensionNames);
+                return succeeded;
             }
         }
 
@@ -180,8 +185,12 @@ namespace GAIL.Graphics.Renderer.Vulkan
             unsafe {
                 Utils.GetArray((Pointer<QueueFamilyProperties> pointer, ref uint count) => {
                     API.Vk.GetPhysicalDeviceQueueFamilyProperties(device, ref count, pointer);
-                    return Result.Success; // See here...
-                }, out QueueFamilyProperties[] queueFamilies, Logger, string.Empty, true); // string.Empty because Result is always success.
+                    return Result.Success;
+                }, out QueueFamilyProperties[] queueFamilies, Logger, "PhysicalDeviceQueueFamilyProperties", true);
+
+                if (queueFamilies.Length<1) {
+                    throw new ArgumentOutOfRangeException(null, "Device queue family properties is insufficient");
+                }
 
                 for (uint i = 0; i < queueFamilies.Length; i++)
                 {
@@ -189,7 +198,7 @@ namespace GAIL.Graphics.Renderer.Vulkan
                         indices.GraphicsFamily = i;
                     }
                     
-                    Utils.Check(surface.surfaceExtension.GetPhysicalDeviceSurfaceSupport(device, i, surface.surface, out Bool32 presentSupport), Logger, "Unable get physical device surface support", true);
+                    _ = Utils.Check(surface.surfaceExtension.GetPhysicalDeviceSurfaceSupport(device, i, surface.surface, out Bool32 presentSupport), Logger, "Unable get physical device surface support", true);
                     
                     if (presentSupport) {
                         indices.PresentFamily = i;
