@@ -26,10 +26,6 @@ namespace GAIL.Graphics.Material
         /// </summary>
         ~Shader() { Dispose(); }
 
-        /// <inheritdoc/>
-        public void Dispose() {
-            GC.SuppressFinalize(this);
-        }
         /// <summary>
         /// Adds a uniform value to the shader.
         /// </summary>
@@ -45,5 +41,11 @@ namespace GAIL.Graphics.Material
         public void SetAttributeLayout(List<string> layout) {
             throw new NotImplementedException();
         }
+
+        /// <inheritdoc/>
+        public void Dispose() {
+            GC.SuppressFinalize(this);
+        }
+        
     }
 }
