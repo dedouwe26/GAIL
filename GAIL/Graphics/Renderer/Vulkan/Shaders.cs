@@ -7,9 +7,9 @@ namespace GAIL.Graphics.Renderer.Vulkan;
 /// <summary>
 /// Represents all the programmable shader stages in a default graphics pipeline.
 /// </summary>
-public class Shader : IDisposable {
-    public static Shader? CreateShader(VulkanRenderer renderer, byte[] vertex, byte[]? fragment = null, byte[]? geometry = null) {
-        Shader shader = new(renderer);
+public class Shaders : IDisposable {
+    public static Shaders? CreateShader(VulkanRenderer renderer, byte[] vertex, byte[]? fragment = null, byte[]? geometry = null) {
+        Shaders shader = new(renderer);
 
         {
             ShaderModule? module;
@@ -50,7 +50,7 @@ public class Shader : IDisposable {
 
     private readonly Logger Logger;
     private readonly Device Device;
-    private Shader(VulkanRenderer renderer) {
+    private Shaders(VulkanRenderer renderer) {
         IsDisposed = true;
         stages = [];
         Logger = renderer.Logger;
