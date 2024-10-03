@@ -12,6 +12,10 @@ namespace GAIL.Graphics.Renderer.Vulkan
             public SurfaceFormatKHR[] Formats;
             public PresentModeKHR[] PresentModes;
         }
+        /// <summary>
+        /// If this class is already disposed.
+        /// </summary>
+        public bool IsDisposed { get; private set; }
         public KhrSwapchain extension;
         public SwapchainKHR swapchain;
         public Image[] images;
@@ -25,8 +29,8 @@ namespace GAIL.Graphics.Renderer.Vulkan
 
         public SwapChain(VulkanRenderer renderer, WindowManager windowManager) {
             Logger = renderer.Logger;
-            surface = renderer.surface!;
-            device = renderer.device!;
+            surface = renderer.surface;
+            device = renderer.device;
             window = windowManager;
 
             CreateSwapChain(renderer.instance!);
@@ -60,7 +64,7 @@ namespace GAIL.Graphics.Renderer.Vulkan
                 };
 
                 unsafe {
-                    _ = Utils.Check(API.Vk.CreateImageView(device.logicalDevice, createInfo, null, out imageViews[i]), Logger, "Failed to create image view", true);
+                    _ = Utils.Check(API.Vk.CreateImageView(device.logicalDevice, createInfo, Allocator.allocatorPtr, out imageViews[i]), Logger, "Failed to create image view", true);
                 }
             }
             return imageViews;
@@ -116,7 +120,7 @@ namespace GAIL.Graphics.Renderer.Vulkan
                 throw new APIBackendException("Vulkan", "Failed to get VK_KHR_swapchain extension.");
             }
             unsafe {
-                _ = Utils.Check(extension.CreateSwapchain(device.logicalDevice, createInfo, null, out swapchain), Logger, "Failed to create swapchain", true);
+                _ = Utils.Check(extension.CreateSwapchain(device.logicalDevice, createInfo, Allocator.allocatorPtr, out swapchain), Logger, "Failed to create swapchain", true);
 
                 Utils.GetArray((Pointer<Image> ptr, ref uint count) => { // NOTE: There is only a minimal image count specified.
                     return extension.GetSwapchainImages(device.logicalDevice, swapchain, ref count, ptr);
@@ -157,14 +161,18 @@ namespace GAIL.Graphics.Renderer.Vulkan
     
         /// <inheritdoc/>
         public void Dispose() {
+            if (IsDisposed) { return; }
+            
             foreach (ImageView imageView in imageViews) {
                 unsafe {
-                    API.Vk.DestroyImageView(device.logicalDevice, imageView, null);
+                    API.Vk.DestroyImageView(device.logicalDevice, imageView, Allocator.allocatorPtr);
                 }
             }
             unsafe {
-                extension.DestroySwapchain(device.logicalDevice, swapchain, null);
+                extension.DestroySwapchain(device.logicalDevice, swapchain, Allocator.allocatorPtr);
             }
+            IsDisposed = true;
+            
             GC.SuppressFinalize(this);
         }
     }

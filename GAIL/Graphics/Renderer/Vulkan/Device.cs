@@ -23,6 +23,10 @@ namespace GAIL.Graphics.Renderer.Vulkan
     /// A wrapper around the vulkan logical and physical devices.
     /// </summary>
     public class Device : IDisposable {
+        /// <summary>
+        /// If this class is already disposed.
+        /// </summary>
+        public bool IsDisposed { get; private set; }
         public static readonly string[] deviceExtensions = [KhrSwapchain.ExtensionName];
         public PhysicalDevice physicalDevice;
         public Silk.NET.Vulkan.Device logicalDevice;
@@ -31,9 +35,9 @@ namespace GAIL.Graphics.Renderer.Vulkan
         private readonly Surface surface;
         private readonly Logger Logger;
 
-        public Device(VulkanRenderer renderer, ref Surface surface) {
+        public Device(VulkanRenderer renderer) {
             Logger = renderer.Logger;
-            this.surface = surface;
+            surface = renderer.surface;
 
             bool oneDeviceSuitable = false;
             Logger.LogDebug("Searching for suitable Vulkan physical device.");
@@ -72,7 +76,7 @@ namespace GAIL.Graphics.Renderer.Vulkan
                         SType = StructureType.DeviceQueueCreateInfo,
                         QueueFamilyIndex = uniqueQueueFamilies[i],
                         QueueCount = 1,
-                        PQueuePriorities = &queuePriority
+                        PQueuePriorities = Pointer<float>.From(ref queuePriority)
                     };
                 }
 
@@ -82,13 +86,13 @@ namespace GAIL.Graphics.Renderer.Vulkan
                     SType = StructureType.DeviceCreateInfo,
                     QueueCreateInfoCount = (uint)uniqueQueueFamilies.Length,
                     PQueueCreateInfos = queueCreateInfos,
-                    PEnabledFeatures = &deviceFeatures,
+                    PEnabledFeatures = Pointer<PhysicalDeviceFeatures>.From(ref deviceFeatures),
                     EnabledExtensionCount = (uint)deviceExtensions.Length,
                     PpEnabledExtensionNames = (byte**)SilkMarshal.StringArrayToPtr(deviceExtensions),
                     EnabledLayerCount = 0
                 };
                 
-                bool succeeded = Utils.Check(API.Vk.CreateDevice(physicalDevice, in createInfo, null, out logicalDevice), Logger, "Failed to create logical device", false);
+                bool succeeded = Utils.Check(API.Vk.CreateDevice(physicalDevice, in createInfo, Allocator.allocatorPtr, out logicalDevice), Logger, "Failed to create logical device", false);
 
                 if (succeeded) {
                     API.Vk.GetDeviceQueue(logicalDevice, indices.GraphicsFamily!.Value, 0, out graphicsQueue);
@@ -214,9 +218,13 @@ namespace GAIL.Graphics.Renderer.Vulkan
 
         /// <inheritdoc/>
         public void Dispose() {
+            if (IsDisposed) { return; }
+            
             unsafe {
-                API.Vk.DestroyDevice(logicalDevice, null);
+                API.Vk.DestroyDevice(logicalDevice, Allocator.allocatorPtr);
             }
+
+            IsDisposed = true;
             GC.SuppressFinalize(this);
         }
     }

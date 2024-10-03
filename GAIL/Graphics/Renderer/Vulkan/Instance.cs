@@ -11,6 +11,10 @@ namespace GAIL.Graphics.Renderer.Vulkan;
 /// </summary>
 public class Instance : IDisposable {
     /// <summary>
+    /// If this class is already disposed.
+    /// </summary>
+    public bool IsDisposed { get; private set; }
+    /// <summary>
     /// Vulkan Instance.
     /// </summary>
     public Silk.NET.Vulkan.Instance instance;
@@ -24,19 +28,17 @@ public class Instance : IDisposable {
                 ApplicationVersion = Vk.MakeVersion(appInfo.AppVersion[0], appInfo.AppVersion[1], appInfo.AppVersion[2]),
                 PEngineName = (byte*)Marshal.StringToHGlobalAnsi(appInfo.EngineName),
                 EngineVersion = Vk.MakeVersion(appInfo.EngineVersion[0], appInfo.EngineVersion[1], appInfo.EngineVersion[2]),
-                ApiVersion = Vk.Version11
+                ApiVersion = Vk.Version13
             };
 
             // Glfw required extensions.
-            Glfw glfw = Glfw.GetApi();
-            byte** extensions = glfw.GetRequiredInstanceExtensions(out uint extensionCount);
-            glfw.Dispose();
+            byte** extensions = API.Glfw.GetRequiredInstanceExtensions(out uint extensionCount);
 
             // Instance create info with extensions.
             InstanceCreateInfo createInfo = new()
             {
                 SType = StructureType.InstanceCreateInfo,
-                PApplicationInfo = &vkInfo,
+                PApplicationInfo = Pointer<ApplicationInfo>.From(ref vkInfo),
                 EnabledExtensionCount = extensionCount,
                 PpEnabledExtensionNames = extensions,
                 // Sets no validation layers.
@@ -45,7 +47,7 @@ public class Instance : IDisposable {
             };
 
             // Creates instance.
-            _ = Utils.Check(API.Vk.CreateInstance(createInfo, null, out instance), renderer.Logger, "Failed to create a Vulkan Instance", true);
+            _ = Utils.Check(API.Vk.CreateInstance(createInfo, Allocator.allocatorPtr, out instance), renderer.Logger, "Failed to create a Vulkan Instance", true);
             // NOTE: not checking return value, because fatal is turned on so an exception will be thrown.
 
             // Clears unmanaged resources.
@@ -56,7 +58,12 @@ public class Instance : IDisposable {
 
     /// <inheritdoc/>
     public unsafe void Dispose() {
-        API.Vk.DestroyInstance(instance, null);
+        if (IsDisposed) { return; }
+
+        API.Vk.DestroyInstance(instance, Allocator.allocatorPtr);
+
+        IsDisposed = true;
+        GC.SuppressFinalize(this);
     }
 
     ///

@@ -1,6 +1,3 @@
-using System.Net.Http.Headers;
-using System.Runtime.InteropServices;
-
 namespace GAIL.Core
 {
     /// <summary>
@@ -19,11 +16,27 @@ namespace GAIL.Core
         }
 
         /// <summary>
+        /// Casts this pointer to a new type.
+        /// </summary>
+        /// <typeparam name="TNew">The new unmanaged type.</typeparam>
+        /// <returns>Returns the casted pointer.</returns>
+        public readonly Pointer<TNew> Cast<TNew>() where TNew : unmanaged {
+            return new Pointer<TNew>((TNew*)pointer);
+        }
+
+        /// <summary>
         /// Gets the value of the pointer.
         /// </summary>
         /// <returns>The value of the pointer.</returns>
         public readonly T GetValue() {
             return *pointer;
+        }
+        /// <summary>
+        /// Gets the value of the pointer.
+        /// </summary>
+        /// <returns>The value of the pointer.</returns>
+        public readonly ref T GetReference() {
+            return ref *pointer;
         }
         /// <summary>
         /// Gets the pointer itself.
@@ -50,7 +63,7 @@ namespace GAIL.Core
             }
         }
         /// <summary>
-        /// Creates a new Pointer from a reference with the type <typeparamref name="T"/>.
+        /// Creates a new pointer from a reference with the type <typeparamref name="T"/>.
         /// </summary>
         /// <param name="reference">The reference of the new pointer.</param>
         /// <returns>The new pointer.</returns>
@@ -61,11 +74,21 @@ namespace GAIL.Core
             
         }
         /// <summary>
+        /// Creates a new pointer from an array with the type <typeparamref name="T"/>.
+        /// </summary>
+        /// <param name="array">The array to create the pointer from.</param>
+        /// <returns>The new pointer.</returns>
+        public static Pointer<T> FromArray(ref T[] array) {
+            fixed (T* ptr = array) {
+                return new Pointer<T>(ptr);
+            }
+        }
+        /// <summary>
         /// Creates a null pointer.
         /// </summary>
         /// <returns>An pointer to null.</returns>
         public static Pointer<T> FromNull() {
-            return new Pointer<T>((T*)null);
+            return new Pointer<T>(null);
         }
         ///
         public static implicit operator T(Pointer<T> p) {

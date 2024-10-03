@@ -8,13 +8,17 @@ using Silk.NET.Vulkan.Extensions.KHR;
 namespace GAIL.Graphics.Renderer.Vulkan
 {
     public class Surface : IDisposable {
+        /// <summary>
+        /// If this class is already disposed.
+        /// </summary>
+        public bool IsDisposed { get; private set; }
         public KhrSurface surfaceExtension;
         public SurfaceKHR surface;
         private readonly Instance instance;
         public Surface(VulkanRenderer renderer, WindowManager window) {
             renderer.Logger.LogDebug("Creating Surface.");
 
-            instance = renderer.instance!;
+            instance = renderer.instance;
 
             if (!API.Vk.TryGetInstanceExtension(instance, out surfaceExtension)) {
                 renderer.Logger.LogFatal("Vulkan: Failed to get Surface extension!");
@@ -24,7 +28,7 @@ namespace GAIL.Graphics.Renderer.Vulkan
             unsafe {
                 VkNonDispatchableHandle* surfacePtr = stackalloc VkNonDispatchableHandle[1];
 
-                _ = Utils.Check((Result)API.Glfw.CreateWindowSurface(((Silk.NET.Vulkan.Instance)instance).ToHandle(), window.Window, null, surfacePtr), renderer.Logger, "Failed to create window surface", true);
+                _ = Utils.Check((Result)API.Glfw.CreateWindowSurface(((Silk.NET.Vulkan.Instance)instance).ToHandle(), window.Window, Allocator.allocatorPtr, surfacePtr), renderer.Logger, "Failed to create window surface", true);
                 
                 Glfw.ThrowExceptions();
                 
@@ -35,10 +39,14 @@ namespace GAIL.Graphics.Renderer.Vulkan
 
         /// <inheritdoc/>
         public void Dispose() {
+            if (IsDisposed) { return; }
+            
             unsafe {
-                surfaceExtension.DestroySurface(instance, surface, null);
+                surfaceExtension.DestroySurface(instance, surface, Allocator.allocatorPtr);
             }
             surfaceExtension.Dispose();
+            
+            IsDisposed = true;
             GC.SuppressFinalize(this);
         }
     }

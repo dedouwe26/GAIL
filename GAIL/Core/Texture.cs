@@ -17,7 +17,7 @@ namespace GAIL.Core
         public readonly uint Height;
         /// <summary>
         /// Format: each row has the length of the width. Height is the amount of rows.
-        /// row0 + row1 + row2 + row[height]
+        /// Left-to-right, top-to-bottom.
         /// </summary>
         public Color[] colors;
 
@@ -54,31 +54,12 @@ namespace GAIL.Core
         /// </summary>
         /// <returns>The GLFW image for this texture (RGBa).</returns>
         public Image ToGLFW() {
-            unsafe {
-                List<byte> byteList = [];
-                foreach (Color color in colors) {
-                    byteList = [.. byteList, .. color.ToBytes()];
-                }
-                fixed (byte* pixelArray = byteList.ToArray()) {
-                    return new Image{Width = (int)Width, Height = (int)Height, Pixels = pixelArray};
-                }
+            List<byte> byteList = [];
+            foreach (Color color in colors) {
+                byteList = [.. byteList, .. color.ToBytes()];
             }
-            
-        }
-        /// <summary>
-        /// Creates a GLFW image from this texture (RGB).
-        /// </summary>
-        /// <returns>The GLFW image for this texture (RGB).</returns>
-        public Image ToGLFWRGB() {
-            unsafe {
-                List<byte> byteList = [];
-                foreach (Color color in colors) {
-                    byteList = [.. byteList, .. color.ToBytes()];
-                }
-                fixed (byte* pixelArray = byteList.ToArray()) {
-                    return new Image{Width = (int)Width, Height = (int)Height, Pixels = pixelArray};
-                }
-            }
+            byte[] bytes = [.. byteList];
+            return new Image{Width = (int)Width, Height = (int)Height, Pixels = Pointer<byte>.FromArray(ref bytes)};
         }
 
         /// <inheritdoc/>

@@ -15,7 +15,7 @@ namespace GAIL.Audio
         /// <returns>A list of the names of all the audio devices.</returns>
         public static List<string> GetAudioDevices() {
             unsafe {
-                return [.. ALContext.GetApi().GetContextProperty(null, GetContextString.DeviceSpecifier).Split("\0")];
+                return [.. ALContext.GetApi().GetContextProperty(Pointer<Device>.FromNull(), GetContextString.DeviceSpecifier).Split("\0")];
             }
         }
         /// <summary>

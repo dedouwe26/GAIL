@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using GAIL.Core;
 using OxDED.Terminal.Logging;
@@ -114,7 +115,7 @@ namespace GAIL.Input
         /// </summary>
         /// <param name="key">The key to convert</param>
         /// <returns>The name (printable character).</returns>
-        public string ToName(Key key) {
+        public static string ToName(Key key) {
             return API.Glfw.GetKeyName((int)key, ToScanCode(key));
         }
         /// <summary>
@@ -122,7 +123,7 @@ namespace GAIL.Input
         /// </summary>
         /// <param name="key">The key to convert.</param>
         /// <returns>The platform-specific scan code.</returns>
-        public int ToScanCode(Key key) {
+        public static int ToScanCode(Key key) {
             return API.Glfw.GetKeyScancode((int)key);
         }
         /// <summary>
@@ -147,21 +148,22 @@ namespace GAIL.Input
             }
         }
         /// <summary>
-        /// Get the position of the mouse (relative to the top-left side of the window).
+        /// Get the position of the cursor (relative to the top-left side of the window).
         /// </summary>
-        /// <returns>The position of the mouse in pixels (relative to the top-left side of the window).</returns>
-        public Vector2 GetMousePosition() {
+        /// <returns>The position of the cursor in pixels (relative to the top-left side of the window).</returns>
+        public Vector2 GetCursorPosition() {
             unsafe {
                 API.Glfw.GetCursorPos(globals.windowManager.Window, out double x, out double y);
-                Vector2 mousePos = new((float)x, (float)y);
-                return mousePos;
+                Vector2 cursorPos = new((float)x, (float)y);
+                return cursorPos;
             }
+            
             
         }
         /// <summary>
-        /// If the mouse is locked and hidden (you can still get input).
+        /// If the cursor is locked and hidden (you can still get input).
         /// </summary>
-        public bool MouseLocked {
+        public bool CursorLocked {
             get {
                 unsafe {
                     return API.Glfw.GetInputMode(globals.windowManager.Window, CursorStateAttribute.Cursor) == (int)CursorModeValue.CursorDisabled;

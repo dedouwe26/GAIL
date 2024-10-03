@@ -110,17 +110,13 @@ public static class Utils {
         if (count == 0) {
             return true;
         }
-        unsafe {
-            fixed (T* arrayPtr = array) {
-                if (!Check(
-                    arrayGetter(arrayPtr, ref count),
-                    logger, $"Failed to get array '{arrayName}' of type {typeof(T).Name}.",
-                    fatal
-                )) {
-                    array = [];
-                    return false;
-                }
-            }
+        if (!Check(
+            arrayGetter(Pointer<T>.FromArray(ref array), ref count),
+            logger, $"Failed to get array '{arrayName}' of type {typeof(T).Name}.",
+            fatal
+        )) {
+            array = [];
+            return false;
         }
         return true;
     }

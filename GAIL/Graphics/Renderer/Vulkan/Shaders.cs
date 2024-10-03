@@ -1,3 +1,5 @@
+using System.Reflection;
+using GAIL.Core;
 using OxDED.Terminal.Logging;
 using Silk.NET.Core.Native;
 using Silk.NET.Vulkan;
@@ -45,7 +47,10 @@ public class Shaders : IDisposable {
     public ShaderModule vertexModule;
     public ShaderModule? fragmentModule;
     public ShaderModule? geometryModule;
-
+    
+    /// <summary>
+    /// If this class is already disposed.
+    /// </summary>
     public bool IsDisposed { get; private set; }
 
     private readonly Logger Logger;
@@ -77,14 +82,11 @@ public class Shaders : IDisposable {
         };
 
         ShaderModule shaderModule;
-
         unsafe {
-            fixed (byte* codePtr = byteCode) {
-                createInfo.PCode = (uint*)codePtr;
+            createInfo.PCode = Pointer<byte>.FromArray(ref byteCode).Cast<uint>();
 
-                if (!Utils.Check(API.Vk.CreateShaderModule(Device.logicalDevice, createInfo, null, out shaderModule), Logger, "Failed to create shader module")) {
-                    return null;
-                }
+            if (!Utils.Check(API.Vk.CreateShaderModule(Device.logicalDevice, createInfo, Allocator.allocatorPtr, out shaderModule), Logger, "Failed to create shader module")) {
+                return null;
             }
         }
         return shaderModule;
@@ -95,9 +97,9 @@ public class Shaders : IDisposable {
         if (IsDisposed) { return; }
 
         unsafe {
-            API.Vk.DestroyShaderModule(Device.logicalDevice, vertexModule, null);
-            if (fragmentModule!=null) API.Vk.DestroyShaderModule(Device.logicalDevice, fragmentModule.Value, null);
-            if (geometryModule!=null) API.Vk.DestroyShaderModule(Device.logicalDevice, geometryModule.Value, null);
+            API.Vk.DestroyShaderModule(Device.logicalDevice, vertexModule, Allocator.allocatorPtr);
+            if (fragmentModule!=null) API.Vk.DestroyShaderModule(Device.logicalDevice, fragmentModule.Value, Allocator.allocatorPtr);
+            if (geometryModule!=null) API.Vk.DestroyShaderModule(Device.logicalDevice, geometryModule.Value, Allocator.allocatorPtr);
 
             foreach (PipelineShaderStageCreateInfo createInfo in stages) {
                 SilkMarshal.Free((nint)createInfo.PName);

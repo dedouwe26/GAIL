@@ -5,6 +5,7 @@ using Silk.NET.Vulkan;
 namespace GAIL.Graphics.Renderer.Vulkan;
 
 public class Pipeline : IDisposable {
+    public Silk.NET.Vulkan.Pipeline graphicsPipeline;
     public PipelineLayout layout;
     public bool IsDisposed { get; private set; }
     private readonly Device device;
@@ -94,6 +95,16 @@ public class Pipeline : IDisposable {
             PAttachments = Pointer<PipelineColorBlendAttachmentState>.From(ref colorBlendState)
         };
 
+        DynamicState dynamicState = DynamicState.Viewport;
+
+        // Dynamic state info.
+        PipelineDynamicStateCreateInfo dynamicStateInfo = new() {
+            SType = StructureType.PipelineDynamicStateCreateInfo,
+
+            DynamicStateCount = 1, // NOTE: Using dynamic state for viewport.
+            PDynamicStates = Pointer<DynamicState>.From(ref dynamicState)
+        };
+
         // The pipeline layout (used to define uniform values / push constants / descriptor sets).
         PipelineLayoutCreateInfo layoutInfo = new() {
             SType = StructureType.PipelineLayoutCreateInfo,
@@ -104,10 +115,34 @@ public class Pipeline : IDisposable {
         };
 
         unsafe {
-            _ = Utils.Check(API.Vk.CreatePipelineLayout(device.logicalDevice, layoutInfo, Pointer<AllocationCallbacks>.FromNull(), out layout), renderer.Logger, "Failed to create the pipeline layout", true);
+            _ = Utils.Check(API.Vk.CreatePipelineLayout(device.logicalDevice, layoutInfo, Allocator.allocatorPtr, out layout), renderer.Logger, "Failed to create the pipeline layout", true);
         }
 
         shaders.Dispose();
+
+        // Creating the pipeline.
+        GraphicsPipelineCreateInfo createInfo = new() {
+            PVertexInputState = Pointer<PipelineVertexInputStateCreateInfo>.From(ref vertexInputInfo),
+            PInputAssemblyState = Pointer<PipelineInputAssemblyStateCreateInfo>.From(ref inputAssemblyInfo),
+            PViewportState = Pointer<PipelineViewportStateCreateInfo>.From(ref viewportInfo),
+            PRasterizationState = Pointer<PipelineRasterizationStateCreateInfo>.From(ref rasterizerInfo),
+            PMultisampleState = Pointer<PipelineMultisampleStateCreateInfo>.From(ref multisamplingInfo),
+            PDepthStencilState = Pointer<PipelineDepthStencilStateCreateInfo>.FromNull(),
+            PColorBlendState = Pointer<PipelineColorBlendStateCreateInfo>.From(ref colorBlendStateInfo),
+            PDynamicState = Pointer<PipelineDynamicStateCreateInfo>.From(ref dynamicStateInfo),
+
+            Layout = layout,
+
+            RenderPass = renderer.renderPass!.renderPass,
+            Subpass = renderer.renderPass!.graphicsPipelineSubpass, // NOTE: Index of subpass where the graphics pipeline will be used.
+            
+            BasePipelineHandle = default,
+            BasePipelineIndex = -1 // NOTE: Can make pipeline derive from another, to make creating another one less expensive.
+        };
+        unsafe {
+            _ = Utils.Check(API.Vk.CreateGraphicsPipelines(device.logicalDevice, default, 1, in createInfo, Allocator.allocatorPtr, out graphicsPipeline), renderer.Logger, "Failed to create graphics pipeline", true);
+        }
+        
     }
 
     /// <inheritdoc/>
@@ -115,7 +150,8 @@ public class Pipeline : IDisposable {
         if (IsDisposed) { return; }
 
         unsafe {
-            API.Vk.DestroyPipelineLayout(device.logicalDevice, layout, Pointer<AllocationCallbacks>.FromNull());
+            API.Vk.DestroyPipeline(device.logicalDevice, graphicsPipeline, Allocator.allocatorPtr);
+            API.Vk.DestroyPipelineLayout(device.logicalDevice, layout, Allocator.allocatorPtr);
         }
         
         IsDisposed = true;

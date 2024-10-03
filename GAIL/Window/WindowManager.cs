@@ -172,9 +172,8 @@ namespace GAIL.Window
         /// <param name="newIcon">The list of Textures with different sizes for scaling purposes.</param>
         public void SetWindowIcon(List<Texture> newIcon) {
             unsafe {
-                fixed (Image* ptr = newIcon.Select(x => x.ToGLFWRGB()).ToArray()) {
-                    API.Glfw.SetWindowIcon(Window, newIcon.Count, ptr);
-                }
+                Image[] icons = [.. newIcon.Select(x => x.ToGLFW())];
+                API.Glfw.SetWindowIcon(Window, icons.Length, Pointer<Image>.FromArray(ref icons));
             }
         }
 
