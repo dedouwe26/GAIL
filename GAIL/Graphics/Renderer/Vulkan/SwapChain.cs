@@ -20,6 +20,7 @@ namespace GAIL.Graphics.Renderer.Vulkan
         public SwapchainKHR swapchain;
         public Image[] images;
         public ImageView[] imageViews;
+        public Framebuffer[]? frameBuffers;
         public Format imageFormat;
         public Extent2D extent;
         private readonly Surface surface;
@@ -159,6 +160,28 @@ namespace GAIL.Graphics.Renderer.Vulkan
             return surfaceFormats[0];
         }
     
+        public void CreateFramebuffers(RenderPass renderPass) {
+            frameBuffers = new Framebuffer[imageViews.Length];
+
+            for (int i = 0; i < imageViews.Length; i++) {
+                ImageView imageView = imageViews[i];
+                FramebufferCreateInfo createInfo = new() {
+                    SType = StructureType.FramebufferCreateInfo,
+
+                    RenderPass = renderPass.renderPass,
+                    AttachmentCount = 1,
+                    PAttachments = Pointer<ImageView>.From(ref imageView),
+                    Width = extent.Width,
+                    Height = extent.Height,
+                    Layers = 1
+                };
+
+                unsafe {
+                    _ = Utils.Check(API.Vk.CreateFramebuffer(device.logicalDevice, Pointer<FramebufferCreateInfo>.From(ref createInfo), Allocator.allocatorPtr, Pointer<Framebuffer>.From(ref frameBuffers[i])), Logger, "Failed to create framebuffer", true);
+                }
+            }
+        }
+        
         /// <inheritdoc/>
         public void Dispose() {
             if (IsDisposed) { return; }

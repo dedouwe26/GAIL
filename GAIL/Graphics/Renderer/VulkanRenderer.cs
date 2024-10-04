@@ -55,6 +55,7 @@ public class VulkanRenderer : IRenderer {
         renderPass = new RenderPass(this);
         // Shaders
         // Pipeline
+        swapchain.CreateFramebuffers(renderPass);
     }
 
     /// <inheritdoc/>
