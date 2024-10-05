@@ -13,7 +13,7 @@ namespace GAIL.Graphics
         /// <summary>
         /// The renderer of the graphics manager.
         /// </summary>
-        public VulkanRenderer renderer;
+        public VulkanRenderer? renderer;
 
         /// <summary>
         /// The logger corresponding to the graphics part of the application.
@@ -26,7 +26,7 @@ namespace GAIL.Graphics
         /// <param name="logger">The logger to use.</param>
         public GraphicsManager(Logger logger) {
             Logger = logger;
-            renderer = new VulkanRenderer(logger);
+            
         }
 
         /// <summary>
@@ -44,13 +44,13 @@ namespace GAIL.Graphics
         /// <exception cref="APIBackendException"></exception>
         public void Init(Application.Globals globals, AppInfo appInfo) {
             Logger.LogDebug("Initalizing Graphics.");
-            renderer.Initialize(globals, appInfo);
+
+            renderer = new VulkanRenderer(Logger, globals, appInfo);
         }
 
         /// <inheritdoc/>
         public void Dispose() {
-            
-            renderer.Dispose();
+            renderer?.Dispose();
         }
     }
 }

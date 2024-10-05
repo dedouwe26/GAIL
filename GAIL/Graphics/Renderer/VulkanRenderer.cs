@@ -40,6 +40,8 @@ public class VulkanRenderer : IRenderer {
     /// Creates a new Vulkan Renderer.
     /// </summary>
     /// <param name="logger">The logger to use.</param>
+    /// <param name="globals">The globals of the application.</param>
+    /// <param name="appInfo">The application info.</param>
     public VulkanRenderer(Logger logger, Application.Globals globals, AppInfo appInfo) {
         Logger = logger;
         if (!API.Glfw.VulkanSupported()) {
@@ -63,15 +65,13 @@ public class VulkanRenderer : IRenderer {
         if (IsDisposed) { return; }
         
         Logger.LogDebug("Terminating Vulkan.");
-        
-        swapchain!.Dispose();
-        device!.Dispose();
-        surface!.Dispose();
-        instance!.Dispose();
-
         // ~Pipeline
-        // ~Renderpass
-
+        renderPass.Dispose();
+        swapchain.Dispose();
+        device.Dispose();
+        surface.Dispose();
+        instance.Dispose();
+        
         GC.SuppressFinalize(this);
     }
 }

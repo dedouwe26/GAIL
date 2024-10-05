@@ -186,6 +186,12 @@ namespace GAIL.Graphics.Renderer.Vulkan
         public void Dispose() {
             if (IsDisposed) { return; }
             
+            foreach (Framebuffer framebuffer in frameBuffers!) {
+                unsafe {
+                    API.Vk.DestroyFramebuffer(device.logicalDevice, framebuffer, Allocator.allocatorPtr);
+                }
+            }
+
             foreach (ImageView imageView in imageViews) {
                 unsafe {
                     API.Vk.DestroyImageView(device.logicalDevice, imageView, Allocator.allocatorPtr);
