@@ -55,5 +55,8 @@ public class Syncronization : IDisposable {
             API.Vk.DestroySemaphore(device.logicalDevice, renderFinished, Allocator.allocatorPtr);
             API.Vk.DestroyFence(device.logicalDevice, inFlight, Allocator.allocatorPtr);
         }
+
+        IsDisposed = true;
+        GC.SuppressFinalize(this);
     }
 }
