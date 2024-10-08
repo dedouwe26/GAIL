@@ -45,6 +45,17 @@ public class RenderPass : IDisposable {
         };
         graphicsPipelineSubpass = 0;
 
+        SubpassDependency dependency = new() {
+            SrcSubpass = Vk.SubpassExternal, // NOTE: From.
+            DstSubpass = 0, // NOTE: To (subpass index).
+            
+            SrcStageMask = PipelineStageFlags.ColorAttachmentOutputBit, // NOTE: On what to wait (swapchain image reading).
+            SrcAccessMask = 0, // NOTE: Where that happens.
+
+            DstStageMask = PipelineStageFlags.ColorAttachmentOutputBit, // NOTE: Where to wait.
+            DstAccessMask = AccessFlags.ColorAttachmentWriteBit // NOTE: Writing of the color attachment.
+        };
+
         // Creating the render pass.
         RenderPassCreateInfo createInfo = new() {
             SType = StructureType.RenderPassCreateInfo,
@@ -53,7 +64,10 @@ public class RenderPass : IDisposable {
             PAttachments = Pointer<AttachmentDescription>.From(ref colorAttachment),
 
             SubpassCount = 1, // NOTE: Subpass list.
-            PSubpasses = Pointer<SubpassDescription>.From(ref subpass)
+            PSubpasses = Pointer<SubpassDescription>.From(ref subpass),
+
+            DependencyCount = 1, // NOTE: The dependencies.
+            PDependencies = Pointer<SubpassDependency>.From(ref dependency)
         };
         unsafe {
             _ = Utils.Check(API.Vk.CreateRenderPass(device.logicalDevice, in createInfo, Allocator.allocatorPtr, out renderPass), renderer.Logger, "Failed to create render pass", true);

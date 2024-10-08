@@ -17,7 +17,7 @@ public class Instance : IDisposable {
     /// <summary>
     /// Vulkan Instance.
     /// </summary>
-    public Silk.NET.Vulkan.Instance instance;
+    public readonly Silk.NET.Vulkan.Instance instance;
     public Instance(VulkanRenderer renderer, AppInfo appInfo) {
         renderer.Logger.LogDebug("Creating Vulkan Instance.");
         unsafe {

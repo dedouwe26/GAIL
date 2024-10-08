@@ -28,7 +28,7 @@ namespace GAIL.Graphics.Renderer.Vulkan
         /// </summary>
         public bool IsDisposed { get; private set; }
         public static readonly string[] deviceExtensions = [KhrSwapchain.ExtensionName];
-        public PhysicalDevice physicalDevice;
+        public readonly PhysicalDevice physicalDevice;
         public Silk.NET.Vulkan.Device logicalDevice;
         public Queue graphicsQueue;
         public Queue presentQueue;
@@ -216,6 +216,22 @@ namespace GAIL.Graphics.Renderer.Vulkan
             }
         }
 
+        public void Present(VulkanRenderer renderer, ref uint imageIndex) {
+            Silk.NET.Vulkan.Semaphore[] signals = [renderer.syncronization.renderFinished];
+            SwapchainKHR[] swapchains = [renderer.swapchain.swapchain];
+
+            PresentInfoKHR presentInfo = new() {
+                SType = StructureType.PresentInfoKhr,
+
+                WaitSemaphoreCount = 1,
+                PWaitSemaphores = Pointer<Silk.NET.Vulkan.Semaphore>.FromArray(ref signals),
+
+                SwapchainCount = 1,
+                PSwapchains = Pointer<SwapchainKHR>.FromArray(ref swapchains),
+                PImageIndices = Pointer<uint>.From(ref imageIndex)
+            };
+        }
+
         /// <inheritdoc/>
         public void Dispose() {
             if (IsDisposed) { return; }
@@ -227,5 +243,7 @@ namespace GAIL.Graphics.Renderer.Vulkan
             IsDisposed = true;
             GC.SuppressFinalize(this);
         }
+
+        
     }
 }

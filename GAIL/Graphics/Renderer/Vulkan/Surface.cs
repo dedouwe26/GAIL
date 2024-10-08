@@ -12,8 +12,8 @@ namespace GAIL.Graphics.Renderer.Vulkan
         /// If this class is already disposed.
         /// </summary>
         public bool IsDisposed { get; private set; }
-        public KhrSurface surfaceExtension;
-        public SurfaceKHR surface;
+        public readonly KhrSurface surfaceExtension;
+        public readonly SurfaceKHR surface;
         private readonly Instance instance;
         public Surface(VulkanRenderer renderer, WindowManager window) {
             renderer.Logger.LogDebug("Creating Surface.");

@@ -10,5 +10,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+  <Target Name="BuildVert" BeforeTargets="PreBuildEvent">
+    <Exec Command="%VULKAN_SDK%/Bin/glslc -fshader-stage=vertex -o vert.spv vert.glsl" />
+  </Target>
+  <Target Name="BuildFrag" BeforeTargets="PreBuildEvent">
+    <Exec Command="%VULKAN_SDK%/Bin/glslc -fshader-stage=fragment -o frag.spv frag.glsl" />
+  </Target>
 
 </Project>

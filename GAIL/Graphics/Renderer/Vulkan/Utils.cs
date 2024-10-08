@@ -32,6 +32,7 @@ public static class Utils {
     /// <param name="logger">The logger of the graphics part.</param>
     /// <param name="msg">The message to log.</param>
     /// <param name="fatal">If it is fatal (if this is not recoverable).</param>
+    /// <exception cref="APIBackendException"></exception>
     /// <returns>If it was successful.</returns>
     public static bool Check(Result result, Logger logger, string msg, bool fatal = false) {
         if (result!=Result.Success) {

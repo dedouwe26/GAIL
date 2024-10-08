@@ -19,10 +19,10 @@ namespace GAIL.Graphics.Renderer.Vulkan
         public KhrSwapchain extension;
         public SwapchainKHR swapchain;
         public Image[] images;
-        public ImageView[] imageViews;
-        public Framebuffer[]? frameBuffers;
-        public Format imageFormat;
-        public Extent2D extent;
+        public ImageView[] imageViews { get; private set; }
+        public Framebuffer[]? frameBuffers { get; private set; }
+        public Format imageFormat { get; private set; }
+        public Extent2D extent { get; private set; }
         private readonly Surface surface;
         private readonly WindowManager window;
         private readonly Device device;
@@ -37,6 +37,12 @@ namespace GAIL.Graphics.Renderer.Vulkan
             CreateSwapChain(renderer.instance!);
 
             imageViews = CreateImageViews();
+        }
+
+        public uint AcquireNextImage(Syncronization syncObject) {
+            uint index = default;
+            extension.AcquireNextImage(device.logicalDevice, swapchain, ulong.MaxValue, syncObject.imageAvailable, default, ref index);
+            return index;
         }
 
         public ImageView[] CreateImageViews() {

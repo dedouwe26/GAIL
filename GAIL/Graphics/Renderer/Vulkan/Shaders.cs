@@ -44,9 +44,9 @@ public class Shaders : IDisposable {
         return shader;
     }
     public PipelineShaderStageCreateInfo[] stages;
-    public ShaderModule vertexModule;
-    public ShaderModule? fragmentModule;
-    public ShaderModule? geometryModule;
+    public ShaderModule vertexModule { get; private set; }
+    public ShaderModule? fragmentModule { get; private set; }
+    public ShaderModule? geometryModule { get; private set; }
     
     /// <summary>
     /// If this class is already disposed.

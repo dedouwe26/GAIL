@@ -5,8 +5,8 @@ using Silk.NET.Vulkan;
 namespace GAIL.Graphics.Renderer.Vulkan;
 
 public class Pipeline : IDisposable {
-    public Silk.NET.Vulkan.Pipeline graphicsPipeline;
-    public PipelineLayout layout;
+    public readonly Silk.NET.Vulkan.Pipeline graphicsPipeline;
+    public readonly PipelineLayout layout;
     public bool IsDisposed { get; private set; }
     private readonly Device device;
 
@@ -118,10 +118,15 @@ public class Pipeline : IDisposable {
             _ = Utils.Check(API.Vk.CreatePipelineLayout(device.logicalDevice, layoutInfo, Allocator.allocatorPtr, out layout), renderer.Logger, "Failed to create the pipeline layout", true);
         }
 
-        shaders.Dispose();
+        
 
         // Creating the pipeline.
         GraphicsPipelineCreateInfo createInfo = new() {
+            SType = StructureType.GraphicsPipelineCreateInfo,
+
+            StageCount = Convert.ToUInt32(shaders.stages!.Length),
+            PStages = Pointer<PipelineShaderStageCreateInfo>.FromArray(ref shaders.stages),
+
             PVertexInputState = Pointer<PipelineVertexInputStateCreateInfo>.From(ref vertexInputInfo),
             PInputAssemblyState = Pointer<PipelineInputAssemblyStateCreateInfo>.From(ref inputAssemblyInfo),
             PViewportState = Pointer<PipelineViewportStateCreateInfo>.From(ref viewportInfo),
@@ -142,7 +147,8 @@ public class Pipeline : IDisposable {
         unsafe {
             _ = Utils.Check(API.Vk.CreateGraphicsPipelines(device.logicalDevice, default, 1, in createInfo, Allocator.allocatorPtr, out graphicsPipeline), renderer.Logger, "Failed to create graphics pipeline", true);
         }
-        
+
+        shaders.Dispose();
     }
 
     /// <inheritdoc/>
