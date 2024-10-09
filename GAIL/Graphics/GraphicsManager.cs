@@ -48,6 +48,10 @@ namespace GAIL.Graphics
             renderer = new VulkanRenderer(Logger, globals, appInfo);
         }
 
+        public void Update() {
+            renderer!.Render();
+        }
+
         /// <inheritdoc/>
         public void Dispose() {
             renderer?.Dispose();
