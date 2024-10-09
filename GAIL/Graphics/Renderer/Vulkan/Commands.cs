@@ -82,7 +82,7 @@ public class Commands : IDisposable {
         
         { // Command Begin RenderPass
             // TODO: Make changable
-            ClearValue clearValue = new(new(float32_0:1, float32_1:100/255,float32_2:0, float32_3: 1));
+            ClearValue clearValue = new(new(float32_0:0, float32_1:0,float32_2:0, float32_3: 1));
             // NOTE: Clear values for load operation clear.
 
             RenderPassBeginInfo renderPassInfo = new() {

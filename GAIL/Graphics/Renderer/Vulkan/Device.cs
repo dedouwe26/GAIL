@@ -230,6 +230,8 @@ namespace GAIL.Graphics.Renderer.Vulkan
                 PSwapchains = Pointer<SwapchainKHR>.FromArray(ref swapchains),
                 PImageIndices = Pointer<uint>.From(ref imageIndex)
             };
+            
+            _ = Utils.Check(renderer.swapchain.extension.QueuePresent(presentQueue, presentInfo), renderer.Logger, "Failed to present", true);
         }
 
         /// <inheritdoc/>
