@@ -81,9 +81,7 @@ public class VulkanRenderer : IRenderer {
         syncronization = new Syncronization(this);
     }
     /// <inheritdoc/>
-    public void Render() {
-        syncronization.WaitForFrame();
-        
+    public void Render() { // TODO: device wait idle, framebuffer disposing.
         uint imageIndex = swapchain.AcquireNextImage(syncronization);
         commands.Record(
             this, 
@@ -93,7 +91,7 @@ public class VulkanRenderer : IRenderer {
         
         device.Present(this, ref imageIndex);
 
-         // NOTE: Can be at start (setup inFlight fence to be signaled).
+        syncronization.WaitForFrame(); // NOTE: Can be at start (setup inFlight fence to be signaled).
     }
 
     /// <inheritdoc/>
