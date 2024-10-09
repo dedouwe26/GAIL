@@ -47,7 +47,9 @@ namespace GAIL.Graphics
 
             renderer = new VulkanRenderer(Logger, globals, appInfo);
         }
-
+        /// <summary>
+        /// Updates the graphics on the screen.
+        /// </summary>
         public void Update() {
             renderer!.Render();
         }

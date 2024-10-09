@@ -81,7 +81,7 @@ public class VulkanRenderer : IRenderer {
         syncronization = new Syncronization(this);
     }
     /// <inheritdoc/>
-    public void Render() { // TODO: device wait idle, framebuffer disposing.
+    public void Render() { // TODO: device wait idle?, framebuffer disposing.
         uint imageIndex = swapchain.AcquireNextImage(syncronization);
         commands.Record(
             this, 
@@ -99,7 +99,8 @@ public class VulkanRenderer : IRenderer {
         if (IsDisposed) { return; }
         
         Logger.LogDebug("Terminating Vulkan.");
-        // ~Pipeline
+        commands.Dispose();
+        pipeline.Dispose();
         renderPass.Dispose();
         swapchain.Dispose();
         device.Dispose();

@@ -40,7 +40,7 @@ namespace GAIL.Graphics.Renderer.Vulkan
         }
 
         public uint AcquireNextImage(Syncronization syncObject) {
-            uint index = default;
+            uint index = default; // TODO: Stuck at line below.
             extension.AcquireNextImage(device.logicalDevice, swapchain, ulong.MaxValue, syncObject.imageAvailable, default, ref index);
             return index;
         }

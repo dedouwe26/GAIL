@@ -132,6 +132,8 @@ namespace GAIL
                 if (globals.windowManager.ShouldClose) { break; }
             
                 OnUpdate?.Invoke(this, deltaTime);
+
+                globals.graphicsManager.Update();
                 
                 lastTime = CurrentTime;
                 
