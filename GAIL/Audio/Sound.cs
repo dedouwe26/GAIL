@@ -92,7 +92,6 @@ namespace GAIL.Audio
         /// Also Applies all the sound effects (from first to last).
         /// </summary>
         public void Update() {
-
             API.Al.DeleteSource(source);
             API.Al.DeleteBuffer(buffer);
             

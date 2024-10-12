@@ -11,7 +11,7 @@ namespace GAIL.Graphics.Renderer.Vulkan;
 /// </summary>
 public class Shaders : IDisposable {
     public static Shaders? CreateShader(VulkanRenderer renderer, byte[] vertex, byte[]? fragment = null, byte[]? geometry = null) {
-        Shaders shader = new(renderer);
+        Shaders shader = new(renderer, 1 + (fragment!=null?1:0) + (geometry!=null?1:0));
 
         {
             ShaderModule? module;
@@ -21,25 +21,24 @@ public class Shaders : IDisposable {
             shader.vertexModule = module.Value;
         }
 
-        List<PipelineShaderStageCreateInfo> stages = [shader.CreateShaderStage(shader.vertexModule, ShaderStageFlags.VertexBit)];
-
         shader.IsDisposed = false;
+
+        shader.stages[0] = shader.CreateShaderStage(shader.vertexModule, ShaderStageFlags.VertexBit);
 
         if (fragment!=null) {
             if ((shader.fragmentModule=shader.CreateShaderModule(fragment))==null) {
                 return null;
             }
-            stages.Add(shader.CreateShaderStage(shader.fragmentModule.Value, ShaderStageFlags.FragmentBit));
+            shader.stages[1] = shader.CreateShaderStage(shader.fragmentModule.Value, ShaderStageFlags.FragmentBit);
         }
 
         if (geometry!=null) {
             if ((shader.geometryModule=shader.CreateShaderModule(geometry))==null) {
                 return null;
             }
-            stages.Add(shader.CreateShaderStage(shader.geometryModule.Value, ShaderStageFlags.GeometryBit));
+            shader.stages[1+(fragment!=null?1:0)] = shader.CreateShaderStage(shader.geometryModule.Value, ShaderStageFlags.GeometryBit);
         }
         // TODO: Create tesselation (control shader, evaluation shader).
-        shader.stages = [.. stages];
 
         return shader;
     }
@@ -55,14 +54,15 @@ public class Shaders : IDisposable {
 
     private readonly Logger Logger;
     private readonly Device Device;
-    private Shaders(VulkanRenderer renderer) {
+    private Shaders(VulkanRenderer renderer, int stagesLength) {
         IsDisposed = true;
-        stages = [];
+        stages = new PipelineShaderStageCreateInfo[stagesLength];
         Logger = renderer.Logger;
-        Device = renderer.device!;
+        Device = renderer.device;
     }
     public PipelineShaderStageCreateInfo CreateShaderStage(ShaderModule shaderModule, ShaderStageFlags stage) {
-        
+        Logger.LogDebug("Creating Shader Stage: "+stage.ToString());
+
         unsafe {
             PipelineShaderStageCreateInfo createInfo = new() {
                 SType = StructureType.PipelineShaderStageCreateInfo,

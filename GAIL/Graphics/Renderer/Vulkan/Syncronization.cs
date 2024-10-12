@@ -7,53 +7,71 @@ public class Syncronization : IDisposable {
     private readonly Device device;
     private readonly Logger Logger;
     
-    public readonly Silk.NET.Vulkan.Semaphore imageAvailable;
-    public readonly Silk.NET.Vulkan.Semaphore renderFinished;
-    public readonly Fence inFlight;
+    public readonly Silk.NET.Vulkan.Semaphore[] imageAvailable;
+    public readonly Silk.NET.Vulkan.Semaphore[] renderFinished;
+    public readonly Fence[] inFlight;
     public bool IsDisposed { get; private set; }
     public Syncronization(VulkanRenderer renderer) {
         device = renderer.device;
         Logger = renderer.Logger;
+        
+        renderer.Logger.LogDebug("Creating Sync Objects.");
 
-        imageAvailable = CreateSemaphore();
-        renderFinished = CreateSemaphore();
-        inFlight = CreateFence(false);
+        imageAvailable = CreateSemaphore(renderer.MaxFramesInFlight);
+        renderFinished = CreateSemaphore(renderer.MaxFramesInFlight);
+        inFlight = CreateFence(renderer.MaxFramesInFlight, true);
     }
-    public void WaitForFrame() {
-        API.Vk.WaitForFences(device.logicalDevice, 1, in inFlight, true, ulong.MaxValue);
-        API.Vk.ResetFences(device.logicalDevice, 1, in inFlight);
+    public void WaitForFrame(uint currentFrame) {
+        API.Vk.WaitForFences(device.logicalDevice, 1, in inFlight[currentFrame], true, ulong.MaxValue);
     }
-    public Fence CreateFence(bool signaled = false) {
+    public void Reset(uint currentFrame) {
+        API.Vk.ResetFences(device.logicalDevice, 1, in inFlight[currentFrame]);
+    }
+    public Fence[] CreateFence(uint size, bool signaled = false) {
+        Fence[] fences = new Fence[size];
+
         FenceCreateInfo createInfo = new() {
             SType = StructureType.FenceCreateInfo
         };
 
         if (signaled) createInfo.Flags = FenceCreateFlags.SignaledBit;
 
-        unsafe {
-            _ = Utils.Check(API.Vk.CreateFence(device.logicalDevice, createInfo, Allocator.allocatorPtr, out Fence fence), Logger, "Failed to create semaphore", true);
-        
-            return fence;
+        for (int i = 0; i < size; i++) {
+            unsafe {
+                _ = Utils.Check(API.Vk.CreateFence(device.logicalDevice, createInfo, Allocator.allocatorPtr, out fences[i]), Logger, "Failed to create fence", true);
+            }
         }
+        
+        return fences;
     }
-    public Silk.NET.Vulkan.Semaphore CreateSemaphore() {
+    public Silk.NET.Vulkan.Semaphore[] CreateSemaphore(uint size) {
+        Silk.NET.Vulkan.Semaphore[] semaphores = new Silk.NET.Vulkan.Semaphore[size];
+
         SemaphoreCreateInfo createInfo = new() {
             SType = StructureType.SemaphoreCreateInfo
         };
 
-        unsafe {
-            _ = Utils.Check(API.Vk.CreateSemaphore(device.logicalDevice, createInfo, Allocator.allocatorPtr, out Silk.NET.Vulkan.Semaphore semaphore), Logger, "Failed to create semaphore", true);
-        
-            return semaphore;
+        for (int i = 0; i < size; i++) {
+            unsafe {
+                _ = Utils.Check(API.Vk.CreateSemaphore(device.logicalDevice, createInfo, Allocator.allocatorPtr, out semaphores[i]), Logger, "Failed to create semaphore", true);
+            }
         }
+
+        return semaphores;
     }
     public void Dispose() {
         if (IsDisposed) { return; }
 
         unsafe {
-            API.Vk.DestroySemaphore(device.logicalDevice, imageAvailable, Allocator.allocatorPtr);
-            API.Vk.DestroySemaphore(device.logicalDevice, renderFinished, Allocator.allocatorPtr);
-            API.Vk.DestroyFence(device.logicalDevice, inFlight, Allocator.allocatorPtr);
+            foreach (Silk.NET.Vulkan.Semaphore semaphore in imageAvailable) {
+                API.Vk.DestroySemaphore(device.logicalDevice, semaphore, Allocator.allocatorPtr);
+            }
+            foreach (Silk.NET.Vulkan.Semaphore semaphore in renderFinished) {
+                API.Vk.DestroySemaphore(device.logicalDevice, semaphore, Allocator.allocatorPtr);
+            }
+            foreach (Fence fence in inFlight) {
+                API.Vk.DestroyFence(device.logicalDevice, fence, Allocator.allocatorPtr);
+            }
         }
 
         IsDisposed = true;

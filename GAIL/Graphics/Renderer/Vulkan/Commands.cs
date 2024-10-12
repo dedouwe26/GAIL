@@ -8,7 +8,7 @@ namespace GAIL.Graphics.Renderer.Vulkan;
 public class Commands : IDisposable {
     public bool IsDisposed { get; private set; }
     public readonly CommandPool commandPool;
-    public CommandBuffer commandBuffer;
+    public CommandBuffer[] commandBuffers;
     private readonly Device device;
     public Commands(VulkanRenderer renderer) {
         device = renderer.device;
@@ -23,10 +23,13 @@ public class Commands : IDisposable {
                 QueueFamilyIndex = queueFamilyIndices.GraphicsFamily!.Value
             };
 
+            renderer.Logger.LogDebug("Creating Command Pool.");
             unsafe {
                 _ = Utils.Check(API.Vk.CreateCommandPool(device.logicalDevice, createInfo, Allocator.allocatorPtr, out commandPool), renderer.Logger, "Failed to create commandpool", true);
             }
         }
+
+        commandBuffers = new CommandBuffer[renderer.MaxFramesInFlight];
 
         // Command buffers
         CommandBufferAllocateInfo allocateInfo = new() {
@@ -34,21 +37,26 @@ public class Commands : IDisposable {
 
             CommandPool = commandPool,
             Level = CommandBufferLevel.Primary, // NOTE: Primary: Can be submitted to a queue, secondary: can be called from the primary (e.g. reusability).
-            CommandBufferCount = 1 // NOTE: 1, because we only have 1 buffer.
+            CommandBufferCount = renderer.MaxFramesInFlight
         };
 
-        _ = Utils.Check(API.Vk.AllocateCommandBuffers(device.logicalDevice, allocateInfo, out commandBuffer), renderer.Logger, "Failed to allocate command buffer", true);
+        renderer.Logger.LogDebug("Allocating Command Buffers.");
+
+        commandBuffers = new CommandBuffer[renderer.MaxFramesInFlight];
+        unsafe {
+            _ = Utils.Check(API.Vk.AllocateCommandBuffers(device.logicalDevice, allocateInfo, Pointer<CommandBuffer>.FromArray(ref commandBuffers)), renderer.Logger, "Failed to allocate command buffer", true);
+        }
     }
     
     public void Record(VulkanRenderer renderer, ref Framebuffer swapchainImage) {
-        RecordCommandBuffer(renderer, commandBuffer, ref swapchainImage);
+        RecordCommandBuffer(renderer, commandBuffers[renderer.CurrentFrame], ref swapchainImage);
     }
 
     public void Submit(VulkanRenderer renderer) {
         PipelineStageFlags[] waitStages = [PipelineStageFlags.ColorAttachmentOutputBit];
-        Silk.NET.Vulkan.Semaphore[] waitSemaphores = [renderer.syncronization.imageAvailable];
+        Silk.NET.Vulkan.Semaphore[] waitSemaphores = [renderer.syncronization.imageAvailable[renderer.CurrentFrame]];
         
-        Silk.NET.Vulkan.Semaphore[] signalSemaphores = [renderer.syncronization.renderFinished];
+        Silk.NET.Vulkan.Semaphore[] signalSemaphores = [renderer.syncronization.renderFinished[renderer.CurrentFrame]];
 
         SubmitInfo submitInfo = new() {
             SType = StructureType.SubmitInfo,
@@ -58,13 +66,13 @@ public class Commands : IDisposable {
             PWaitDstStageMask = Pointer<PipelineStageFlags>.FromArray(ref waitStages), // NOTE: Only wait with writing colors, not with the pipeline.
         
             CommandBufferCount = 1, // commandbuffers
-            PCommandBuffers = Pointer<CommandBuffer>.From(ref commandBuffer),
+            PCommandBuffers = Pointer<CommandBuffer>.From(ref commandBuffers[renderer.CurrentFrame]),
 
             SignalSemaphoreCount = 1, // NOTE: The semaphores to signal.
             PSignalSemaphores = Pointer<Silk.NET.Vulkan.Semaphore>.FromArray(ref signalSemaphores)
         };
 
-        _ = Utils.Check(API.Vk.QueueSubmit(renderer.device.graphicsQueue, [submitInfo], renderer.syncronization.inFlight), renderer.Logger, "Failed to submit draw command buffer", true);
+        _ = Utils.Check(API.Vk.QueueSubmit(renderer.device.graphicsQueue, [submitInfo], renderer.syncronization.inFlight[renderer.CurrentFrame]), renderer.Logger, "Failed to submit draw command buffer", true);
     }
 
     public static void RecordCommandBuffer(VulkanRenderer renderer, CommandBuffer buffer, ref Framebuffer swapchainImage) {
@@ -91,7 +99,7 @@ public class Commands : IDisposable {
                 RenderPass = renderer.renderPass.renderPass,
                 Framebuffer = swapchainImage,
 
-                RenderArea = new(new(0, 0), renderer.swapchain.extent), // NOTE: Shader loads, stores area
+                RenderArea = new(new(0, 0), renderer.Swapchain.extent), // NOTE: Shader loads, stores area
 
                 ClearValueCount = 1, // Reference the clear value.
                 PClearValues = Pointer<ClearValue>.From(ref clearValue)
@@ -109,8 +117,8 @@ public class Commands : IDisposable {
             Viewport viewport = new() {
                 X = 0,
                 Y = 0,
-                Width = renderer.swapchain.extent.Width,
-                Height = renderer.swapchain.extent.Height,
+                Width = renderer.Swapchain.extent.Width,
+                Height = renderer.Swapchain.extent.Height,
                 MinDepth = 0,
                 MaxDepth = 0
             };

@@ -216,9 +216,9 @@ namespace GAIL.Graphics.Renderer.Vulkan
             }
         }
 
-        public void Present(VulkanRenderer renderer, ref uint imageIndex) {
-            Silk.NET.Vulkan.Semaphore[] signals = [renderer.syncronization.renderFinished];
-            SwapchainKHR[] swapchains = [renderer.swapchain.swapchain];
+        public bool Present(VulkanRenderer renderer, ref uint imageIndex) {
+            Silk.NET.Vulkan.Semaphore[] signals = [renderer.syncronization.renderFinished[renderer.CurrentFrame]];
+            SwapchainKHR[] swapchains = [renderer.Swapchain.swapchain];
 
             PresentInfoKHR presentInfo = new() {
                 SType = StructureType.PresentInfoKhr,
@@ -230,8 +230,18 @@ namespace GAIL.Graphics.Renderer.Vulkan
                 PSwapchains = Pointer<SwapchainKHR>.FromArray(ref swapchains),
                 PImageIndices = Pointer<uint>.From(ref imageIndex)
             };
-            
-            _ = Utils.Check(renderer.swapchain.extension.QueuePresent(presentQueue, presentInfo), renderer.Logger, "Failed to present", true);
+            Result result = renderer.Swapchain.extension.QueuePresent(presentQueue, presentInfo);
+
+            if (result == Result.ErrorOutOfDateKhr || result == Result.SuboptimalKhr) {
+                return false;
+            } else {
+                _ = Utils.Check(result, renderer.Logger, "Failed to present", true);
+            }
+            return true;
+        }
+        
+        public bool WaitIdle() {
+            return Utils.Check(API.Vk.DeviceWaitIdle(logicalDevice), Logger, "The device failed to wait idle");
         }
 
         /// <inheritdoc/>

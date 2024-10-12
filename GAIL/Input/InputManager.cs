@@ -12,7 +12,7 @@ namespace GAIL.Input
     /// <summary>
     /// Handles all input in the Application.
     /// </summary>
-    public class InputManager : IManager {
+    public class InputManager {
         /// <summary>
         /// Event for when a key is pressed.
         /// </summary>
@@ -97,17 +97,6 @@ namespace GAIL.Input
                 );
                 
             }
-        }
-
-        /// <summary>
-        /// Disposes this input manager.
-        /// </summary>
-        ~InputManager() {
-            Dispose();
-        }
-        /// <inheritdoc/>
-        public void Dispose() {
-            GC.SuppressFinalize(this);
         }
 
         /// <summary>

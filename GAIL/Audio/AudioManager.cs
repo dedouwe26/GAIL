@@ -8,7 +8,11 @@ namespace GAIL.Audio
     /// <summary>
     /// Handles all audio in the Application.
     /// </summary>
-    public class AudioManager : IManager {
+    public class AudioManager : IDisposable {
+        /// <summary>
+        /// If this manager is already disposed.
+        /// </summary>
+        public bool IsDisposed { get; private set; }
         /// <summary>
         /// Gets all the audio devices names.
         /// </summary>
@@ -46,7 +50,6 @@ namespace GAIL.Audio
         /// <param name="audioDevice">The custom selected audio device name. Get the name from <see cref="GetAudioDevices"/> (default: default device).</param>
         /// <exception cref="APIBackendException"></exception>
         public void Init(string audioDevice = "") {
-
             unsafe {
                 device = API.Alc.OpenDevice(audioDevice);
                 if (device.IsNull) {
@@ -61,13 +64,11 @@ namespace GAIL.Audio
             }
         }
 
-        /// <summary></summary>
-        ~AudioManager() {
-            Dispose();
-        }
         /// <inheritdoc/>
         /// <exception cref="APIBackendException"></exception>
         public void Dispose() {
+            if (IsDisposed) { return; }
+
             Logger.LogDebug("Terminating OpenAL.");
             unsafe {
                 if (!API.Alc.MakeContextCurrent(null)) {
@@ -80,6 +81,8 @@ namespace GAIL.Audio
                     throw new APIBackendException("OpenAL", "Failed to close device.");
                 }
             }
+
+            IsDisposed = true;
             GC.SuppressFinalize(this);
         }
         /// <summary>
@@ -90,6 +93,7 @@ namespace GAIL.Audio
         /// <param name="sound">The sound to play.</param>
         /// <exception cref="APIBackendException"></exception>
         public void PlaySound(Sound sound) {
+            Logger.LogDebug("Playing sound.");
             sound.Update();
             unsafe {
                 if (!API.Alc.MakeContextCurrent(context)) {
@@ -116,6 +120,7 @@ namespace GAIL.Audio
         /// <param name="direction">The direction of the movement.</param>
         /// <exception cref="APIBackendException"></exception>
         public void PlaySound3D(Sound sound, Vector3 position, Vector3 velocity, Vector3 direction) {
+            Logger.LogDebug("Playing sound in 3D.");
             sound.Update();
             unsafe {
                 if (!API.Alc.MakeContextCurrent(context)) {
@@ -141,6 +146,7 @@ namespace GAIL.Audio
         /// <param name="sound">The sound to stop.</param>
         /// <exception cref="APIBackendException"></exception>
         public void StopSound(Sound sound) {
+            Logger.LogDebug("Stopping sound.");
             unsafe {
                 if (!API.Alc.MakeContextCurrent(context)) {
                     Logger.LogError("OpenAL: Failed to make context current.");
@@ -155,6 +161,7 @@ namespace GAIL.Audio
         /// <param name="sound">The sound to pause or resume.</param>
         /// <exception cref="APIBackendException"></exception>
         public void PauseSound(Sound sound) {
+            Logger.LogDebug("Pausing sound.");
             unsafe {
                 if (!API.Alc.MakeContextCurrent(context)) {
                     Logger.LogError("OpenAL: Failed to make context current.");
@@ -207,6 +214,7 @@ namespace GAIL.Audio
         /// <param name="sample">The specified sample to go to.</param>
         /// <exception cref="APIBackendException"></exception>
         public void Goto(Sound sound, int sample) {
+            Logger.LogDebug("Going to sample.");
             unsafe {
                 if (!API.Alc.MakeContextCurrent(context)) {
                     Logger.LogError("OpenAL: Failed to make context current.");

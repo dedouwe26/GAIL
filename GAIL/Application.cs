@@ -71,19 +71,18 @@ namespace GAIL
         /// <summary>
         /// Creates a GAIL application.
         /// </summary>
-        /// <param name="windowTitle">The name of the window (also used for the <paramref name="loggerID"/>).</param>
+        /// <param name="windowTitle">The name of the window (also used for the <paramref name="logger"/> ID if the <paramref name="logger"/> is null).</param>
         /// <param name="width">The width of the window (in pixels).</param>
         /// <param name="height">The height of the window (in pixels).</param>
-        /// <param name="loggerID">The ID for the logger (default: GAIL.App.{windowTitle replace ' ' with '_'}).</param>
         /// <param name="appInfo">The app info used for vulkan (null for default).</param>
-        /// <param name="audioDevice">The custom audio device if necessary (default: empty).</param>
-        /// <param name="logLevel">The log level of all the loggers in this application (default: Info).</param>
-        /// <param name="logTargets">All the log targets for all the loggers in this application (default: TerminalTarget).</param>
-        public Application(string windowTitle = "GAIL Window", int width = 1000, int height = 600, AppInfo? appInfo = null, string audioDevice = "", string? loggerID = null, Severity logLevel = Severity.Info, Dictionary<Type, ITarget>? logTargets = null) {  
+        /// <param name="audioDevice">The custom audio device if necessary (defaults to empty).</param>
+        /// <param name="logger">The optional logger to use.</param>
+        /// <param name="severity">The severity to use if the logger isn't specified (defaults to Info).</param>
+        public Application(string windowTitle = "GAIL Window", int width = 1000, int height = 600, AppInfo? appInfo = null, string audioDevice = "", Logger? logger = null, Severity severity = Severity.Info) {  
             hasStopped = true;
             
             globals = new() {
-                logger = new Logger(loggerID??"GAIL.App."+windowTitle.Replace(' ', '_'), "GAIL", logLevel, logTargets??new(){[typeof(TerminalTarget)] = new TerminalTarget()})
+                logger = logger ?? new Logger("GAIL.App."+windowTitle.Replace(' ', '_'), "GAIL", severity, new(){[typeof(TerminalTarget)] = new TerminalTarget()})
             };
             if (globals.logger.HasTarget<TerminalTarget>()) {
                 globals.logger.GetTarget<TerminalTarget>().Format = "<{0}>: ("+Color.DarkBlue.ToForegroundANSI()+"{2}"+ANSI.Styles.ResetAll+")[{5}"+ANSI.Styles.Bold+"{3}"+ANSI.Styles.ResetAll+"] : {5}{4}"+ANSI.Styles.ResetAll;
@@ -96,16 +95,16 @@ namespace GAIL
 
             globals.logger.LogDebug("Initializing all managers.");
 
-            globals.windowManager = new WindowManager(globals.logger.CreateSubLogger("Window", "Window", logLevel));
+            globals.windowManager = new WindowManager(globals.logger.CreateSubLogger("Window", "Window", globals.logger.logLevel));
             globals.windowManager.Init(windowTitle, width, height);
 
-            globals.inputManager = new InputManager(globals, globals.logger.CreateSubLogger("Input", "Input", logLevel));
+            globals.inputManager = new InputManager(globals, globals.logger.CreateSubLogger("Input", "Input", globals.logger.logLevel));
             globals.inputManager.Init();
 
-            globals.graphicsManager = new GraphicsManager(globals.logger.CreateSubLogger("Graphics", "Graphics", logLevel));
+            globals.graphicsManager = new GraphicsManager(globals.logger.CreateSubLogger("Graphics", "Graphics", globals.logger.logLevel));
             globals.graphicsManager.Init(globals, appInfo == null? new AppInfo() : appInfo.Value);
 
-            globals.audioManager = new AudioManager(globals.logger.CreateSubLogger("Audio", "Audio", logLevel));
+            globals.audioManager = new AudioManager(globals.logger.CreateSubLogger("Audio", "Audio", globals.logger.logLevel));
             globals.audioManager.Init(audioDevice);
         }
 
@@ -204,7 +203,6 @@ namespace GAIL
 
             globals.audioManager.Dispose();
             globals.graphicsManager.Dispose();
-            globals.inputManager.Dispose();
             globals.windowManager.Dispose();
 
             GC.SuppressFinalize(this);

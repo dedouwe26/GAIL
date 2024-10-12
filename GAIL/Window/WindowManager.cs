@@ -8,7 +8,11 @@ namespace GAIL.Window
     /// <summary>
     /// Handles everything for the window (GLFW).
     /// </summary>
-    public class WindowManager : IManager {
+    public class WindowManager : IDisposable {
+        /// <summary>
+        /// If this manager is already disposed.
+        /// </summary>
+        public bool IsDisposed { get; private set; }
         /// <summary>
         /// The logger corresponding to the graphics part of the application.
         /// </summary>
@@ -38,11 +42,6 @@ namespace GAIL.Window
                 Logger.LogError($"GLFW: ({error}): {description}");
                 throw new APIBackendException("GLFW", $"({error}): {description}");
             });
-        }
-
-        /// <summary></summary>
-        ~WindowManager() {
-            Dispose();
         }
 
         /// <summary>
@@ -176,19 +175,37 @@ namespace GAIL.Window
                 API.Glfw.SetWindowIcon(Window, icons.Length, Pointer<Image>.FromArray(ref icons));
             }
         }
+        /// <summary>
+        /// Gets / Sets if the window is resizable or not.
+        /// </summary>
+        public bool Resizable { get {
+            unsafe {
+                return API.Glfw.GetWindowAttrib(Window, WindowAttributeGetter.Resizable);
+            }
+        } set {
+            unsafe {
+                API.Glfw.SetWindowAttrib(Window, WindowAttributeSetter.Resizable, value);
+            }
+        }}
+
+        // TODO: public bool Decorated {get set}
 
         /// <summary>
         /// The current time on the GLFW Timer.
         /// </summary>
-        public static double Time{ get { return API.Glfw.GetTime(); } }
+        public static double Time { get { return API.Glfw.GetTime(); } }
 
         /// <inheritdoc/>
         public void Dispose() {
+            if (IsDisposed) { return; }
+
             Logger.LogDebug("Terminating GLFW.");
             unsafe {
                 API.Glfw.DestroyWindow(Window);
             }
             API.Glfw.Terminate();
+
+            IsDisposed = true;
             GC.SuppressFinalize(this);
         }
     }

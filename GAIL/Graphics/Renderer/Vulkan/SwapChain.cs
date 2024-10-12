@@ -39,9 +39,16 @@ namespace GAIL.Graphics.Renderer.Vulkan
             imageViews = CreateImageViews();
         }
 
-        public uint AcquireNextImage(Syncronization syncObject) {
+        public uint? AcquireNextImage(VulkanRenderer renderer) {
             uint index = default;
-            extension.AcquireNextImage(device.logicalDevice, swapchain, ulong.MaxValue, syncObject.imageAvailable, default, ref index);
+            Result result = extension.AcquireNextImage(device.logicalDevice, swapchain, ulong.MaxValue, renderer.syncronization.imageAvailable[renderer.CurrentFrame], default, ref index);
+            
+            if (result == Result.ErrorOutOfDateKhr) {
+                return null;
+            } else if (result != Result.SuboptimalKhr) {
+                _ = Utils.Check(result, Logger, "Failed to acquire next image", true);
+            }
+            
             return index;
         }
 
@@ -168,6 +175,8 @@ namespace GAIL.Graphics.Renderer.Vulkan
     
         public void CreateFramebuffers(RenderPass renderPass) {
             frameBuffers = new Framebuffer[imageViews.Length];
+
+            Logger.LogDebug("Creating Framebuffers.");
 
             for (int i = 0; i < imageViews.Length; i++) {
                 ImageView imageView = imageViews[i];

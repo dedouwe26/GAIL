@@ -34,7 +34,7 @@ public class Pipeline : IDisposable {
         // The scissor of the viewport.
         Rect2D scissor = new() {
             Offset = { X = 0, Y = 0 },
-            Extent = renderer.swapchain!.extent,
+            Extent = renderer.Swapchain!.extent,
         };
 
         // NOTE: Using dynamic state so we don't have to specify the viewport.
@@ -114,6 +114,8 @@ public class Pipeline : IDisposable {
             PPushConstantRanges = Pointer<PushConstantRange>.FromNull()
         };
 
+        renderer.Logger.LogDebug("Creating Pipeline Layout.");
+
         unsafe {
             _ = Utils.Check(API.Vk.CreatePipelineLayout(device.logicalDevice, layoutInfo, Allocator.allocatorPtr, out layout), renderer.Logger, "Failed to create the pipeline layout", true);
         }
@@ -144,6 +146,9 @@ public class Pipeline : IDisposable {
             BasePipelineHandle = default,
             BasePipelineIndex = -1 // NOTE: Can make pipeline derive from another, to make creating another one less expensive.
         };
+
+        renderer.Logger.LogDebug("Creating Graphics Pipeline.");
+
         unsafe {
             _ = Utils.Check(API.Vk.CreateGraphicsPipelines(device.logicalDevice, default, 1, in createInfo, Allocator.allocatorPtr, out graphicsPipeline), renderer.Logger, "Failed to create graphics pipeline", true);
         }

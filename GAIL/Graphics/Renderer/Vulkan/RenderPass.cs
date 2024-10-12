@@ -17,7 +17,7 @@ public class RenderPass : IDisposable {
         
         // Stuff about framebuffers.
         AttachmentDescription colorAttachment = new() {
-            Format = renderer.swapchain!.imageFormat,
+            Format = renderer.Swapchain!.imageFormat,
             Samples = SampleCountFlags.Count1Bit, // NOTE: Can enable MSAA.
 
             LoadOp = AttachmentLoadOp.Clear, // NOTE: Clears framebuffer to black.
@@ -69,6 +69,9 @@ public class RenderPass : IDisposable {
             DependencyCount = 1, // NOTE: The dependencies.
             PDependencies = Pointer<SubpassDependency>.From(ref dependency)
         };
+
+        renderer.Logger.LogDebug("Creating RenderPass.");
+
         unsafe {
             _ = Utils.Check(API.Vk.CreateRenderPass(device.logicalDevice, in createInfo, Allocator.allocatorPtr, out renderPass), renderer.Logger, "Failed to create render pass", true);
         }

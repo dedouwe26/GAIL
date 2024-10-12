@@ -9,7 +9,11 @@ namespace GAIL.Graphics
     /// <summary>
     /// Handles all the graphics of GAIL.
     /// </summary>
-    public class GraphicsManager : IManager {
+    public class GraphicsManager : IDisposable {
+        /// <summary>
+        /// If this manager is already disposed.
+        /// </summary>
+        public bool IsDisposed { get; private set; }
         /// <summary>
         /// The renderer of the graphics manager.
         /// </summary>
@@ -30,13 +34,6 @@ namespace GAIL.Graphics
         }
 
         /// <summary>
-        /// Disposes this graphics manager.
-        /// </summary>
-        ~GraphicsManager() {
-            Dispose();
-        }
-
-        /// <summary>
         /// Initializes the graphics manager.
         /// </summary>
         /// <param name="globals">The globals of this application.</param>
@@ -54,9 +51,21 @@ namespace GAIL.Graphics
             renderer!.Render();
         }
 
+        /// <summary>
+        /// Resizes the graphics on the screen.
+        /// </summary>
+        public void Resize() {
+            renderer!.Resize();
+        }
+
         /// <inheritdoc/>
         public void Dispose() {
+            if (IsDisposed) { return; }
+
             renderer?.Dispose();
+
+            IsDisposed = true;
+            GC.SuppressFinalize(this);
         }
     }
 }
