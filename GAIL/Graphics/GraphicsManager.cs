@@ -1,6 +1,8 @@
 using System.Runtime.InteropServices;
 using GAIL.Core;
+using GAIL.Graphics.Layer;
 using GAIL.Graphics.Renderer;
+using GAIL.Graphics.Renderer.Layer;
 using OxDED.Terminal.Logging;
 using Silk.NET.GLFW;
 
@@ -56,6 +58,20 @@ namespace GAIL.Graphics
         /// </summary>
         public void Update() {
             Renderer!.Render();
+        }
+        public bool CreateBackendLayer<TBackend>(out TBackend? layer) where TBackend : IBackendLayer {
+            if (typeof(TBackend) == typeof(IRasterizationLayer)) {
+                // TODO: Initialize layers.
+
+                return true;
+            }
+            layer = default;
+            return false;
+        }
+        public bool AddLayer<TBackend>(ILayer<TBackend> layer) where TBackend : IBackendLayer {
+            if (!CreateBackendLayer(out TBackend? backendLayer)) return false;
+            if (backendLayer == null) return false;
+            
         }
 
         /// <inheritdoc/>

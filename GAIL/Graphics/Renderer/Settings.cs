@@ -63,38 +63,17 @@ public enum FrontFaceMode {
 /// </summary>
 public abstract class Settings {
     /// <summary>
-    /// The max frames that can be rendered at once.
-    /// </summary>
-    public virtual uint MaxFramesInFlight { get => maxFramesInFlight; set => throw new NotSupportedException(); }
-    /// <summary>
-    /// The max frames that can be rendered at once.
-    /// </summary>
-    protected uint maxFramesInFlight = 2;
-    /// <summary>
-    /// If the renderer should render.
+    /// If the renderer should render. Defaults to true.
     /// </summary>
     /// <remarks>
     /// Will be turned off if the width or the height of window framebuffer is zero.
     /// </remarks>
-    public virtual bool ShouldRender { get => shouldRender; set => throw new NotSupportedException(); }
+    public virtual bool ShouldRender { get => shouldRender; set => shouldRender = value; }
     /// <summary>
-    /// If the renderer should render.
+    /// If the renderer should render. Defaults to true.
     /// </summary>
     /// <remarks>
     /// Will be turned off if the width or the height of window framebuffer is zero.
     /// </remarks>
     protected bool shouldRender = true;
-    /// <summary>
-    /// The color to clear the screen with.
-    /// </summary>
-    public virtual Color ClearValue { get => clearValue; set => throw new NotSupportedException(); }
-    /// <summary>
-    /// The color to clear the screen with.
-    /// </summary>
-    protected Color clearValue = new(0, 0, 0);
-
-    /// <summary>
-    /// Creates a new instance of the settings of a renderer.
-    /// </summary>
-    public Settings() { }
 }

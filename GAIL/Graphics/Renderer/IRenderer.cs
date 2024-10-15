@@ -3,7 +3,7 @@ namespace GAIL.Graphics.Renderer;
 /// <summary>
 /// Represents a class that can render stuff.
 /// </summary>
-public interface IRenderer<TSettings> : IDisposable where TSettings : Settings {
+public interface IRenderer : IDisposable {
     /// <summary>
     /// Renders the current frame.
     /// </summary>
@@ -11,7 +11,7 @@ public interface IRenderer<TSettings> : IDisposable where TSettings : Settings {
     /// <summary>
     /// The settings of the renderer.
     /// </summary>
-    public TSettings Settings { get; }
+    public Settings Settings { get; }
     /// <summary>
     /// Resizes the renderer output.
     /// </summary>

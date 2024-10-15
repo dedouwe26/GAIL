@@ -16,29 +16,12 @@ public class VulkanSettings : Settings {
     public VulkanSettings(VulkanRenderer renderer) {
         this.renderer = renderer;
     }
-    /// <inheritdoc/>
-    public override Color ClearValue { set {
-        renderer.Commands.Dispose();
-        clearValue = value;
-        renderer.Commands = new(renderer);
-    } }
-
-    /// <inheritdoc/>
-    public override uint MaxFramesInFlight { set {
-        renderer.Syncronization.Dispose();
-        renderer.Commands.Dispose();
-        maxFramesInFlight = value;
-        renderer.Commands = new(renderer);
-        renderer.Syncronization = new(renderer);
-    } }
-    /// <inheritdoc/>
-    public override bool ShouldRender { set => shouldRender = value; }
 }
 
 /// <summary>
 /// Represents a renderer that uses the Vulkan Graphics API.
 /// </summary>
-public class VulkanRenderer : IRenderer<VulkanSettings> {
+public class VulkanRenderer : IRenderer {
     /// <summary>
     /// If this class is already disposed.
     /// </summary>
@@ -88,7 +71,7 @@ public class VulkanRenderer : IRenderer<VulkanSettings> {
     private readonly Application.Globals globals;
     private readonly VulkanSettings settings;
     /// <inheritdoc/>
-    public VulkanSettings Settings { get => settings; }
+    public Settings Settings { get => settings; }
 
     /// <summary>
     /// Creates a new Vulkan Renderer.
