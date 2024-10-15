@@ -24,19 +24,19 @@ namespace GAIL.Core
         /// <summary>
         /// The red component of this color (0-1).
         /// </summary>
-        public float R { get => r/255; set => r=Convert.ToByte(Math.Round(value*255)); }
+        public float R { get => r/255f; set => r=Convert.ToByte(Math.Round(value*255)); }
         /// <summary>
         /// The green component of this color (0-1).
         /// </summary>
-        public float G { get => g/255; set => g=Convert.ToByte(Math.Round(value*255)); }
+        public float G { get => g/255f; set => g=Convert.ToByte(Math.Round(value*255)); }
         /// <summary>
         /// The blue component of this color (0-1).
         /// </summary>
-        public float B { get => b/255; set => b=Convert.ToByte(Math.Round(value*255)); }
+        public float B { get => b/255f; set => b=Convert.ToByte(Math.Round(value*255)); }
         /// <summary>
         /// The alpha value of this color (0-1).
         /// </summary>
-        public float A { get => a/255; set => a=Convert.ToByte(Math.Round(value*255)); }
+        public float A { get => a/255f; set => a=Convert.ToByte(Math.Round(value*255)); }
         /// <summary>
         /// Creates a color from RGBa.
         /// </summary>
@@ -56,7 +56,7 @@ namespace GAIL.Core
         /// <param name="r">The red component between 0-255.</param>
         /// <param name="g">The green component between 0-255.</param>
         /// <param name="b">The blue component between 0-255.</param>
-        /// <param name="a">The alpha value between 0-1.</param>
+        /// <param name="a">The alpha value between 0-255.</param>
         public Color(byte r, byte g, byte b, byte a = 255) {
             this.r=r;
             this.g=g;
@@ -80,7 +80,10 @@ namespace GAIL.Core
 
         /// <inheritdoc/>
         public bool Equals(Color? other) {
-            if (other == null) { return false; }
+            if (other is null) { return false; }
+            if (ReferenceEquals(this, other)) { return true; }
+            if (GetType() != other.GetType()) { return false; }
+
             return (r==other.r)&&(g==other.g)&&(b==other.b)&&(a==other.a);
         }
         /// <inheritdoc/>
@@ -90,15 +93,13 @@ namespace GAIL.Core
         
         ///
         public static bool operator ==(Color? a, Color? b) {
-            if (a==null&&b==null) { return true; }
-            if (a==null) { return false; }
-            return a.Equals(b);
+            if (a is null&&b is null) { return true; }
+
+            return a?.Equals(b) ?? false;
         }
         ///
         public static bool operator !=(Color? a, Color? b) {
-            if (a==null&&b==null) { return false; }
-            if (a==null) { return true; }
-            return !a.Equals(b);
+            return !(a==b);
         }
         /// <inheritdoc/>
         public override int GetHashCode() { return (r<<24)^(g<<16)^(b<<8)^(a); }

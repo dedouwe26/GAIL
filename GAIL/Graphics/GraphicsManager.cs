@@ -17,7 +17,11 @@ namespace GAIL.Graphics
         /// <summary>
         /// The renderer of the graphics manager.
         /// </summary>
-        public VulkanRenderer? renderer;
+        public VulkanRenderer? Renderer { get; private set; }
+        /// <summary>
+        /// The settings of the renderer.
+        /// </summary>
+        public Settings Settings { get => Renderer!.Settings; }
 
         /// <summary>
         /// The logger corresponding to the graphics part of the application.
@@ -30,7 +34,6 @@ namespace GAIL.Graphics
         /// <param name="logger">The logger to use.</param>
         public GraphicsManager(Logger logger) {
             Logger = logger;
-            
         }
 
         /// <summary>
@@ -42,27 +45,24 @@ namespace GAIL.Graphics
         public void Init(Application.Globals globals, AppInfo appInfo) {
             Logger.LogDebug("Initalizing Graphics.");
 
-            renderer = new VulkanRenderer(Logger, globals, appInfo);
+            Renderer = new VulkanRenderer(Logger, globals, appInfo);
+
+            globals.windowManager.OnFramebufferResize += (int width, int height) => {
+                Renderer.Resize(width, height);
+            };
         }
         /// <summary>
         /// Updates the graphics on the screen.
         /// </summary>
         public void Update() {
-            renderer!.Render();
-        }
-
-        /// <summary>
-        /// Resizes the graphics on the screen.
-        /// </summary>
-        public void Resize() {
-            renderer!.Resize();
+            Renderer!.Render();
         }
 
         /// <inheritdoc/>
         public void Dispose() {
             if (IsDisposed) { return; }
 
-            renderer?.Dispose();
+            Renderer?.Dispose();
 
             IsDisposed = true;
             GC.SuppressFinalize(this);

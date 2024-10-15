@@ -17,9 +17,9 @@ public class Syncronization : IDisposable {
         
         renderer.Logger.LogDebug("Creating Sync Objects.");
 
-        imageAvailable = CreateSemaphore(renderer.MaxFramesInFlight);
-        renderFinished = CreateSemaphore(renderer.MaxFramesInFlight);
-        inFlight = CreateFence(renderer.MaxFramesInFlight, true);
+        imageAvailable = CreateSemaphore(renderer.Settings.MaxFramesInFlight);
+        renderFinished = CreateSemaphore(renderer.Settings.MaxFramesInFlight);
+        inFlight = CreateFence(renderer.Settings.MaxFramesInFlight, true);
     }
     public void WaitForFrame(uint currentFrame) {
         API.Vk.WaitForFences(device.logicalDevice, 1, in inFlight[currentFrame], true, ulong.MaxValue);

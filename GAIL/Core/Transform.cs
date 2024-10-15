@@ -19,7 +19,10 @@ namespace GAIL.Core
         
         /// <inheritdoc/>
         public bool Equals(Transform? other) {
-            if (other == null) { return false; }
+            if (other is null) { return false; }
+            if (ReferenceEquals(this, other)) { return true; }
+            if (GetType() != other.GetType()) { return false; }
+
             return translation == other.translation && scale == other.scale && rotation == other.rotation;
         }
         /// <inheritdoc/>
@@ -29,15 +32,13 @@ namespace GAIL.Core
 
         ///
         public static bool operator ==(Transform? a, Transform? b) {
-            if (a==null&&b==null) { return true; }
-            if (a==null) { return false; }
-            return a.Equals(b);
+            if (a is null&&b is null) { return true; }
+
+            return a?.Equals(b) ?? false;
         }
         ///
         public static bool operator !=(Transform? a, Transform? b) {
-            if (a==null&&b==null) { return false; }
-            if (a==null) { return true; }
-            return !a.Equals(b);
+            return !(a==b);
         }
     }
 }

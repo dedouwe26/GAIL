@@ -2,6 +2,7 @@
 using GAIL.Input;
 using OxDED.Terminal;
 using OxDED.Terminal.Logging;
+using Silk.NET.Vulkan;
 
 namespace examples.HelloTriangle
 {
@@ -43,10 +44,30 @@ namespace examples.HelloTriangle
                     app.Stop();
                 }
             };
+
+            // Add listeners for graphics settings.
+            app.InputManager.OnKeyDown += (Key key) => {
+                if (key == Key.Equals) {
+                    app.GraphicsManager.Settings.MaxFramesInFlight++;
+
+                    Logger.LogDebug("Max frames in flight is set to: "+app.GraphicsManager.Settings.MaxFramesInFlight);
+                } else if (key == Key.Minus) {
+                    app.GraphicsManager.Settings.MaxFramesInFlight--;
+                    
+                    Logger.LogDebug("Max frames in flight is set to: "+app.GraphicsManager.Settings.MaxFramesInFlight);
+                }
+
+                else if (key == Key.Space) {
+                    app.GraphicsManager.Settings.ShouldRender = !app.GraphicsManager.Settings.ShouldRender;
+
+                    Logger.LogDebug("Should render is set to: "+app.GraphicsManager.Settings.ShouldRender);
+                }
+            };
         }
         private static uint frameCount = 0;
         private static double timePassed = 0;
         public static void Update(GAIL.Application app, double deltaTime) {
+            // Counts the amount of updates (frameCount) in one second (timepassed == 1).
             timePassed += deltaTime;
             frameCount++;
 

@@ -215,9 +215,9 @@ namespace GAIL.Graphics.Renderer.Vulkan
                 return indices;
             }
         }
-
+        public bool shouldRecreateSwapchain = false;
         public bool Present(VulkanRenderer renderer, ref uint imageIndex) {
-            Silk.NET.Vulkan.Semaphore[] signals = [renderer.syncronization.renderFinished[renderer.CurrentFrame]];
+            Silk.NET.Vulkan.Semaphore[] signals = [renderer.Syncronization.renderFinished[renderer.CurrentFrame]];
             SwapchainKHR[] swapchains = [renderer.Swapchain.swapchain];
 
             PresentInfoKHR presentInfo = new() {
@@ -233,6 +233,8 @@ namespace GAIL.Graphics.Renderer.Vulkan
             Result result = renderer.Swapchain.extension.QueuePresent(presentQueue, presentInfo);
 
             if (result == Result.ErrorOutOfDateKhr || result == Result.SuboptimalKhr) {
+                // if (shouldRecreateSwapchain) { Logger.LogDebug("Goes via shouldRecreateSwapchain."); }
+                shouldRecreateSwapchain = false;
                 return false;
             } else {
                 _ = Utils.Check(result, renderer.Logger, "Failed to present", true);

@@ -41,7 +41,7 @@ namespace GAIL.Graphics.Renderer.Vulkan
 
         public uint? AcquireNextImage(VulkanRenderer renderer) {
             uint index = default;
-            Result result = extension.AcquireNextImage(device.logicalDevice, swapchain, ulong.MaxValue, renderer.syncronization.imageAvailable[renderer.CurrentFrame], default, ref index);
+            Result result = extension.AcquireNextImage(device.logicalDevice, swapchain, ulong.MaxValue, renderer.Syncronization.imageAvailable[renderer.CurrentFrame], default, ref index);
             
             if (result == Result.ErrorOutOfDateKhr) {
                 return null;

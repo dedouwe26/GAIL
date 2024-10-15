@@ -1,29 +1,21 @@
 namespace GAIL.Graphics.Renderer;
 
 /// <summary>
-/// The settings of the current renderer.
-/// </summary>
-public struct Settings {
-    /// <summary>
-    /// The max frames that can be rendered at once.
-    /// </summary>
-    public uint MaxFramesInFlight;
-}
-
-/// <summary>
 /// Represents a class that can render stuff.
 /// </summary>
-public interface IRenderer : IDisposable {
+public interface IRenderer<TSettings> : IDisposable where TSettings : Settings {
     /// <summary>
     /// Renders the current frame.
     /// </summary>
     public void Render();
     /// <summary>
-    /// Updates the configuration of the current renderer.
+    /// The settings of the renderer.
     /// </summary>
-    public void UpdateSettings(Settings newSettings);
+    public TSettings Settings { get; }
     /// <summary>
     /// Resizes the renderer output.
     /// </summary>
-    public void Resize();
+    /// <param name="width">The new width.</param>
+    /// <param name="height">The new height.</param>
+    public void Resize(int width, int height);
 }

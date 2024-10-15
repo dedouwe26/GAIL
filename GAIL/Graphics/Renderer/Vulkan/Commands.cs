@@ -29,7 +29,7 @@ public class Commands : IDisposable {
             }
         }
 
-        commandBuffers = new CommandBuffer[renderer.MaxFramesInFlight];
+        commandBuffers = new CommandBuffer[renderer.Settings.MaxFramesInFlight];
 
         // Command buffers
         CommandBufferAllocateInfo allocateInfo = new() {
@@ -37,12 +37,12 @@ public class Commands : IDisposable {
 
             CommandPool = commandPool,
             Level = CommandBufferLevel.Primary, // NOTE: Primary: Can be submitted to a queue, secondary: can be called from the primary (e.g. reusability).
-            CommandBufferCount = renderer.MaxFramesInFlight
+            CommandBufferCount = renderer.Settings.MaxFramesInFlight
         };
 
         renderer.Logger.LogDebug("Allocating Command Buffers.");
 
-        commandBuffers = new CommandBuffer[renderer.MaxFramesInFlight];
+        commandBuffers = new CommandBuffer[renderer.Settings.MaxFramesInFlight];
         unsafe {
             _ = Utils.Check(API.Vk.AllocateCommandBuffers(device.logicalDevice, allocateInfo, Pointer<CommandBuffer>.FromArray(ref commandBuffers)), renderer.Logger, "Failed to allocate command buffer", true);
         }
@@ -54,9 +54,9 @@ public class Commands : IDisposable {
 
     public void Submit(VulkanRenderer renderer) {
         PipelineStageFlags[] waitStages = [PipelineStageFlags.ColorAttachmentOutputBit];
-        Silk.NET.Vulkan.Semaphore[] waitSemaphores = [renderer.syncronization.imageAvailable[renderer.CurrentFrame]];
+        Silk.NET.Vulkan.Semaphore[] waitSemaphores = [renderer.Syncronization.imageAvailable[renderer.CurrentFrame]];
         
-        Silk.NET.Vulkan.Semaphore[] signalSemaphores = [renderer.syncronization.renderFinished[renderer.CurrentFrame]];
+        Silk.NET.Vulkan.Semaphore[] signalSemaphores = [renderer.Syncronization.renderFinished[renderer.CurrentFrame]];
 
         SubmitInfo submitInfo = new() {
             SType = StructureType.SubmitInfo,
@@ -72,7 +72,7 @@ public class Commands : IDisposable {
             PSignalSemaphores = Pointer<Silk.NET.Vulkan.Semaphore>.FromArray(ref signalSemaphores)
         };
 
-        _ = Utils.Check(API.Vk.QueueSubmit(renderer.device.graphicsQueue, [submitInfo], renderer.syncronization.inFlight[renderer.CurrentFrame]), renderer.Logger, "Failed to submit draw command buffer", true);
+        _ = Utils.Check(API.Vk.QueueSubmit(renderer.device.graphicsQueue, [submitInfo], renderer.Syncronization.inFlight[renderer.CurrentFrame]), renderer.Logger, "Failed to submit draw command buffer", true);
     }
 
     public static void RecordCommandBuffer(VulkanRenderer renderer, CommandBuffer buffer, ref Framebuffer swapchainImage) {
@@ -90,7 +90,7 @@ public class Commands : IDisposable {
         
         { // Command Begin RenderPass
             // TODO: Make changable
-            ClearValue clearValue = new(new(float32_0:0, float32_1:0,float32_2:0, float32_3: 1));
+            ClearValue clearValue = new(new(float32_0:renderer.Settings.ClearValue.R, float32_1:renderer.Settings.ClearValue.G,float32_2:renderer.Settings.ClearValue.B, float32_3: renderer.Settings.ClearValue.A));
             // NOTE: Clear values for load operation clear.
 
             RenderPassBeginInfo renderPassInfo = new() {

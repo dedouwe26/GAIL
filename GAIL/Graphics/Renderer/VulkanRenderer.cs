@@ -5,26 +5,53 @@ using OxDED.Terminal.Logging;
 namespace GAIL.Graphics.Renderer;
 
 /// <summary>
+/// The settings implementation for Vulkan.
+/// </summary>
+public class VulkanSettings : Settings {
+    private readonly VulkanRenderer renderer;
+    /// <summary>
+    /// Creates an vulkan settings instance.
+    /// </summary>
+    /// <param name="renderer">The renderer of these settings.</param>
+    public VulkanSettings(VulkanRenderer renderer) {
+        this.renderer = renderer;
+    }
+    /// <inheritdoc/>
+    public override Color ClearValue { set {
+        renderer.Commands.Dispose();
+        clearValue = value;
+        renderer.Commands = new(renderer);
+    } }
+
+    /// <inheritdoc/>
+    public override uint MaxFramesInFlight { set {
+        renderer.Syncronization.Dispose();
+        renderer.Commands.Dispose();
+        maxFramesInFlight = value;
+        renderer.Commands = new(renderer);
+        renderer.Syncronization = new(renderer);
+    } }
+    /// <inheritdoc/>
+    public override bool ShouldRender { set => shouldRender = value; }
+}
+
+/// <summary>
 /// Represents a renderer that uses the Vulkan Graphics API.
 /// </summary>
-public class VulkanRenderer : IRenderer {
+public class VulkanRenderer : IRenderer<VulkanSettings> {
     /// <summary>
     /// If this class is already disposed.
     /// </summary>
     public bool IsDisposed { get; private set; }
     /// <summary>
-    /// The maximum amount of frames that can be rendered at a time.
-    /// </summary>
-    public uint MaxFramesInFlight { get; private set; }
-    /// <summary>
     /// The current in flight frame.
     /// </summary>
     /// <remarks>
-    /// CurrentFrame cannot be higher than <see cref="MaxFramesInFlight"/>.
+    /// CurrentFrame cannot be higher than <see cref="Settings.MaxFramesInFlight"/>.
     /// </remarks>
     public uint CurrentFrame { get; private set; }
     internal Logger Logger;
-    
+
     /// <summary>
     /// The vulkan devices utility, for custom usage.
     /// </summary>
@@ -49,16 +76,19 @@ public class VulkanRenderer : IRenderer {
     /// <summary>
     /// The vulkan syncronization utility, for custom usage.
     /// </summary>
-    public readonly Syncronization syncronization;
+    public Syncronization Syncronization { get; internal set; }
     /// <summary>
     /// The vulkan commandbuffer and command pool utility, for custom usage.
     /// </summary>
-    public readonly Commands commands;
+    public Commands Commands { get; internal set; }
     /// <summary>
     /// The vulkan instance utility, for custom usage.
     /// </summary>
     public readonly Instance instance;
     private readonly Application.Globals globals;
+    private readonly VulkanSettings settings;
+    /// <inheritdoc/>
+    public VulkanSettings Settings { get => settings; }
 
     /// <summary>
     /// Creates a new Vulkan Renderer.
@@ -68,15 +98,13 @@ public class VulkanRenderer : IRenderer {
     /// <param name="appInfo">The application info.</param>
     public VulkanRenderer(Logger logger, Application.Globals globals, AppInfo appInfo) {
         this.globals = globals;
+        settings = new(this);
 
         Logger = logger;
         if (!API.Glfw.VulkanSupported()) {
             Logger.LogFatal("Vulkan: Not Supported!");
             throw new APIBackendException("Vulkan", "Not Supported");
         }
-
-        // TODO: Temporary
-        MaxFramesInFlight = 4;
 
         Logger.LogDebug("Starting Vulkan.");
 
@@ -86,19 +114,22 @@ public class VulkanRenderer : IRenderer {
         Swapchain = new SwapChain(this, globals.windowManager);
 
         renderPass = new RenderPass(this);
+        Swapchain.CreateFramebuffers(renderPass);
 
         // TODO: Temporary
         pipeline = new Pipeline(this, Shaders.CreateShader(this, File.ReadAllBytes("examples/HelloTriangle/vert.spv"), File.ReadAllBytes("examples/HelloTriangle/frag.spv"))!);
 
-        Swapchain.CreateFramebuffers(renderPass);
-        commands = new Commands(this);
-        syncronization = new Syncronization(this);
+        Commands = new Commands(this);
+        Syncronization = new Syncronization(this);
 
         Logger.LogDebug("Done setting up Vulkan.");
     }
     /// <inheritdoc/>
     public void Render() {
-        syncronization.WaitForFrame(CurrentFrame);
+        if (!settings.ShouldRender) return;
+
+
+        Syncronization.WaitForFrame(CurrentFrame);
 
         uint imageIndex;
         {
@@ -112,28 +143,29 @@ public class VulkanRenderer : IRenderer {
             }
         }
 
-        syncronization.Reset(CurrentFrame);
+        Syncronization.Reset(CurrentFrame);
 
-        commands.Record(
+        Commands.Record(
             this,
             ref Swapchain.frameBuffers![imageIndex]
         );
-        commands.Submit(this);
+        Commands.Submit(this);
         
         if (!device.Present(this, ref imageIndex)) {
             RecreateSwapchain();
         }
 
-        CurrentFrame = (CurrentFrame+1)%MaxFramesInFlight;
-    }
-    /// <inheritdoc/>
-    public void UpdateSettings(Settings newSettings) {
-
+        CurrentFrame = (CurrentFrame+1)%settings.MaxFramesInFlight;
     }
 
     /// <inheritdoc/>
-    public void Resize() {
-        RecreateSwapchain();
+    public void Resize(int width, int height) {
+        if (width == 0 || width == 0) {
+            settings.ShouldRender = false;
+        } else if (!settings.ShouldRender) {
+            settings.ShouldRender = true;
+        }
+        device.shouldRecreateSwapchain = true;
     }
 
     
@@ -153,8 +185,8 @@ public class VulkanRenderer : IRenderer {
         device.WaitIdle();
         
         Logger.LogDebug("Terminating Vulkan.");
-        syncronization.Dispose();
-        commands.Dispose();
+        Syncronization.Dispose();
+        Commands.Dispose();
         pipeline.Dispose();
         renderPass.Dispose();
         Swapchain.Dispose();

@@ -19,11 +19,15 @@ namespace GAIL.Window
         public readonly Logger Logger;
 
         /// <summary>
-        /// Event for when the window resized.
+        /// Event for when the framebuffer has resized.
+        /// </summary>
+        public event FramebufferResizeCallback? OnFramebufferResize;
+        /// <summary>
+        /// Event for when the window has resized.
         /// </summary>
         public event WindowResizeCallback? OnWindowResize;
         /// <summary>
-        /// Event for when the window moved.
+        /// Event for when the window has moved.
         /// </summary>
         public event WindowMoveCallback? OnWindowMove;
         /// <summary>
@@ -70,6 +74,7 @@ namespace GAIL.Window
                 throw new APIBackendException("GLFW", "window creation failed!");
             }
             unsafe {
+                
                 API.Glfw.SetWindowPosCallback(Window,
                     (WindowHandle* window, int xpos, int ypos) => {
                         OnWindowMove?.Invoke(xpos, ypos);
@@ -78,6 +83,11 @@ namespace GAIL.Window
                 API.Glfw.SetWindowSizeCallback(Window,
                     (WindowHandle* window, int width, int height) => {
                         OnWindowResize?.Invoke(width, height, 0, 0);
+                    }
+                );
+                API.Glfw.SetFramebufferSizeCallback(Window,
+                    (WindowHandle* window, int width, int height) => {
+                        OnFramebufferResize?.Invoke(width, height);
                     }
                 );
                 API.Glfw.SetWindowIconifyCallback(Window,
@@ -186,7 +196,21 @@ namespace GAIL.Window
             unsafe {
                 API.Glfw.SetWindowAttrib(Window, WindowAttributeSetter.Resizable, value);
             }
-        }}
+        } }
+
+        /// <summary>
+        /// Gets / sets the opacity (alpha value) of the window.
+        /// Can only be between 0 and 1.
+        /// </summary>
+        public float Opacity { get {
+            unsafe {
+                return API.Glfw.GetWindowOpacity(Window);
+            }
+        } set {
+            unsafe {
+                API.Glfw.SetWindowOpacity(Window, Math.Clamp(value, 0f, 1f));
+            }
+        } }
 
         // TODO: public bool Decorated {get set}
 
