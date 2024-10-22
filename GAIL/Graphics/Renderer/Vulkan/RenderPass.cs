@@ -10,7 +10,7 @@ public class RenderPass : IDisposable {
     /// </summary>
     public bool IsDisposed { get; private set; }
     public readonly Silk.NET.Vulkan.RenderPass renderPass;
-    public readonly uint graphicsPipelineSubpass;
+    public readonly uint[] graphicsPipelineSubpass;
     private readonly Device device;
     public RenderPass(VulkanRenderer renderer) {
         device = renderer.device;
@@ -20,8 +20,23 @@ public class RenderPass : IDisposable {
             Format = renderer.Swapchain!.imageFormat,
             Samples = SampleCountFlags.Count1Bit, // NOTE: Can enable MSAA.
 
-            LoadOp = AttachmentLoadOp.Clear, // NOTE: Clears framebuffer to black.
-            StoreOp = AttachmentStoreOp.Store, // NOTE: Stores the rendered frame in the framebuffer.
+            LoadOp = AttachmentLoadOp.Clear, // NOTE: Clears framebuffer to black (beginning of frame).
+            StoreOp = AttachmentStoreOp.Store, // NOTE: Stores the rendered frame in the framebuffer (end of frame).
+
+            StencilLoadOp = AttachmentLoadOp.DontCare, // NOTE: Depth buffers (ignored, because it is a color format).
+            StencilStoreOp = AttachmentStoreOp.DontCare,
+
+            InitialLayout = ImageLayout.Undefined,
+            FinalLayout = ImageLayout.PresentSrcKhr // NOTE: The layout of the image bytes. In this case the layout for the swapchain.
+        };
+
+        // Stuff about framebuffers.
+        AttachmentDescription stencilAttachment = new() {
+            Format = Format.,
+            Samples = SampleCountFlags.Count1Bit, // NOTE: Can enable MSAA.
+
+            LoadOp = AttachmentLoadOp.Clear, // NOTE: Clears framebuffer to black (beginning of frame).
+            StoreOp = AttachmentStoreOp.Store, // NOTE: Stores the rendered frame in the framebuffer (end of frame).
 
             StencilLoadOp = AttachmentLoadOp.DontCare, // NOTE: Depth buffers.
             StencilStoreOp = AttachmentStoreOp.DontCare,
@@ -42,6 +57,7 @@ public class RenderPass : IDisposable {
 
             ColorAttachmentCount = 1, // Attachment reference
             PColorAttachments = Pointer<AttachmentReference>.From(ref colorAttachmentRef),
+            P
         };
         graphicsPipelineSubpass = 0;
 

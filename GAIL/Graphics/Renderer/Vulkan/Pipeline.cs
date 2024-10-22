@@ -1,5 +1,5 @@
-using System.Reflection;
 using GAIL.Core;
+using GAIL.Graphics.Renderer.Vulkan.Layer;
 using Silk.NET.Vulkan;
 
 namespace GAIL.Graphics.Renderer.Vulkan;
@@ -10,8 +10,10 @@ public class Pipeline : IDisposable {
     public bool IsDisposed { get; private set; }
     private readonly Device device;
 
-    public Pipeline(VulkanRenderer renderer, Shaders shaders) {
-        device = renderer.device!;
+    public readonly PipelineBindPoint Type = PipelineBindPoint.Graphics;
+
+    public Pipeline(VulkanRasterizationLayer layer) {
+        device = layer.Renderer.device;
 
         // Fixed function stages.
 
@@ -34,7 +36,7 @@ public class Pipeline : IDisposable {
         // The scissor of the viewport.
         Rect2D scissor = new() {
             Offset = { X = 0, Y = 0 },
-            Extent = renderer.Swapchain!.extent,
+            Extent = layer.Renderer.Swapchain!.extent,
         };
 
         // NOTE: Using dynamic state so we don't have to specify the viewport.
@@ -69,7 +71,23 @@ public class Pipeline : IDisposable {
             SType = StructureType.PipelineMultisampleStateCreateInfo,
             SampleShadingEnable = false, // NOTE: Can enable MSAA.
             RasterizationSamples = SampleCountFlags.Count1Bit // NOTE: Can define the count of MSAA.
-            // MSAA: ...
+            // TODO: MSAA: ...
+        };
+
+        PipelineDepthStencilStateCreateInfo depthStencilInfo = new() {
+            SType = StructureType.PipelineDepthStencilStateCreateInfo,
+
+            DepthTestEnable = false,
+            DepthWriteEnable = false,
+            DepthCompareOp = CompareOp.Less, // TODO: ???
+
+            DepthBoundsTestEnable = false, // TODO: ???
+            MinDepthBounds = 0,
+            MaxDepthBounds = 1,
+
+            StencilTestEnable = false,
+            // Front = ...,
+            // Back = ...
         };
 
         // Color blending state.
@@ -114,10 +132,12 @@ public class Pipeline : IDisposable {
             PPushConstantRanges = Pointer<PushConstantRange>.FromNull()
         };
 
-        renderer.Logger.LogDebug("Creating Pipeline Layout.");
+        layer.Logger.LogDebug("Creating Pipeline Layout.");
 
         unsafe {
-            _ = Utils.Check(API.Vk.CreatePipelineLayout(device.logicalDevice, layoutInfo, Allocator.allocatorPtr, out layout), renderer.Logger, "Failed to create the pipeline layout", true);
+            if (!Utils.Check(API.Vk.CreatePipelineLayout(device.logicalDevice, layoutInfo, Allocator.allocatorPtr, out layout), layer.Logger, "Failed to create the pipeline layout", false)) {
+                throw new APIBackendException("Vulkan", "Failed to create the pipeline layout");
+            }
         }
 
         
@@ -126,34 +146,34 @@ public class Pipeline : IDisposable {
         GraphicsPipelineCreateInfo createInfo = new() {
             SType = StructureType.GraphicsPipelineCreateInfo,
 
-            StageCount = Convert.ToUInt32(shaders.stages!.Length),
-            PStages = Pointer<PipelineShaderStageCreateInfo>.FromArray(ref shaders.stages),
+            StageCount = Convert.ToUInt32(layer.Settings.Shaders.stages!.Length),
+            PStages = Pointer<PipelineShaderStageCreateInfo>.FromArray(ref layer.Settings.Shaders.stages),
 
             PVertexInputState = Pointer<PipelineVertexInputStateCreateInfo>.From(ref vertexInputInfo),
             PInputAssemblyState = Pointer<PipelineInputAssemblyStateCreateInfo>.From(ref inputAssemblyInfo),
             PViewportState = Pointer<PipelineViewportStateCreateInfo>.From(ref viewportInfo),
             PRasterizationState = Pointer<PipelineRasterizationStateCreateInfo>.From(ref rasterizerInfo),
             PMultisampleState = Pointer<PipelineMultisampleStateCreateInfo>.From(ref multisamplingInfo),
-            PDepthStencilState = Pointer<PipelineDepthStencilStateCreateInfo>.FromNull(),
+            PDepthStencilState = Pointer<PipelineDepthStencilStateCreateInfo>.From(ref depthStencilInfo),
             PColorBlendState = Pointer<PipelineColorBlendStateCreateInfo>.From(ref colorBlendStateInfo),
             PDynamicState = Pointer<PipelineDynamicStateCreateInfo>.From(ref dynamicStateInfo),
 
             Layout = layout,
 
-            RenderPass = renderer.renderPass!.renderPass,
-            Subpass = renderer.renderPass!.graphicsPipelineSubpass, // NOTE: Index of subpass where the graphics pipeline will be used.
+            RenderPass = layer.Renderer.renderPass!.renderPass,
+            Subpass = layer.Renderer.renderPass!.graphicsPipelineSubpass, // NOTE: Index of subpass where the graphics pipeline will be used.
             
             BasePipelineHandle = default,
             BasePipelineIndex = -1 // NOTE: Can make pipeline derive from another, to make creating another one less expensive.
         };
 
-        renderer.Logger.LogDebug("Creating Graphics Pipeline.");
+        layer.Renderer.Logger.LogDebug("Creating Graphics Pipeline.");
 
         unsafe {
-            _ = Utils.Check(API.Vk.CreateGraphicsPipelines(device.logicalDevice, default, 1, in createInfo, Allocator.allocatorPtr, out graphicsPipeline), renderer.Logger, "Failed to create graphics pipeline", true);
+            if (!Utils.Check(API.Vk.CreateGraphicsPipelines(device.logicalDevice, default, 1, in createInfo, Allocator.allocatorPtr, out graphicsPipeline), layer.Renderer.Logger, "Failed to create graphics pipeline", false)) {
+                throw new APIBackendException("Vulkan", "Failed to create graphics pipeline");
+            }
         }
-
-        shaders.Dispose();
     }
 
     /// <inheritdoc/>

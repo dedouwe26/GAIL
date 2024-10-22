@@ -1,5 +1,6 @@
 using System.Reflection;
 using GAIL.Core;
+using GAIL.Graphics.Renderer.Vulkan.Layer;
 using OxDED.Terminal.Logging;
 using Silk.NET.Vulkan;
 
@@ -25,7 +26,9 @@ public class Commands : IDisposable {
 
             renderer.Logger.LogDebug("Creating Command Pool.");
             unsafe {
-                _ = Utils.Check(API.Vk.CreateCommandPool(device.logicalDevice, createInfo, Allocator.allocatorPtr, out commandPool), renderer.Logger, "Failed to create commandpool", true);
+                if (!Utils.Check(API.Vk.CreateCommandPool(device.logicalDevice, createInfo, Allocator.allocatorPtr, out commandPool), renderer.Logger, "Failed to create commandpool", false)) {
+                    throw new APIBackendException("Vulkan", "Failed to create commandpool");
+                }
             }
         }
 
@@ -44,12 +47,10 @@ public class Commands : IDisposable {
 
         commandBuffers = new CommandBuffer[renderer.Settings.MaxFramesInFlight];
         unsafe {
-            _ = Utils.Check(API.Vk.AllocateCommandBuffers(device.logicalDevice, allocateInfo, Pointer<CommandBuffer>.FromArray(ref commandBuffers)), renderer.Logger, "Failed to allocate command buffer", true);
+            if (!Utils.Check(API.Vk.AllocateCommandBuffers(device.logicalDevice, allocateInfo, Pointer<CommandBuffer>.FromArray(ref commandBuffers)), renderer.Logger, "Failed to allocate command buffer", false)) {
+                throw new APIBackendException("Vulkan", "Failed to allocate command buffer");
+            }
         }
-    }
-    
-    public void Record(VulkanRenderer renderer, ref Framebuffer swapchainImage) {
-        RecordCommandBuffer(renderer, commandBuffers[renderer.CurrentFrame], ref swapchainImage);
     }
 
     public void Submit(VulkanRenderer renderer) {
@@ -74,22 +75,48 @@ public class Commands : IDisposable {
 
         _ = Utils.Check(API.Vk.QueueSubmit(renderer.device.graphicsQueue, [submitInfo], renderer.Syncronization.inFlight[renderer.CurrentFrame]), renderer.Logger, "Failed to submit draw command buffer", true);
     }
+    
+    public void BeginRecord(VulkanRenderer renderer, ref Framebuffer swapchainImage) {
+        BeginCommandBuffer(renderer, commandBuffers[renderer.CurrentFrame], ref swapchainImage);
+    }
 
-    public static void RecordCommandBuffer(VulkanRenderer renderer, CommandBuffer buffer, ref Framebuffer swapchainImage) {
+    public void BindPipeline(VulkanRenderer renderer, Pipeline pipeline) {
+        API.Vk.CmdBindPipeline(commandBuffers[renderer.CurrentFrame], pipeline.Type, pipeline.graphicsPipeline);
+    }
+    public void Draw(VulkanRenderer renderer, uint vertexCount, uint instanceCount = 1, uint firstVertex = 0, uint firstInstance = 0) {
+        API.Vk.CmdDraw(commandBuffers[renderer.CurrentFrame], vertexCount, instanceCount, firstVertex, firstInstance);
+    }
+    public void SetDynamicStates(VulkanRenderer renderer) {
+        Viewport viewport = new() {
+            X = 0,
+            Y = 0,
+            Width = renderer.Swapchain.extent.Width,
+            Height = renderer.Swapchain.extent.Height,
+            MinDepth = 0,
+            MaxDepth = 0
+        };
+        // TODO: Make faster: every frame recreating viewport.
+        API.Vk.CmdSetViewport(commandBuffers[renderer.CurrentFrame], 0, 1, in viewport);
+    }
+
+    public void EndRecord(VulkanRenderer renderer) {
+        EndCommandBuffer(renderer, commandBuffers[renderer.CurrentFrame]);
+    }
+
+    public static void BeginCommandBuffer(VulkanRenderer renderer, CommandBuffer buffer, ref Framebuffer swapchainImage) {
         API.Vk.ResetCommandBuffer(buffer, CommandBufferResetFlags.None);
         
         { // Begin CommandBuffer
             CommandBufferBeginInfo beginInfo = new() {
                 SType = StructureType.CommandBufferBeginInfo,
-                Flags = 0,
+                Flags = CommandBufferUsageFlags.None,
                 PInheritanceInfo = Pointer<CommandBufferInheritanceInfo>.FromNull() // NOTE: Only relevant for secondary buffers.
             };
 
-            _ = Utils.Check(API.Vk.BeginCommandBuffer(buffer, beginInfo), renderer.Logger, "Failed to begin recording the command buffer", true);
+            _ = Utils.Check(API.Vk.BeginCommandBuffer(buffer, beginInfo), renderer.Logger, "Failed to begin recording a command buffer", true);
         }
         
         { // Command Begin RenderPass
-            // TODO: Make changable
             ClearValue clearValue = new(new(float32_0:renderer.Settings.ClearValue.R, float32_1:renderer.Settings.ClearValue.G,float32_2:renderer.Settings.ClearValue.B, float32_3: renderer.Settings.ClearValue.A));
             // NOTE: Clear values for load operation clear.
 
@@ -108,26 +135,9 @@ public class Commands : IDisposable {
             API.Vk.CmdBeginRenderPass(buffer, renderPassInfo, SubpassContents.Inline);
             // NOTE: Inline: renderpass setup commands will be embedded in the primary command buffer.
         }
+    }
 
-        { // Command Bind Pipeline
-            // NOTE: Binding a *graphics* pipeline.
-            API.Vk.CmdBindPipeline(buffer, PipelineBindPoint.Graphics, renderer.pipeline.graphicsPipeline);
-
-            // NOTE: The viewport state is specified as a dynamic state.
-            Viewport viewport = new() {
-                X = 0,
-                Y = 0,
-                Width = renderer.Swapchain.extent.Width,
-                Height = renderer.Swapchain.extent.Height,
-                MinDepth = 0,
-                MaxDepth = 0
-            };
-            API.Vk.CmdSetViewport(buffer, 0, 1, in viewport);
-        }
-
-        // TODO: Temporary
-        API.Vk.CmdDraw(buffer, 3, 1, 0, 0);
-
+    public static void EndCommandBuffer(VulkanRenderer renderer, CommandBuffer buffer) {
         API.Vk.CmdEndRenderPass(buffer);
 
         _ = Utils.Check(API.Vk.EndCommandBuffer(buffer), renderer.Logger, "Failed to record a command buffer", true);

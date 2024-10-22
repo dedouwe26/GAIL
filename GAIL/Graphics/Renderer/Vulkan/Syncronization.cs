@@ -7,8 +7,17 @@ public class Syncronization : IDisposable {
     private readonly Device device;
     private readonly Logger Logger;
     
-    public readonly Silk.NET.Vulkan.Semaphore[] imageAvailable;
+    /// <summary>
+    /// The render finished semaphores, for custom usage.
+    /// </summary>
     public readonly Silk.NET.Vulkan.Semaphore[] renderFinished;
+    /// <summary>
+    /// The image available semaphores, for custom usage.
+    /// </summary>    
+    public readonly Silk.NET.Vulkan.Semaphore[] imageAvailable;
+    /// <summary>
+    /// The frame in flight fences, for custom usage.
+    /// </summary>
     public readonly Fence[] inFlight;
     public bool IsDisposed { get; private set; }
     public Syncronization(VulkanRenderer renderer) {
@@ -16,16 +25,31 @@ public class Syncronization : IDisposable {
         Logger = renderer.Logger;
         
         renderer.Logger.LogDebug("Creating Sync Objects.");
-
-        imageAvailable = CreateSemaphore(renderer.Settings.MaxFramesInFlight);
+        
         renderFinished = CreateSemaphore(renderer.Settings.MaxFramesInFlight);
+        imageAvailable = CreateSemaphore(renderer.Settings.MaxFramesInFlight);
         inFlight = CreateFence(renderer.Settings.MaxFramesInFlight, true);
     }
     public void WaitForFrame(uint currentFrame) {
-        API.Vk.WaitForFences(device.logicalDevice, 1, in inFlight[currentFrame], true, ulong.MaxValue);
+        _ = Utils.Check(API.Vk.WaitForFences(device.logicalDevice, 1, in inFlight[currentFrame], true, ulong.MaxValue), Logger, "Failed to wait for in flight fence", true);
     }
     public void Reset(uint currentFrame) {
-        API.Vk.ResetFences(device.logicalDevice, 1, in inFlight[currentFrame]);
+        _ = Utils.Check(API.Vk.ResetFences(device.logicalDevice, 1, in inFlight[currentFrame]), Logger, "Failed to reset in flight fence", true);
+    }
+    public Silk.NET.Vulkan.Semaphore[] CreateSemaphore(uint size) {
+        Silk.NET.Vulkan.Semaphore[] semaphores = new Silk.NET.Vulkan.Semaphore[size];
+
+        SemaphoreCreateInfo createInfo = new() {
+            SType = StructureType.SemaphoreCreateInfo
+        };
+
+        for (int i = 0; i < size; i++) {
+            unsafe {
+                _ = Utils.Check(API.Vk.CreateSemaphore(device.logicalDevice, createInfo, Allocator.allocatorPtr, out semaphores[i]), Logger, "Failed to create semaphore", true);
+            }
+        }
+
+        return semaphores;
     }
     public Fence[] CreateFence(uint size, bool signaled = false) {
         Fence[] fences = new Fence[size];
@@ -44,29 +68,15 @@ public class Syncronization : IDisposable {
         
         return fences;
     }
-    public Silk.NET.Vulkan.Semaphore[] CreateSemaphore(uint size) {
-        Silk.NET.Vulkan.Semaphore[] semaphores = new Silk.NET.Vulkan.Semaphore[size];
-
-        SemaphoreCreateInfo createInfo = new() {
-            SType = StructureType.SemaphoreCreateInfo
-        };
-
-        for (int i = 0; i < size; i++) {
-            unsafe {
-                _ = Utils.Check(API.Vk.CreateSemaphore(device.logicalDevice, createInfo, Allocator.allocatorPtr, out semaphores[i]), Logger, "Failed to create semaphore", true);
-            }
-        }
-
-        return semaphores;
-    }
+    /// <inheritdoc/>
     public void Dispose() {
         if (IsDisposed) { return; }
 
         unsafe {
-            foreach (Silk.NET.Vulkan.Semaphore semaphore in imageAvailable) {
+            foreach (Silk.NET.Vulkan.Semaphore semaphore in renderFinished) {
                 API.Vk.DestroySemaphore(device.logicalDevice, semaphore, Allocator.allocatorPtr);
             }
-            foreach (Silk.NET.Vulkan.Semaphore semaphore in renderFinished) {
+            foreach (Silk.NET.Vulkan.Semaphore semaphore in imageAvailable) {
                 API.Vk.DestroySemaphore(device.logicalDevice, semaphore, Allocator.allocatorPtr);
             }
             foreach (Fence fence in inFlight) {
