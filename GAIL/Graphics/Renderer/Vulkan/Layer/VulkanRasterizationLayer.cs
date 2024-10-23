@@ -56,9 +56,7 @@ public class VulkanRasterizationLayer : IVulkanLayer, IRasterizationLayer {
     /// </summary>
     public bool IsDisposed { get; private set; }
 
-    /// <summary>
-    /// The vulkan pipeline utility, for custom usage.
-    /// </summary>
+    /// <inheritdoc/>
     public Pipeline Pipeline { get; internal set; }
 
     /// <summary>
@@ -78,8 +76,6 @@ public class VulkanRasterizationLayer : IVulkanLayer, IRasterizationLayer {
         if (!settings.ShouldRender) return;
 
         commands.BindPipeline(Renderer, Pipeline);
-
-        commands.SetDynamicStates(Renderer);
 
         // TODO: Temporary
         commands.Draw(Renderer, vertexCount:3);

@@ -140,8 +140,6 @@ public class Pipeline : IDisposable {
             }
         }
 
-        
-
         // Creating the pipeline.
         GraphicsPipelineCreateInfo createInfo = new() {
             SType = StructureType.GraphicsPipelineCreateInfo,

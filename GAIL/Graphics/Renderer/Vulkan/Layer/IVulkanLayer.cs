@@ -11,4 +11,9 @@ public interface IVulkanLayer : IBackendLayer {
     /// </summary>
     /// <param name="commands">The given command buffer used to submit render calls.</param>
     public void Render(Commands commands);
+
+    /// <summary>
+    /// The vulkan pipeline utility, for custom usage.
+    /// </summary>
+    public Pipeline Pipeline { get; }
 }

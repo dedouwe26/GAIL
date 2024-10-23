@@ -29,8 +29,4 @@ public interface IRenderer<TBackendLayer> : IDisposable where TBackendLayer : IB
     /// <param name="backendLayer">The created back-end rasterization layer. It is null if the return value is false.</param>
     /// <param name="settings">The initial settings values of the back-end rasterization layer settings</param>
     public bool CreateRasterizationLayer(out IRasterizationLayer? backendLayer, ref RasterizationLayerSettings settings);
-    /// <summary>
-    /// The back-end layers for rendering.
-    /// </summary>
-    public IEnumerable<IBackendLayer> BackendLayers { get; }
 }

@@ -86,18 +86,6 @@ public class Commands : IDisposable {
     public void Draw(VulkanRenderer renderer, uint vertexCount, uint instanceCount = 1, uint firstVertex = 0, uint firstInstance = 0) {
         API.Vk.CmdDraw(commandBuffers[renderer.CurrentFrame], vertexCount, instanceCount, firstVertex, firstInstance);
     }
-    public void SetDynamicStates(VulkanRenderer renderer) {
-        Viewport viewport = new() {
-            X = 0,
-            Y = 0,
-            Width = renderer.Swapchain.extent.Width,
-            Height = renderer.Swapchain.extent.Height,
-            MinDepth = 0,
-            MaxDepth = 0
-        };
-        // TODO: Make faster: every frame recreating viewport.
-        API.Vk.CmdSetViewport(commandBuffers[renderer.CurrentFrame], 0, 1, in viewport);
-    }
 
     public void EndRecord(VulkanRenderer renderer) {
         EndCommandBuffer(renderer, commandBuffers[renderer.CurrentFrame]);
@@ -135,6 +123,17 @@ public class Commands : IDisposable {
             API.Vk.CmdBeginRenderPass(buffer, renderPassInfo, SubpassContents.Inline);
             // NOTE: Inline: renderpass setup commands will be embedded in the primary command buffer.
         }
+
+        Viewport viewport = new() {
+            X = 0f,
+            Y = 0f,
+            Width = renderer.Swapchain.extent.Width,
+            Height = renderer.Swapchain.extent.Height,
+            MinDepth = 0f,
+            MaxDepth = 1f
+        };
+        // TODO: Make faster: every frame recreating viewport.
+        API.Vk.CmdSetViewport(buffer, 0, 1, in viewport);
     }
 
     public static void EndCommandBuffer(VulkanRenderer renderer, CommandBuffer buffer) {

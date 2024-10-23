@@ -29,7 +29,7 @@ public class VulkanSettings : RendererSettings<VulkanRenderer, IVulkanLayer> {
     /// <inheritdoc/>
     public override Color ClearValue { get => base.ClearValue; set => clearValue = value; }
     public override IVulkanLayer[] Layers { get => base.Layers; set => // TODO: Create this
-     }
+    }
 }
 
 /// <summary>
@@ -82,10 +82,6 @@ public class VulkanRenderer : IRenderer<IVulkanLayer> {
     /// The vulkan instance utility, for custom usage.
     /// </summary>
     public readonly Instance instance;
-
-    /// <inheritdoc/>
-    public IEnumerable<IBackendLayer> BackendLayers => backendLayers.Cast<IBackendLayer>();
-    private readonly List<IVulkanLayer> backendLayers = [];
 
     private readonly Application.Globals globals;
     private readonly VulkanSettings settings;
@@ -177,7 +173,7 @@ public class VulkanRenderer : IRenderer<IVulkanLayer> {
         device.shouldRecreateSwapchain = true;
     }
     /// <inheritdoc/>
-    public bool CreateRasterizationLayer(out IRasterizationLayer? backendLayer, ref RasterizationLayerSettings settings) {
+    public bool CreateRasterizationLayer(out IRasterizationLayer? backendLayer, ref RasterizationLayerSettings<IRasterizationLayer> settings) {
         try {
             VulkanRasterizationLayer layer = new(this, ref settings);
             backendLayers.Add(layer);
@@ -222,7 +218,7 @@ public class VulkanRenderer : IRenderer<IVulkanLayer> {
         Commands.Dispose();
 
         Logger.LogDebug("Terminating Vulkan.");
-        foreach (IBackendLayer backendLayer in BackendLayers) {
+        foreach (IVulkanLayer backendLayer in Settings.Layers) {
             backendLayer.Dispose();
         }
         

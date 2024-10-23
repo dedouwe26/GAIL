@@ -10,7 +10,6 @@ public class RenderPass : IDisposable {
     /// </summary>
     public bool IsDisposed { get; private set; }
     public readonly Silk.NET.Vulkan.RenderPass renderPass;
-    public readonly uint[] graphicsPipelineSubpass;
     private readonly Device device;
     public RenderPass(VulkanRenderer renderer) {
         device = renderer.device;
@@ -29,61 +28,60 @@ public class RenderPass : IDisposable {
             InitialLayout = ImageLayout.Undefined,
             FinalLayout = ImageLayout.PresentSrcKhr // NOTE: The layout of the image bytes. In this case the layout for the swapchain.
         };
+        
+        AttachmentDescription[] attachments = [colorAttachment];
 
-        // Stuff about framebuffers.
-        AttachmentDescription stencilAttachment = new() {
-            Format = Format.,
-            Samples = SampleCountFlags.Count1Bit, // NOTE: Can enable MSAA.
+        SubpassDependency[] dependencies = new SubpassDependency[renderer.Settings.Layers.Length];
+        SubpassDescription[] subpasses = new SubpassDescription[renderer.Settings.Layers.Length];
 
-            LoadOp = AttachmentLoadOp.Clear, // NOTE: Clears framebuffer to black (beginning of frame).
-            StoreOp = AttachmentStoreOp.Store, // NOTE: Stores the rendered frame in the framebuffer (end of frame).
+        //   <<< LAYER SPECIFIC >>>
 
-            StencilLoadOp = AttachmentLoadOp.DontCare, // NOTE: Depth buffers.
-            StencilStoreOp = AttachmentStoreOp.DontCare,
+        for (uint i = 0; i < subpasses.Length; i++) {
+            SubpassDependency dependency = new() {
+                SrcSubpass = i==0 ? Vk.SubpassExternal : checked(i-1), // NOTE: From.
+                DstSubpass = i, // NOTE: To (subpass index).
+                
+                SrcStageMask = PipelineStageFlags.ColorAttachmentOutputBit, // NOTE: On what to wait (swapchain image reading).
+                SrcAccessMask = 0, // NOTE: Where that happens.
 
-            InitialLayout = ImageLayout.Undefined,
-            FinalLayout = ImageLayout.PresentSrcKhr // NOTE: The layout of the image bytes. In this case the layout for the swapchain.
-        };
+                DstStageMask = PipelineStageFlags.ColorAttachmentOutputBit, // NOTE: Where to wait.
+                DstAccessMask = AccessFlags.ColorAttachmentWriteBit // NOTE: Writing of the color attachment.
+            };
 
-        // NOTE: Subpasses are rendering operations that depend on the attachments of previous subpasses.
-        // Reference to colorAttachment
-        AttachmentReference colorAttachmentRef = new() {
-            Attachment = 0, // NOTE: Index of attachment.
-            Layout = ImageLayout.ColorAttachmentOptimal // NOTE: Subpass uses it as a color attachment.
-        };
+            // NOTE: Subpasses are rendering operations that depend on the attachments of previous subpasses.
+            // Reference to colorAttachment
+            AttachmentReference colorAttachmentRef = new() {
+                Attachment = 0, // NOTE: Index of attachment.
+                Layout = ImageLayout.ColorAttachmentOptimal // NOTE: Subpass uses it as a color attachment.
+            };
 
-        SubpassDescription subpass = new() {
-            PipelineBindPoint = PipelineBindPoint.Graphics, // NOTE: This is a graphics subpass.
+            SubpassDescription subpass = new() {
+                PipelineBindPoint = renderer.Settings.Layers[i].Pipeline.Type, // NOTE: The type of the pipeline.
 
-            ColorAttachmentCount = 1, // Attachment reference
-            PColorAttachments = Pointer<AttachmentReference>.From(ref colorAttachmentRef),
-            P
-        };
-        graphicsPipelineSubpass = 0;
+                ColorAttachmentCount = 1, // Attachment reference
+                PColorAttachments = Pointer<AttachmentReference>.From(ref colorAttachmentRef),
+                
+                // TODO: Add more attachments.
+            };
 
-        SubpassDependency dependency = new() {
-            SrcSubpass = Vk.SubpassExternal, // NOTE: From.
-            DstSubpass = 0, // NOTE: To (subpass index).
-            
-            SrcStageMask = PipelineStageFlags.ColorAttachmentOutputBit, // NOTE: On what to wait (swapchain image reading).
-            SrcAccessMask = 0, // NOTE: Where that happens.
+            dependencies[i] = dependency;
+            subpasses[i] = subpass;
+        }
 
-            DstStageMask = PipelineStageFlags.ColorAttachmentOutputBit, // NOTE: Where to wait.
-            DstAccessMask = AccessFlags.ColorAttachmentWriteBit // NOTE: Writing of the color attachment.
-        };
+        // <<< END LAYER SPECIFIC >>>
 
         // Creating the render pass.
         RenderPassCreateInfo createInfo = new() {
             SType = StructureType.RenderPassCreateInfo,
 
-            AttachmentCount = 1, // NOTE: The attachments list, where the attachment references take from.
-            PAttachments = Pointer<AttachmentDescription>.From(ref colorAttachment),
+            AttachmentCount = Convert.ToUInt32(attachments.LongLength), // NOTE: The attachments list, where the attachment references take from.
+            PAttachments = Pointer<AttachmentDescription>.FromArray(ref attachments),
 
-            SubpassCount = 1, // NOTE: Subpass list.
-            PSubpasses = Pointer<SubpassDescription>.From(ref subpass),
+            SubpassCount = Convert.ToUInt32(subpasses.LongLength), // NOTE: Subpass list.
+            PSubpasses = Pointer<SubpassDescription>.FromArray(ref subpasses),
 
-            DependencyCount = 1, // NOTE: The dependencies.
-            PDependencies = Pointer<SubpassDependency>.From(ref dependency)
+            DependencyCount = Convert.ToUInt32(dependencies.LongLength), // NOTE: The dependencies.
+            PDependencies = Pointer<SubpassDependency>.FromArray(ref dependencies)
         };
 
         renderer.Logger.LogDebug("Creating RenderPass.");
