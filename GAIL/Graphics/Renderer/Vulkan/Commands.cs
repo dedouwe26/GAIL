@@ -1,7 +1,4 @@
-using System.Reflection;
 using GAIL.Core;
-using GAIL.Graphics.Renderer.Vulkan.Layer;
-using OxDED.Terminal.Logging;
 using Silk.NET.Vulkan;
 
 namespace GAIL.Graphics.Renderer.Vulkan;
@@ -26,7 +23,7 @@ public class Commands : IDisposable {
 
             renderer.Logger.LogDebug("Creating Command Pool.");
             unsafe {
-                if (!Utils.Check(API.Vk.CreateCommandPool(device.logicalDevice, createInfo, Allocator.allocatorPtr, out commandPool), renderer.Logger, "Failed to create commandpool", false)) {
+                if (!Utils.Check(API.Vk.CreateCommandPool(device.logicalDevice, in createInfo, Allocator.allocatorPtr, out commandPool), renderer.Logger, "Failed to create commandpool", false)) {
                     throw new APIBackendException("Vulkan", "Failed to create commandpool");
                 }
             }
@@ -47,7 +44,7 @@ public class Commands : IDisposable {
 
         commandBuffers = new CommandBuffer[renderer.Settings.MaxFramesInFlight];
         unsafe {
-            if (!Utils.Check(API.Vk.AllocateCommandBuffers(device.logicalDevice, allocateInfo, Pointer<CommandBuffer>.FromArray(ref commandBuffers)), renderer.Logger, "Failed to allocate command buffer", false)) {
+            if (!Utils.Check(API.Vk.AllocateCommandBuffers(device.logicalDevice, in allocateInfo, Pointer<CommandBuffer>.FromArray(ref commandBuffers)), renderer.Logger, "Failed to allocate command buffer", false)) {
                 throw new APIBackendException("Vulkan", "Failed to allocate command buffer");
             }
         }
@@ -101,7 +98,7 @@ public class Commands : IDisposable {
                 PInheritanceInfo = Pointer<CommandBufferInheritanceInfo>.FromNull() // NOTE: Only relevant for secondary buffers.
             };
 
-            _ = Utils.Check(API.Vk.BeginCommandBuffer(buffer, beginInfo), renderer.Logger, "Failed to begin recording a command buffer", true);
+            _ = Utils.Check(API.Vk.BeginCommandBuffer(buffer, in beginInfo), renderer.Logger, "Failed to begin recording a command buffer", true);
         }
         
         { // Command Begin RenderPass
@@ -111,7 +108,7 @@ public class Commands : IDisposable {
             RenderPassBeginInfo renderPassInfo = new() {
                 SType = StructureType.RenderPassBeginInfo,
 
-                RenderPass = renderer.renderPass.renderPass,
+                RenderPass = renderer.RenderPass.renderPass,
                 Framebuffer = swapchainImage,
 
                 RenderArea = new(new(0, 0), renderer.Swapchain.extent), // NOTE: Shader loads, stores area
@@ -120,7 +117,7 @@ public class Commands : IDisposable {
                 PClearValues = Pointer<ClearValue>.From(ref clearValue)
             };
             
-            API.Vk.CmdBeginRenderPass(buffer, renderPassInfo, SubpassContents.Inline);
+            API.Vk.CmdBeginRenderPass(buffer, in renderPassInfo, SubpassContents.Inline);
             // NOTE: Inline: renderpass setup commands will be embedded in the primary command buffer.
         }
 

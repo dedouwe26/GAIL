@@ -158,8 +158,8 @@ public class Pipeline : IDisposable {
 
             Layout = layout,
 
-            RenderPass = layer.Renderer.renderPass!.renderPass,
-            Subpass = layer.Renderer.renderPass!.graphicsPipelineSubpass, // NOTE: Index of subpass where the graphics pipeline will be used.
+            RenderPass = layer.Renderer.RenderPass!.renderPass,
+            Subpass = layer.Index, // NOTE: Index of subpass where the graphics pipeline will be used.
             
             BasePipelineHandle = default,
             BasePipelineIndex = -1 // NOTE: Can make pipeline derive from another, to make creating another one less expensive.

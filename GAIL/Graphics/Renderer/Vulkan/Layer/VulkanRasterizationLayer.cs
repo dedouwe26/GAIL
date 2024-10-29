@@ -38,14 +38,11 @@ public class VulkanRasterizationLayerSettings : RasterizationLayerSettings<Vulka
 /// The Vulkan implementation of the back-end rasterization layer.
 /// </summary>
 public class VulkanRasterizationLayer : IVulkanLayer, IRasterizationLayer {
-    /// <summary>
-    /// Creates a new Vulkan implementation of the back-end rasterization layer.
-    /// </summary>
-    public VulkanRasterizationLayer(VulkanRenderer renderer, ref RasterizationLayerSettings settings) {
+    internal VulkanRasterizationLayer(VulkanRenderer renderer, uint index, ref RasterizationLayerSettings settings) {
         Logger = renderer.Logger;
         Renderer = renderer;
+        Index = index;
         this.settings = new(this, ref settings);
-        
 
         Logger.LogDebug("Creating a Vulkan rasterization back-end layer.");
 
@@ -70,6 +67,13 @@ public class VulkanRasterizationLayer : IVulkanLayer, IRasterizationLayer {
     private readonly VulkanRasterizationLayerSettings settings;
     /// <inheritdoc/>
     public IRasterizationLayerSettings Settings => settings;
+    internal uint Index;
+    Pipeline IVulkanLayer.Pipeline { get => Pipeline; set => Pipeline = value; }
+    uint IVulkanLayer.Index { set {
+        Pipeline.Dispose();
+        Index = value;
+        Pipeline = new(this);
+    } }
 
     /// <inheritdoc/>
     public void Render(Commands commands) {

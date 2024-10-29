@@ -40,12 +40,13 @@ public class Syncronization : IDisposable {
         Silk.NET.Vulkan.Semaphore[] semaphores = new Silk.NET.Vulkan.Semaphore[size];
 
         SemaphoreCreateInfo createInfo = new() {
-            SType = StructureType.SemaphoreCreateInfo
+            SType = StructureType.SemaphoreCreateInfo,
+            Flags = SemaphoreCreateFlags.None
         };
 
         for (int i = 0; i < size; i++) {
             unsafe {
-                _ = Utils.Check(API.Vk.CreateSemaphore(device.logicalDevice, createInfo, Allocator.allocatorPtr, out semaphores[i]), Logger, "Failed to create semaphore", true);
+                _ = Utils.Check(API.Vk.CreateSemaphore(device.logicalDevice, in createInfo, Allocator.allocatorPtr, out semaphores[i]), Logger, "Failed to create semaphore", true);
             }
         }
 
@@ -55,14 +56,15 @@ public class Syncronization : IDisposable {
         Fence[] fences = new Fence[size];
 
         FenceCreateInfo createInfo = new() {
-            SType = StructureType.FenceCreateInfo
+            SType = StructureType.FenceCreateInfo,
+            Flags = signaled ? FenceCreateFlags.SignaledBit : FenceCreateFlags.None
         };
 
         if (signaled) createInfo.Flags = FenceCreateFlags.SignaledBit;
 
         for (int i = 0; i < size; i++) {
             unsafe {
-                _ = Utils.Check(API.Vk.CreateFence(device.logicalDevice, createInfo, Allocator.allocatorPtr, out fences[i]), Logger, "Failed to create fence", true);
+                _ = Utils.Check(API.Vk.CreateFence(device.logicalDevice, in createInfo, Allocator.allocatorPtr, out fences[i]), Logger, "Failed to create fence", true);
             }
         }
         

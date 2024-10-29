@@ -20,6 +20,7 @@ public class VulkanSettings : RendererSettings<VulkanRenderer, IVulkanLayer> {
 
     /// <inheritdoc/>
     public override uint MaxFramesInFlight { get => base.MaxFramesInFlight; set {
+        // TODO: ??? device wait idle at all settings (including layer settings) ???
         renderer.Syncronization.Dispose();
         renderer.Commands.Dispose();
         maxFramesInFlight = value;
@@ -28,8 +29,18 @@ public class VulkanSettings : RendererSettings<VulkanRenderer, IVulkanLayer> {
     } }
     /// <inheritdoc/>
     public override Color ClearValue { get => base.ClearValue; set => clearValue = value; }
-    public override IVulkanLayer[] Layers { get => base.Layers; set => // TODO: Create this
-    }
+    /// <inheritdoc/>
+    public override IVulkanLayer[] Layers { get => base.Layers; set {
+        for (uint i = 0; i < value.Length; i++) {
+            value[i].Index = i;
+        }
+
+        renderer.RenderPass.Dispose();
+        renderer.Swapchain.DisposeFramebuffers();
+        layers = value;
+        renderer.RenderPass = new(renderer);
+        renderer.Swapchain.CreateFramebuffers(renderer.RenderPass);
+    } }
 }
 
 /// <summary>
@@ -69,7 +80,7 @@ public class VulkanRenderer : IRenderer<IVulkanLayer> {
     /// <summary>
     /// The vulkan renderpass utility, for custom usage.
     /// </summary>
-    public readonly RenderPass renderPass;
+    public RenderPass RenderPass { get; internal set; }
     /// <summary>
     /// The Vulkan syncronization utility, for custom usage.
     /// </summary>
@@ -112,9 +123,8 @@ public class VulkanRenderer : IRenderer<IVulkanLayer> {
         device = new Device(this);
         Swapchain = new SwapChain(this, globals.windowManager);
 
-        // TODO: Make renderpass use layers in settings when creating.
-        renderPass = new RenderPass(this);
-        Swapchain.CreateFramebuffers(renderPass);
+        RenderPass = new RenderPass(this);
+        Swapchain.CreateFramebuffers(RenderPass);
         Commands = new Commands(this);
         Syncronization = new Syncronization(this);
 
@@ -142,11 +152,12 @@ public class VulkanRenderer : IRenderer<IVulkanLayer> {
         // TODO: Add layers to render pass?
         // TODO: RenderFinished semaphores 
 
+        // TODO: Optimization: dont re-record every frame.
         Commands.BeginRecord(this, ref Swapchain.frameBuffers![imageIndex]);
         
             //   <<< LAYER SPECIFICS >>>
 
-            foreach (IVulkanLayer backendLayer in backendLayers) {
+            foreach (IVulkanLayer backendLayer in settings.Layers) {
                 backendLayer.Render(Commands);
             }
 
@@ -173,32 +184,16 @@ public class VulkanRenderer : IRenderer<IVulkanLayer> {
         device.shouldRecreateSwapchain = true;
     }
     /// <inheritdoc/>
-    public bool CreateRasterizationLayer(out IRasterizationLayer? backendLayer, ref RasterizationLayerSettings<IRasterizationLayer> settings) {
+    public bool CreateRasterizationLayer(out IRasterizationLayer? backendLayer, ref RasterizationLayerSettings settings) {
         try {
-            VulkanRasterizationLayer layer = new(this, ref settings);
-            backendLayers.Add(layer);
+            VulkanRasterizationLayer layer = new(this, 0, ref settings);
             backendLayer = layer;
-            // TODO: Recreate Renderpass, pipeline
             return true;
         } catch (APIBackendException) {
             backendLayer = default;
             return false;
         }
     }
-    // public bool CreateRasterizationLayers(uint count, out IRasterizationLayer[]? backendLayer, ref RasterizationLayerSettings settings) {
-    //     // TODO: Recreate renderpasses.
-    //     try {
-    //         VulkanRasterizationLayer layer = new(this, ref settings);
-    //         backendLayers.Add(layer);
-    //         backendLayer = layer;
-    //         // TODO: Recreate Renderpass, pipeline
-    //         return true;
-    //     } catch (APIBackendException) {
-    //         backendLayer = default;
-    //         return false;
-    //     }
-    // }
-
     
     private void RecreateSwapchain() {
         device.WaitIdle();
@@ -206,7 +201,7 @@ public class VulkanRenderer : IRenderer<IVulkanLayer> {
         Swapchain.Dispose();
 
         Swapchain = new SwapChain(this, globals.windowManager);
-        Swapchain.CreateFramebuffers(renderPass);
+        Swapchain.CreateFramebuffers(RenderPass);
     }
 
     /// <inheritdoc/>
@@ -222,7 +217,7 @@ public class VulkanRenderer : IRenderer<IVulkanLayer> {
             backendLayer.Dispose();
         }
         
-        renderPass.Dispose();
+        RenderPass.Dispose();
         Swapchain.Dispose();
         device.Dispose();
         surface.Dispose();

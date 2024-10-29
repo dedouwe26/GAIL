@@ -16,6 +16,7 @@ namespace GAIL.Graphics.Renderer.Vulkan
         /// If this class is already disposed.
         /// </summary>
         public bool IsDisposed { get; private set; }
+        public bool AreFramebuffersDisposed { get; private set; }
         public KhrSwapchain extension;
         public SwapchainKHR swapchain;
         public Image[] images;
@@ -174,6 +175,8 @@ namespace GAIL.Graphics.Renderer.Vulkan
         }
     
         public void CreateFramebuffers(RenderPass renderPass) {
+            if (!AreFramebuffersDisposed) DisposeFramebuffers();
+
             frameBuffers = new Framebuffer[imageViews.Length];
 
             Logger.LogDebug("Creating Framebuffers.");
@@ -195,17 +198,25 @@ namespace GAIL.Graphics.Renderer.Vulkan
                     _ = Utils.Check(API.Vk.CreateFramebuffer(device.logicalDevice, Pointer<FramebufferCreateInfo>.From(ref createInfo), Allocator.allocatorPtr, Pointer<Framebuffer>.From(ref frameBuffers[i])), Logger, "Failed to create framebuffer", true);
                 }
             }
+
+            AreFramebuffersDisposed = false;
         }
-        
-        /// <inheritdoc/>
-        public void Dispose() {
-            if (IsDisposed) { return; }
-            
+        public void DisposeFramebuffers() {
+            if (AreFramebuffersDisposed) { return; }
+
             foreach (Framebuffer framebuffer in frameBuffers!) {
                 unsafe {
                     API.Vk.DestroyFramebuffer(device.logicalDevice, framebuffer, Allocator.allocatorPtr);
                 }
             }
+
+            AreFramebuffersDisposed = true;
+        }
+        /// <inheritdoc/>
+        public void Dispose() {
+            if (IsDisposed) { return; }
+
+            DisposeFramebuffers();
 
             foreach (ImageView imageView in imageViews) {
                 unsafe {

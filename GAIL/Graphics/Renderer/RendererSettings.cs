@@ -6,8 +6,7 @@ namespace GAIL.Graphics.Renderer;
 /// <summary>
 /// The settings of the current renderer.
 /// </summary>
-/// <typeparam name="TBackendLayer">The type of back-end layer the renderer uses.</typeparam>
-public interface IRendererSettings<TBackendLayer> where TBackendLayer : IBackendLayer {
+public interface IRendererSettings {
     /// <summary>
     /// If the renderer should render. Defaults to true.
     /// </summary>
@@ -26,7 +25,18 @@ public interface IRendererSettings<TBackendLayer> where TBackendLayer : IBackend
     /// <summary>
     /// The layers used by the renderer. Default is empty.
     /// </summary>
-    public TBackendLayer[] Layers { get; set; }
+    public IBackendLayer[] Layers { get; set; }
+}
+
+/// <summary>
+/// The settings of the current renderer.
+/// </summary>
+/// <typeparam name="TBackendLayer">The type of back-end layer the renderer uses.</typeparam>
+public interface IRendererSettings<TBackendLayer> : IRendererSettings where TBackendLayer : IBackendLayer {
+    /// <summary>
+    /// The layers used by the renderer. Default is empty.
+    /// </summary>
+    public new TBackendLayer[] Layers { get; set; }
 }
 
 /// <summary>
@@ -109,6 +119,8 @@ public abstract class RendererSettings<TRenderer, TBackendLayer> : IRendererSett
     
     /// <inheritdoc/>
     public virtual TBackendLayer[] Layers { get => layers; set => throw new NotImplementedException(); }
+    IBackendLayer[] IRendererSettings.Layers { get => Layers.Cast<IBackendLayer>().ToArray(); set => Layers = value.Cast<TBackendLayer>().ToArray(); }
+
     /// <summary>
     /// The layers used by the renderer. Default is empty.
     /// </summary>

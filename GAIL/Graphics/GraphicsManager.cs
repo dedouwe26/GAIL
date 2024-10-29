@@ -23,7 +23,7 @@ namespace GAIL.Graphics
         /// <summary>
         /// The settings of the renderer.
         /// </summary>
-        public Settings Settings { get => Renderer!.Settings; }
+        public IRendererSettings Settings { get => Renderer!.Settings; }
 
         /// <summary>
         /// The logger corresponding to the graphics part of the application.
