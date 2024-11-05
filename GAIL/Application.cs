@@ -64,26 +64,28 @@ namespace GAIL
             public Logger logger;
         }
         /// <summary>
-        /// A boolean to indicate if the application has stopped.
+        /// A boolean to indicate if the application has stopped and will be able to resume.
         /// </summary>
-        public bool hasStopped { get; private set; }
+        public bool HasStopped { get; set; }
+        /// <summary>
+        /// A boolean to indicate if the application is disposed and it is not able to be run again.
+        /// </summary>
+        public bool IsDisposed { get; private set; }
 
         /// <summary>
         /// Creates a GAIL application.
         /// </summary>
-        /// <param name="windowTitle">The name of the window (also used for the <paramref name="logger"/> ID if the <paramref name="logger"/> is null).</param>
-        /// <param name="width">The width of the window (in pixels).</param>
-        /// <param name="height">The height of the window (in pixels).</param>
-        /// <param name="appInfo">The app info used for vulkan (null for default).</param>
-        /// <param name="audioDevice">The custom audio device if necessary (defaults to empty).</param>
+        /// <param name="applicationName">The name of this application (used for the logger ID: GAIL.App.{here}).</param>
         /// <param name="logger">The optional logger to use.</param>
         /// <param name="severity">The severity to use if the logger isn't specified (defaults to Info).</param>
-        public Application(string windowTitle = "GAIL Window", int width = 1000, int height = 600, AppInfo? appInfo = null, string audioDevice = "", Logger? logger = null, Severity severity = Severity.Info) {  
-            hasStopped = true;
+        public Application(string applicationName, Logger? logger = null, Severity severity = Severity.Info) {  
+            HasStopped = true;
+            IsDisposed = true;
             
             globals = new() {
-                logger = logger ?? new Logger("GAIL.App."+windowTitle.Replace(' ', '_'), "GAIL", severity, new(){[typeof(TerminalTarget)] = new TerminalTarget()})
+                logger = logger ?? new Logger("GAIL.App."+applicationName, "GAIL", severity, new(){[typeof(TerminalTarget)] = new TerminalTarget()})
             };
+            
             if (globals.logger.HasTarget<TerminalTarget>()) {
                 globals.logger.GetTarget<TerminalTarget>().Format = "<{0}>: ("+Color.DarkBlue.ToForegroundANSI()+"{2}"+ANSI.Styles.ResetAll+")[{5}"+ANSI.Styles.Bold+"{3}"+ANSI.Styles.ResetAll+"] : {5}{4}"+ANSI.Styles.ResetAll;
                 globals.logger.GetTarget<TerminalTarget>().NameFormat =  "{0} - {1}";
@@ -96,23 +98,41 @@ namespace GAIL
             globals.logger.LogDebug("Initializing all managers.");
 
             globals.windowManager = new WindowManager(globals.logger.CreateSubLogger("Window", "Window", globals.logger.logLevel));
-            globals.windowManager.Init(windowTitle, width, height);
 
             globals.inputManager = new InputManager(globals, globals.logger.CreateSubLogger("Input", "Input", globals.logger.logLevel));
-            globals.inputManager.Init();
 
             globals.graphicsManager = new GraphicsManager(globals.logger.CreateSubLogger("Graphics", "Graphics", globals.logger.logLevel));
-            globals.graphicsManager.Init(globals, appInfo == null? new AppInfo() : appInfo.Value);
 
             globals.audioManager = new AudioManager(globals.logger.CreateSubLogger("Audio", "Audio", globals.logger.logLevel));
-            globals.audioManager.Init(audioDevice);
+        }
+        /// <summary>
+        /// Initializes the application after the settings have been applied.
+        /// </summary>
+        /// <param name="windowSettings">The settings of the window (default: "GAIL Window", 1000, 600).</param>
+        /// <param name="graphicsSettings">The settings for the renderer (default: 2, (0, 0, 0, 0)).</param>
+        /// <param name="appInfo">The app info used for vulkan (null for default).</param>
+        /// <param name="audioDevice">The custom audio device if necessary (defaults to empty).</param>
+        public void Initialize(AppInfo? appInfo = null, (string windowTitle, int width, int height)? windowSettings = default, (uint maxFramesInFlight, Core.Color clearValue)? graphicsSettings = default, string audioDevice = "") {
+            globals.windowManager.Initialize(windowSettings?.windowTitle ?? "GAIL Window", windowSettings?.width ?? 1000, windowSettings?.height ?? 600);
+            
+            globals.inputManager.Initialize();
+
+            AppInfo appInfoRef = appInfo ?? new AppInfo();
+            globals.graphicsManager.Initialize(globals, ref appInfoRef, graphicsSettings?.maxFramesInFlight ?? 2, graphicsSettings?.clearValue);
+
+            globals.audioManager.Initialize(audioDevice);
         }
 
         /// <summary>
         /// Starts the application, use after subscribing on events.
         /// </summary>
         public void Start() {
-            hasStopped = false;
+            if (!IsDisposed) {
+                Logger.LogError("Cannot start the application if it is disposed or initialized.");
+                return;
+            }
+
+            HasStopped = false;
 
             Logger.LogInfo("Starting...");
             OnLoad?.Invoke(this);
@@ -120,14 +140,14 @@ namespace GAIL
             double CurrentTime; // Could also be WindowManager.Time
             double lastTime = WindowManager.Time;
 
-            while (!hasStopped) {
+            while (!HasStopped) {
                 CurrentTime = WindowManager.Time;
 
                 double deltaTime = CurrentTime - lastTime;
 
                 globals.windowManager.Update();
 
-                if (hasStopped) { break; }
+                if (HasStopped) { break; }
                 if (globals.windowManager.ShouldClose) { break; }
             
                 OnUpdate?.Invoke(this, deltaTime);
@@ -138,14 +158,11 @@ namespace GAIL
                 
             }
 
-            Dispose();
+            HasStopped = true;
+
+            Logger.LogInfo("Stopped.");
         }
-        /// <summary>
-        /// Disposes this application.
-        /// </summary>
-        ~Application() {
-            Dispose();
-        }
+
         /// <summary>
         /// The Globals of this Application, contains all the managers.
         /// </summary>
@@ -194,16 +211,18 @@ namespace GAIL
         /// <inheritdoc/>
         /// <remarks>Stops the application (don't use this application after disposal).</remarks>
         public void Dispose() {
-            if (hasStopped) {return;}
+            if (IsDisposed) {return;}
 
-            hasStopped = true;
-
-            Logger.LogInfo("Stopping...");
+            Logger.LogInfo("Disposing...");
             OnStop?.Invoke(this);
 
             globals.audioManager.Dispose();
             globals.graphicsManager.Dispose();
             globals.windowManager.Dispose();
+
+            IsDisposed = true;
+
+            Logger.Dispose();
 
             GC.SuppressFinalize(this);
         }

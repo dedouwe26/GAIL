@@ -62,7 +62,7 @@ namespace GAIL.Input
         /// <summary>
         /// Initializes the input manager.
         /// </summary>
-        public void Init() {
+        public void Initialize() {
             Logger.LogDebug("Setting all GLFW callbacks.");
             unsafe {
                 API.Glfw.SetKeyCallback(globals.windowManager.Window, 

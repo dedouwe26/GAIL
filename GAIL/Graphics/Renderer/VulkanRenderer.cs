@@ -1,4 +1,3 @@
-using System.Collections.ObjectModel;
 using GAIL.Core;
 using GAIL.Graphics.Renderer.Layer;
 using GAIL.Graphics.Renderer.Vulkan;
@@ -55,7 +54,7 @@ public class VulkanRenderer : IRenderer<IVulkanLayer> {
     /// The current in flight frame.
     /// </summary>
     /// <remarks>
-    /// CurrentFrame cannot be higher than <see cref="IRendererSettings{TBackendLayer}.MaxFramesInFlight"/>.
+    /// CurrentFrame cannot be higher than <see cref="IRendererSettings.MaxFramesInFlight"/>.
     /// </remarks>
     public uint CurrentFrame { get; private set; }
     /// <summary>
@@ -106,7 +105,7 @@ public class VulkanRenderer : IRenderer<IVulkanLayer> {
     /// <param name="globals">The globals of the application.</param>
     /// <param name="settings">The settings of this renderer.</param>
     /// <param name="appInfo">The information of the application.</param>
-    public VulkanRenderer(Logger logger, Application.Globals globals, ref RendererSettings<IVulkanLayer> settings, AppInfo? appInfo = null) {
+    public VulkanRenderer(Logger logger, Application.Globals globals, ref RendererSettings<IVulkanLayer> settings, ref AppInfo appInfo) {
         this.globals = globals;
         this.settings = new(this, ref settings);
 
@@ -118,7 +117,7 @@ public class VulkanRenderer : IRenderer<IVulkanLayer> {
 
         Logger.LogDebug("Starting Vulkan.");
 
-        instance = new Instance(this, appInfo ?? new());
+        instance = new Instance(this, ref appInfo);
         surface = new Surface(this, globals.windowManager);
         device = new Device(this);
         Swapchain = new SwapChain(this, globals.windowManager);
@@ -190,6 +189,7 @@ public class VulkanRenderer : IRenderer<IVulkanLayer> {
             backendLayer = layer;
             return true;
         } catch (APIBackendException) {
+            Logger.LogError("Failed to create rasterization layer.");
             backendLayer = default;
             return false;
         }

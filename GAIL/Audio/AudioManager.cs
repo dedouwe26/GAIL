@@ -37,7 +37,7 @@ namespace GAIL.Audio
         public readonly Logger Logger;
 
         /// <summary>
-        /// Creates an audio manager. Use <see cref="Init"/> to initialize the manager.
+        /// Creates an audio manager. Use <see cref="Initialize"/> to initialize the manager.
         /// </summary>
         /// <param name="logger">The logger to use.</param>
         public AudioManager(Logger logger) {
@@ -49,7 +49,7 @@ namespace GAIL.Audio
         /// </summary>
         /// <param name="audioDevice">The custom selected audio device name. Get the name from <see cref="GetAudioDevices"/> (default: default device).</param>
         /// <exception cref="APIBackendException"></exception>
-        public void Init(string audioDevice = "") {
+        public void Initialize(string audioDevice = "") {
             unsafe {
                 device = API.Alc.OpenDevice(audioDevice);
                 if (device.IsNull) {

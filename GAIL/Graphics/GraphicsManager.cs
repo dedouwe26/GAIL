@@ -3,6 +3,7 @@ using GAIL.Core;
 using GAIL.Graphics.Layer;
 using GAIL.Graphics.Renderer;
 using GAIL.Graphics.Renderer.Layer;
+using GAIL.Graphics.Renderer.Vulkan;
 using OxDED.Terminal.Logging;
 using Silk.NET.GLFW;
 
@@ -31,7 +32,7 @@ namespace GAIL.Graphics
         public readonly Logger Logger;
 
         /// <summary>
-        /// Creates a graphics manager. Use <see cref="Init"/> to initialize the manager.
+        /// Creates a graphics manager. Use <see cref="Initialize"/> to initialize the manager.
         /// </summary>
         /// <param name="logger">The logger to use.</param>
         public GraphicsManager(Logger logger) {
@@ -43,11 +44,20 @@ namespace GAIL.Graphics
         /// </summary>
         /// <param name="globals">The globals of this application.</param>
         /// <param name="appInfo">The application info for vulkan.</param>
+        /// <param name="maxFramesInFlight">The default max frames used.</param>
+        /// <param name="clearValue"></param>
         /// <exception cref="APIBackendException"></exception>
-        public void Init(Application.Globals globals, AppInfo appInfo) {
+        public void Initialize(Application.Globals globals, ref AppInfo appInfo, uint maxFramesInFlight = 2, Color? clearValue = null) {
             Logger.LogDebug("Initalizing Graphics.");
 
-            Renderer = new VulkanRenderer(Logger, globals, appInfo);
+            RendererSettings<IVulkanLayer> settings = new() {
+                MaxFramesInFlight = maxFramesInFlight,
+                ClearValue = clearValue ?? new Color(0, 0, 0, 0)
+            };
+
+            Renderer = new VulkanRenderer(Logger, globals, ref settings, ref appInfo);
+
+            IsDisposed = false;
 
             globals.windowManager.OnFramebufferResize += (int width, int height) => {
                 Renderer.Resize(width, height);
@@ -59,19 +69,24 @@ namespace GAIL.Graphics
         public void Update() {
             Renderer!.Render();
         }
-        public bool CreateBackendLayer<TBackend>(out TBackend? layer) where TBackend : IBackendLayer {
-            if (typeof(TBackend) == typeof(IRasterizationLayer)) {
-                // TODO: Initialize layers.
-
-                return true;
+        /// <summary>
+        /// Creates a rasterization layer.
+        /// </summary>
+        /// <param name="layer">The created layer.</param>
+        /// <param name="settings">The default settings of the layer.</param>
+        /// <returns>True, if it succeeded in creating a rasterization layer.</returns>
+        public bool CreateRasterizationLayer(out IRasterizationLayer? layer, ref RasterizationLayerSettings settings) {
+            if (Renderer == null) {
+                Logger.LogError("Renderer is not initialized. On creating rasterization layer.");
+                layer = null;
+                return false;
             }
-            layer = default;
-            return false;
-        }
-        public bool AddLayer<TBackend>(ILayer<TBackend> layer) where TBackend : IBackendLayer {
-            if (!CreateBackendLayer(out TBackend? backendLayer)) return false;
-            if (backendLayer == null) return false;
+            bool succeeded = Renderer.CreateRasterizationLayer(out layer, ref settings);
+            if (!succeeded) { return false; }
+
             
+
+            return succeeded; 
         }
 
         /// <inheritdoc/>

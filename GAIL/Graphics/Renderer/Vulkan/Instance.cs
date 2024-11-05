@@ -18,7 +18,7 @@ public class Instance : IDisposable {
     /// Vulkan Instance.
     /// </summary>
     public readonly Silk.NET.Vulkan.Instance instance;
-    public Instance(VulkanRenderer renderer, AppInfo appInfo) {
+    public Instance(VulkanRenderer renderer, ref AppInfo appInfo) {
         renderer.Logger.LogDebug("Creating Vulkan Instance.");
         unsafe {
             // Creates application info from AppInfo.
@@ -47,7 +47,7 @@ public class Instance : IDisposable {
             };
 
             // Creates instance.
-            _ = Utils.Check(API.Vk.CreateInstance(createInfo, Allocator.allocatorPtr, out instance), renderer.Logger, "Failed to create a Vulkan Instance", true);
+            _ = Utils.Check(API.Vk.CreateInstance(in createInfo, Allocator.allocatorPtr, out instance), renderer.Logger, "Failed to create a Vulkan Instance", true);
             // NOTE: not checking return value, because fatal is turned on so an exception will be thrown.
 
             // Clears unmanaged resources.

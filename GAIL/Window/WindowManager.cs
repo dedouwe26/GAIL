@@ -55,10 +55,8 @@ namespace GAIL.Window
         /// <param name="width">The width of the window (horizontal).</param>
         /// <param name="height">The height of the window (vertical).</param>
         /// <exception cref="APIBackendException"></exception>
-        public void Init(string title, int width, int height) {
-
-            if (!API.Glfw.Init())
-            {
+        public void Initialize(string title, int width, int height) {
+            if (!API.Glfw.Init()) {
                 throw new APIBackendException("GLFW", "initialization failed!");
             }
 

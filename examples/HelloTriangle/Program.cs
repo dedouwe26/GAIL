@@ -21,7 +21,7 @@ namespace examples.HelloTriangle
             Logger.LogDebug("Creating Application instance.");
 
             // Initializes the application.
-            app = new GAIL.Application("Hello Triangle", 1000, 600, severity:Severity.Debug);
+            app = new GAIL.Application("Hello Triangle", severity:Severity.Debug);
 
             Logger.LogDebug("Applying listeners.");
 
@@ -29,11 +29,14 @@ namespace examples.HelloTriangle
             app.OnLoad+=Load;
             app.OnUpdate+=Update;
             app.OnStop+=Stop;
+            app.Initialize(windowSettings:("Hello Triangle", 1000, 600));
 
             Logger.LogDebug("Starting Application.");
 
-            // Locks thread. And starts everything.
+            // Locks thread (until the it has stopped). And starts everything.
             app.Start();
+
+            app.Stop();
         }
         public static void Load(GAIL.Application app) {
             Logger.LogInfo("Loading...");
