@@ -17,13 +17,14 @@ namespace GAIL.Graphics.Renderer.Vulkan
         /// </summary>
         public bool IsDisposed { get; private set; }
         public bool AreFramebuffersDisposed { get; private set; }
-        public KhrSwapchain extension;
+        public KhrSwapchain? extension;
         public SwapchainKHR swapchain;
-        public Image[] images;
+        public Image[]? images;
         public ImageView[] imageViews { get; private set; }
         public Framebuffer[]? frameBuffers { get; private set; }
         public Format imageFormat { get; private set; }
         public Extent2D extent { get; private set; }
+        public Viewport viewport;
         private readonly Surface surface;
         private readonly WindowManager window;
         private readonly Device device;
@@ -86,11 +87,19 @@ namespace GAIL.Graphics.Renderer.Vulkan
         }
 
         public void CreateSwapChain(Instance instance) {
-            
             SupportDetails swapChainSupport = device.CheckSwapChainSupport(device.physicalDevice);
             SurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(swapChainSupport.Formats);
             PresentModeKHR presentMode = ChoosePresentMode(swapChainSupport.PresentModes);
             extent = CreateSwapExtent(swapChainSupport.Capabilities);
+
+            viewport = new() {
+                X = 0f,
+                Y = 0f,
+                Width = extent.Width,
+                Height = extent.Height,
+                MinDepth = 0f,
+                MaxDepth = 1f
+            };
 
             uint imageCount = swapChainSupport.Capabilities.MinImageCount + 1;
             if (swapChainSupport.Capabilities.MaxImageCount > 0 && imageCount > swapChainSupport.Capabilities.MaxImageCount) {

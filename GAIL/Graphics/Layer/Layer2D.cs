@@ -11,7 +11,7 @@ public class Layer2D : ILayer<IRasterizationLayer> {
     /// </summary>
     public bool IsDisposed { get; private set; }
 
-    IRasterizationLayer ILayer<IRasterizationLayer>.BackendLayer => backendLayer!;
+    IRasterizationLayer? ILayer<IRasterizationLayer>.BackendLayer => backendLayer;
 
     private IRasterizationLayer? backendLayer;
     /// <summary>
@@ -25,9 +25,8 @@ public class Layer2D : ILayer<IRasterizationLayer> {
         this.backendLayer = backendLayer;
     }
 
-    /// <inheritdoc/>
-    public void Render() {
-        throw new NotImplementedException();
+    public void Render(Object obj) {
+
     }
 
     /// <inheritdoc/>

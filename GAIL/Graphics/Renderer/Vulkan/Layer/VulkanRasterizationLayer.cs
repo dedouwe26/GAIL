@@ -32,6 +32,12 @@ public class VulkanRasterizationLayerSettings : RasterizationLayerSettings<Vulka
         frontFaceMode = value;
         layer.Pipeline = new Pipeline(layer);
     } }
+    /// <inheritdoc/>
+    public override Shader Shader { get => base.Shader; set {
+        layer.Pipeline.Dispose();
+        shader = value;
+        layer.Pipeline = new Pipeline(layer);
+    } }
 }
 
 /// <summary>

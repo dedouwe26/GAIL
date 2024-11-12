@@ -5,7 +5,7 @@ using Silk.NET.GLFW;
 namespace GAIL.Core
 {
     /// <summary>
-    /// A image or texture.
+    /// An image or texture.
     /// </summary>
     public class Texture : IEquatable<Texture> {
         /// <summary>

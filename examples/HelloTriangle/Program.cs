@@ -36,7 +36,7 @@ namespace examples.HelloTriangle
             // Locks thread (until the it has stopped). And starts everything.
             app.Start();
 
-            app.Stop();
+            app.Stop(); // Doesn't stop automatically.
         }
         public static void Load(GAIL.Application app) {
             Logger.LogInfo("Loading...");

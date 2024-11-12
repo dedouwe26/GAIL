@@ -1,4 +1,5 @@
 using GAIL.Core;
+using GAIL.Graphics.Material;
 using GAIL.Graphics.Renderer.Layer;
 using GAIL.Graphics.Renderer.Vulkan;
 using GAIL.Graphics.Renderer.Vulkan.Layer;
@@ -183,15 +184,21 @@ public class VulkanRenderer : IRenderer<IVulkanLayer> {
         device.shouldRecreateSwapchain = true;
     }
     /// <inheritdoc/>
-    public bool CreateRasterizationLayer(out IRasterizationLayer? backendLayer, ref RasterizationLayerSettings settings) {
+    public IRasterizationLayer? CreateRasterizationLayer(ref RasterizationLayerSettings settings) {
         try {
-            VulkanRasterizationLayer layer = new(this, 0, ref settings);
-            backendLayer = layer;
-            return true;
+            return new VulkanRasterizationLayer(this, 0, ref settings);
         } catch (APIBackendException) {
             Logger.LogError("Failed to create rasterization layer.");
-            backendLayer = default;
-            return false;
+            return default;
+        }
+    }
+    /// <inheritdoc/>
+    public IShader? CreateShader(byte[] vertexShader, byte[]? fragmentShader = null, byte[]? geometryShader = null) {
+        try {
+            return Shader.CreateShader(this, vertexShader, fragmentShader, geometryShader);
+        } catch (APIBackendException) {
+            Logger.LogError("Failed to create shader.");
+            return default;
         }
     }
     

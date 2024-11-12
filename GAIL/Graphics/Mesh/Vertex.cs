@@ -1,61 +1,60 @@
 using System.Numerics;
+using GAIL.Graphics.Material;
 
 namespace GAIL.Graphics.Mesh
 {
     /// <summary>
     /// A point that exists of data (used for 3D / 2D objects).
     /// </summary>
-    public class Vertex : IEquatable<Vertex>
-    {
-        /// <summary>
-        /// The position of this vertex.
-        /// </summary>
-        public Vector3 Position;
+    public class Vertex : IEquatable<Vertex> {
         /// <summary>
         /// Attributes for this vertex shown in shader.
-        /// Name and VertexAttribute.
         /// </summary>
-        public Dictionary<string, VertexAttribute> attributes = [];
+        /// <remarks>
+        /// The index of an attribute is used for the location in the vertex shader.
+        /// </remarks>
+        public List<VertexAttribute> Attributes { get; private set; }
 
         /// <summary>
         /// Creates a new vertex with a position of (0, 0, 0).
         /// </summary>
-        public Vertex() { Position = Vector3.Zero; }
+        public Vertex() {
+            Attributes = [];
+        }
         /// <summary>
-        /// Creates a new vertex with a position.
+        /// Creates a new vertex with a <see cref="PositionAttribute"/> at location 0.
         /// </summary>
         /// <param name="position">The position to set.</param>
-        public Vertex(Vector3 position) { Position = position; }
-        /// <summary>
-        /// Create a new vertex with the x, y, z coordinates.
-        /// </summary>
-        /// <param name="x">The x coordinate.</param>
-        /// <param name="y">The y coordinate.</param>
-        /// <param name="z">the z coordinate.</param>
-        public Vertex(float x, float y, float z) { Position = new Vector3(x, y, z); }
-        /// <summary>
-        /// Create a new vertex with the x, y coordinates.
-        /// </summary>
-        /// <param name="x">The x coordinate.</param>
-        /// <param name="y">The y coordinate.</param>
-        public Vertex(float x, float y) { Position = new Vector3(x, y, 0); }
-
-        /// <summary>
-        /// Adds an attribute to the vertex.
-        /// </summary>
-        /// <param name="name">The name of the attribute.</param>
-        /// <param name="attribute">The attribute itself.</param>
-        public void AddAttribute(string name, VertexAttribute attribute) { attributes.Add(name, attribute); }
+        public Vertex(Vector3 position) : this() {
+            Attributes.Add(new PositionAttribute(position));
+        }
 
         /// <inheritdoc/>
         public bool Equals(Vertex? other)  {
-            if (other == null) { return false; }
-            return Position == other.Position && attributes == other.attributes;
+            if (other == null) return false;
+
+            if (ReferenceEquals(this, other)) return true;
+
+            return Attributes.Equals(other.Attributes);
         }
 
         /// <inheritdoc/>
         public override bool Equals(object? obj) { return Equals(obj as Vertex); }
+
+        ///
+        public static bool operator ==(Vertex? left, Vertex? right) {
+            if (left is null && right is null) return true;
+            if (left is null) return false;
+
+            return left.Equals(right);
+        }
+
+        ///
+        public static bool operator !=(Vertex? left, Vertex? right) {
+            return !(left == right);
+        }
+
         /// <inheritdoc/>
-        public override int GetHashCode() { return Position.GetHashCode(); }
+        public override int GetHashCode() { return Attributes.GetHashCode(); }
     }
 }

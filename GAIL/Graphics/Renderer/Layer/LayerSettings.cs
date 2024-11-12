@@ -59,6 +59,40 @@ public enum FrontFaceMode {
 }
 
 /// <summary>
+/// All the levels of MSAA (multi sampling anti-aliasing).
+/// </summary>
+public enum MSAA {
+    /// <summary>
+    /// No MSAA (off).
+    /// </summary>
+    MSAAx1 = SampleCountFlags.Count1Bit,
+    /// <summary>
+    /// MSAA set to 2.
+    /// </summary>
+    MSAAx2 = SampleCountFlags.Count2Bit,
+    /// <summary>
+    /// MSAA set to 4.
+    /// </summary>
+    MSAAx4 = SampleCountFlags.Count4Bit,
+    /// <summary>
+    /// MSAA set to 8.
+    /// </summary>
+    MSAAx8 = SampleCountFlags.Count8Bit,
+    /// <summary>
+    /// MSAA set to 16.
+    /// </summary>
+    MSAAx16 = SampleCountFlags.Count16Bit,
+    /// <summary>
+    /// MSAA set to 32.
+    /// </summary>
+    MSAAx32 = SampleCountFlags.Count32Bit,
+    /// <summary>
+    /// MSAA set to 64.
+    /// </summary>
+    MSAAx64 = SampleCountFlags.Count64Bit,
+}
+
+/// <summary>
 /// Settings for a rasterization layer.
 /// </summary>
 public interface IRasterizationLayerSettings {
@@ -81,7 +115,7 @@ public interface IRasterizationLayerSettings {
     /// <summary>
     /// The shader stages to use for this layer.
     /// </summary>
-    public Shaders Shaders { get; set; }
+    public Shader Shader { get; set; }
 
 }
 /// <summary>
@@ -107,7 +141,7 @@ public struct RasterizationLayerSettings {
     /// <summary>
     /// The shader stages to use for this layer.
     /// </summary>
-    public required Shaders Shaders;
+    public required Shader Shaders;
 
     /// <summary>
     /// Creates new values of the rasterization layer settings.
@@ -133,7 +167,7 @@ public abstract class RasterizationLayerSettings<TLayer> : IRasterizationLayerSe
         shouldRender = values.ShouldRender;
         fillMode = values.FillMode;
         cullMode = values.CullMode;
-        shaders = values.Shaders;
+        shader = values.Shaders;
     }
 
     /// <inheritdoc/>
@@ -162,11 +196,11 @@ public abstract class RasterizationLayerSettings<TLayer> : IRasterizationLayerSe
     /// </summary>
     protected CullMode cullMode;
     /// <inheritdoc/>
-    public virtual Shaders Shaders { get => shaders; set => throw new NotImplementedException(); }
+    public virtual Shader Shader { get => shader; set => throw new NotImplementedException(); }
     /// <summary>
     /// The shader stages to use for this layer.
     /// </summary>
-    protected Shaders shaders;
+    protected Shader shader;
 }
 
 // TODO: Raytracing settings

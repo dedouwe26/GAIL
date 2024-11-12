@@ -10,6 +10,7 @@ public static class Allocator {
     static Allocator() {
         allocator = null;
         allocatorPtr = Pointer<AllocationCallbacks>.FromNull();
+        // TODO: Add allocator.
     }
     /// <summary>
     /// The allocator itself.

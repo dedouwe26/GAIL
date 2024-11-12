@@ -57,7 +57,7 @@ namespace GAIL.Window
         /// <exception cref="APIBackendException"></exception>
         public void Initialize(string title, int width, int height) {
             if (!API.Glfw.Init()) {
-                throw new APIBackendException("GLFW", "initialization failed!");
+                Logger.LogError("Failed to initialize GLFW.");
             }
 
             Logger.LogDebug("Creating window.");

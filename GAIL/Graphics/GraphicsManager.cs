@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using GAIL.Core;
 using GAIL.Graphics.Layer;
+using GAIL.Graphics.Material;
 using GAIL.Graphics.Renderer;
 using GAIL.Graphics.Renderer.Layer;
 using GAIL.Graphics.Renderer.Vulkan;
@@ -49,7 +50,7 @@ namespace GAIL.Graphics
         /// <exception cref="APIBackendException"></exception>
         public void Initialize(Application.Globals globals, ref AppInfo appInfo, uint maxFramesInFlight = 2, Color? clearValue = null) {
             Logger.LogDebug("Initalizing Graphics.");
-
+            
             RendererSettings<IVulkanLayer> settings = new() {
                 MaxFramesInFlight = maxFramesInFlight,
                 ClearValue = clearValue ?? new Color(0, 0, 0, 0)
@@ -72,21 +73,32 @@ namespace GAIL.Graphics
         /// <summary>
         /// Creates a rasterization layer.
         /// </summary>
-        /// <param name="layer">The created layer.</param>
         /// <param name="settings">The default settings of the layer.</param>
-        /// <returns>True, if it succeeded in creating a rasterization layer.</returns>
-        public bool CreateRasterizationLayer(out IRasterizationLayer? layer, ref RasterizationLayerSettings settings) {
+        /// <returns>The created rasterization layer, if it succeeded in creating a rasterization layer.</returns>
+        public IRasterizationLayer? CreateRasterizationLayer(ref RasterizationLayerSettings settings) {
             if (Renderer == null) {
                 Logger.LogError("Renderer is not initialized. On creating rasterization layer.");
-                layer = null;
-                return false;
+                return default;
             }
-            bool succeeded = Renderer.CreateRasterizationLayer(out layer, ref settings);
-            if (!succeeded) { return false; }
 
-            
+            return Renderer.CreateRasterizationLayer(ref settings);
+        }
+        /// <summary>
+        /// Creates a new shader from the corresponding shader code.
+        /// </summary>
+        /// <returns>
+        /// The created shader, if it succeeded in creating a rasterization layer.
+        /// </returns>
+        /// <param name="vertexShader">The per-vertex shader (in SPIR-V compiled).</param>
+        /// <param name="fragmentShader">The per-pixel shader (in SPIR-V compiled).</param>
+        /// <param name="geometryShader">The geometry shader (in SPIR-V compiled).</param>
+        public IShader? CreateShader(byte[] vertexShader, byte[]? fragmentShader = null, byte[]? geometryShader = null) {
+            if (Renderer == null) {
+                Logger.LogError("Renderer is not initialized. On creating rasterization layer.");
+                return null;
+            }
 
-            return succeeded; 
+            return Renderer.CreateShader(vertexShader, fragmentShader, geometryShader);
         }
 
         /// <inheritdoc/>

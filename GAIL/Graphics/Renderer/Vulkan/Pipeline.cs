@@ -34,7 +34,7 @@ public class Pipeline : IDisposable {
         };
         
         // The scissor of the viewport.
-        Rect2D scissor = new() {
+        Rect2D scissor = new() { // TODO: Make configurable??
             Offset = { X = 0, Y = 0 },
             Extent = layer.Renderer.Swapchain!.extent,
         };
@@ -58,10 +58,10 @@ public class Pipeline : IDisposable {
             DepthClampEnable = false, // NOTE: Instead of discarding the fragment outside the 
                                       //       near and far planes, it will clamp them.
             RasterizerDiscardEnable = false, // NOTE: Literally disables all rendering (KA-BOOM)!
-            PolygonMode = PolygonMode.Fill, // NOTE: How fragments are generated (like wireframe: Line).
-            LineWidth = 1,
-            CullMode = CullModeFlags.BackBit, // NOTE: The way of culling. Most applications use backface culling.
-            FrontFace = FrontFace.Clockwise, // NOTE: How Vulkan knows what the front and back face is.
+            PolygonMode = (PolygonMode)layer.Settings.FillMode, // NOTE: How fragments are generated (like wireframe: Line).
+            LineWidth = 1, // TODO: Make configurable.
+            CullMode = (CullModeFlags)layer.Settings.CullMode, // NOTE: The way of culling. Most applications use backface culling.
+            FrontFace = (FrontFace)layer.Settings.FrontFaceMode, // NOTE: How Vulkan knows what the front and back face is.
 
             DepthBiasEnable = false // NOTE: This can be used to alter the depth value, with the other parameters.
         };
@@ -79,13 +79,13 @@ public class Pipeline : IDisposable {
 
             DepthTestEnable = false,
             DepthWriteEnable = false,
-            DepthCompareOp = CompareOp.Less, // TODO: ???
+            DepthCompareOp = CompareOp.Less, // TODO: Make configurable??
 
-            DepthBoundsTestEnable = false, // TODO: ???
+            DepthBoundsTestEnable = false, // TODO: Make configurable??
             MinDepthBounds = 0,
             MaxDepthBounds = 1,
 
-            StencilTestEnable = false,
+            StencilTestEnable = false, // TODO: Make configurable??
             // Front = ...,
             // Back = ...
         };
@@ -96,8 +96,8 @@ public class Pipeline : IDisposable {
 
             BlendEnable = true, // NOTE: Enables blending for multiple fragments on 1 pixel.
             // NOTE: This is alpha blending.
-            SrcColorBlendFactor = BlendFactor.SrcAlpha,
-            DstColorBlendFactor = BlendFactor.OneMinusSrcAlpha,
+            SrcColorBlendFactor = BlendFactor.SrcAlpha, // TODO: Make configurable??
+            DstColorBlendFactor = BlendFactor.OneMinusSrcAlpha, 
             ColorBlendOp = BlendOp.Add,
             SrcAlphaBlendFactor = BlendFactor.One,
             DstAlphaBlendFactor = BlendFactor.Zero,
@@ -135,7 +135,7 @@ public class Pipeline : IDisposable {
         layer.Logger.LogDebug("Creating Pipeline Layout.");
 
         unsafe {
-            if (!Utils.Check(API.Vk.CreatePipelineLayout(device.logicalDevice, layoutInfo, Allocator.allocatorPtr, out layout), layer.Logger, "Failed to create the pipeline layout", false)) {
+            if (!Utils.Check(API.Vk.CreatePipelineLayout(device.logicalDevice, in layoutInfo, Allocator.allocatorPtr, out layout), layer.Logger, "Failed to create the pipeline layout", false)) {
                 throw new APIBackendException("Vulkan", "Failed to create the pipeline layout");
             }
         }
@@ -144,8 +144,8 @@ public class Pipeline : IDisposable {
         GraphicsPipelineCreateInfo createInfo = new() {
             SType = StructureType.GraphicsPipelineCreateInfo,
 
-            StageCount = Convert.ToUInt32(layer.Settings.Shaders.stages!.Length),
-            PStages = Pointer<PipelineShaderStageCreateInfo>.FromArray(ref layer.Settings.Shaders.stages),
+            StageCount = Convert.ToUInt32(layer.Settings.Shader.stages.Length),
+            PStages = Pointer<PipelineShaderStageCreateInfo>.FromArray(ref layer.Settings.Shader.stages),
 
             PVertexInputState = Pointer<PipelineVertexInputStateCreateInfo>.From(ref vertexInputInfo),
             PInputAssemblyState = Pointer<PipelineInputAssemblyStateCreateInfo>.From(ref inputAssemblyInfo),
@@ -161,7 +161,7 @@ public class Pipeline : IDisposable {
             RenderPass = layer.Renderer.RenderPass!.renderPass,
             Subpass = layer.Index, // NOTE: Index of subpass where the graphics pipeline will be used.
             
-            BasePipelineHandle = default,
+            BasePipelineHandle = default, // TODO: ???
             BasePipelineIndex = -1 // NOTE: Can make pipeline derive from another, to make creating another one less expensive.
         };
 

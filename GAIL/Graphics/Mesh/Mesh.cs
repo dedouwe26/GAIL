@@ -3,15 +3,20 @@ using GAIL.Core.File;
 namespace GAIL.Graphics.Mesh
 {
     /// <summary>
-    /// A 3D / 2D shape data.
+    /// 3D or 2D shape data.
     /// </summary>
     public class Mesh {
         /// <summary>
-        /// Returns a mesh constructed from a Wavefront obj file
-        /// The attributes for each vertex that can be added are:
-        /// "normal": NormalAttribute
-        /// "uv": UVAttribute
+        /// Returns a mesh constructed from a Wavefront obj file.
         /// </summary>
+        /// <remarks>
+        /// The attributes for each vertex that can be added are:
+        /// <list type="bullet">
+        ///     <item>0: PositionAttribute</item>
+        ///     <item>1: NormalAttribute</item>
+        ///     <item>2: UVAttribute</item>
+        /// </list>
+        /// </remarks>
         /// <param name="path">The path where the mesh is.</param>
         /// <returns>The parsed Mesh.</returns>
         public static Mesh FromObj(string path) { return Obj.Parse(path); }
@@ -42,6 +47,5 @@ namespace GAIL.Graphics.Mesh
             this.vertices = vertices;
             this.indexFaces = indexFaces;
         }
-
     }
 }

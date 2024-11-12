@@ -120,17 +120,8 @@ public class Commands : IDisposable {
             API.Vk.CmdBeginRenderPass(buffer, in renderPassInfo, SubpassContents.Inline);
             // NOTE: Inline: renderpass setup commands will be embedded in the primary command buffer.
         }
-
-        Viewport viewport = new() {
-            X = 0f,
-            Y = 0f,
-            Width = renderer.Swapchain.extent.Width,
-            Height = renderer.Swapchain.extent.Height,
-            MinDepth = 0f,
-            MaxDepth = 1f
-        };
-        // TODO: Make faster: every frame recreating viewport.
-        API.Vk.CmdSetViewport(buffer, 0, 1, in viewport);
+        
+        API.Vk.CmdSetViewport(buffer, 0, 1, in renderer.Swapchain.viewport);
     }
 
     public static void EndCommandBuffer(VulkanRenderer renderer, CommandBuffer buffer) {

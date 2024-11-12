@@ -1,5 +1,5 @@
-using System.Reflection;
 using GAIL.Core;
+using GAIL.Graphics.Material;
 using OxDED.Terminal.Logging;
 using Silk.NET.Core.Native;
 using Silk.NET.Vulkan;
@@ -9,9 +9,9 @@ namespace GAIL.Graphics.Renderer.Vulkan;
 /// <summary>
 /// Represents all the programmable shader stages in a default graphics pipeline.
 /// </summary>
-public class Shaders : IDisposable {
-    public static Shaders? CreateShader(VulkanRenderer renderer, byte[] vertex, byte[]? fragment = null, byte[]? geometry = null) {
-        Shaders shader = new(renderer, 1 + (fragment!=null?1:0) + (geometry!=null?1:0));
+public class Shader : IShader {
+    public static Shader? CreateShader(VulkanRenderer renderer, byte[] vertex, byte[]? fragment = null, byte[]? geometry = null) {
+        Shader shader = new(renderer, 1 + (fragment!=null?1:0) + (geometry!=null?1:0));
 
         {
             ShaderModule? module;
@@ -54,7 +54,7 @@ public class Shaders : IDisposable {
 
     private readonly Logger Logger;
     private readonly Device Device;
-    private Shaders(VulkanRenderer renderer, int stagesLength) {
+    private Shader(VulkanRenderer renderer, int stagesLength) {
         IsDisposed = true;
         stages = new PipelineShaderStageCreateInfo[stagesLength];
         Logger = renderer.Logger;
