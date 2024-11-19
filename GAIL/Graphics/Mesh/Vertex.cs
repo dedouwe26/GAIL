@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Numerics;
 using GAIL.Graphics.Material;
 
@@ -27,6 +28,29 @@ namespace GAIL.Graphics.Mesh
         /// <param name="position">The position to set.</param>
         public Vertex(Vector3 position) : this() {
             Attributes.Add(new PositionAttribute(position));
+        }
+
+        /// <summary>
+        /// Gives the nessecary vertex attributes to be used by the shader.
+        /// </summary>
+        /// <param name="requiredAttributes">The attribute types that are required by the shader.</param>
+        /// <returns>The nessecary vertex attributes.</returns>
+        /// <exception cref="NotSupportedException">This exception is fired when this vertex does not supply sufficient attributes.</exception>
+        public VertexAttribute[] Supply(ReadOnlyCollection<AttributeType> requiredAttributes) {
+            VertexAttribute[] result = new VertexAttribute[requiredAttributes.Count];
+            int requiredIndex = 0;
+            foreach (VertexAttribute attribute in Attributes) {
+                if (attribute.type == requiredAttributes[requiredIndex]) {
+                    result[requiredIndex] = attribute;
+                    requiredIndex++;
+                }
+            }
+
+            if (requiredIndex < requiredAttributes.Count) {
+                throw new NotSupportedException("This vertex does not supply sufficient attributes.");
+            }
+
+            return result; 
         }
 
         /// <inheritdoc/>
