@@ -205,58 +205,68 @@ public class ClientContainer : IDisposable {
     /// Sends a packet to the server.
     /// </summary>
     /// <param name="packet">The packet to send to the server.</param>
-    public void SendPacket(Packet packet) {
-        if (Closed) { return; }
+    /// <returns>True if it succeeded, false if the client is closed or the client could not send the packet.</returns>
+    public bool SendPacket(Packet packet) {
+        if (Closed) { return false; }
         NetworkSerializer serializer = new(NetworkStream!);
         try {
             serializer.WritePacket(packet, GlobalFormatter);
         } catch (IOException e) {
             Logger?.LogError("Could not send packet: '"+e.Message+"'.");
             OnException?.Invoke(e);
+            return false;
         }
         NetworkStream!.Flush();
         OnPacketSent?.Invoke(this, packet);
+        return true;
     }
 
     /// <summary>
     /// Sends a packet to the server (asynchronous).
     /// </summary>
     /// <param name="packet">The packet to send to the server.</param>
-    public async ValueTask SendPacketAsync(Packet packet) {
-        if (Closed) { return; }
+    /// <returns>True if it succeeded, false if the client is closed or the client could not send the packet.</returns>
+    public async ValueTask<bool> SendPacketAsync(Packet packet) {
+        if (Closed) { return false; }
         NetworkSerializer serializer = new(NetworkStream!);
         try {
             serializer.WritePacket(packet, GlobalFormatter); // TODO?: this isnt really async.
         } catch (IOException e) {
             Logger?.LogError("Could not send packet: '"+e.Message+"'.");
             OnException?.Invoke(e);
+            return false;
         }
         await NetworkStream!.FlushAsync();
         OnPacketSent?.Invoke(this, packet);
+        return true;
     }
 
     /// <summary>
     /// Disconnects from the server and disposes everything.
     /// </summary>
     /// <param name="additionalData">The optional additional data.</param>
-    public void Stop(byte[]? additionalData = null) {
-        if (Closed) { return; }
+    /// <returns>True if it succeeded, false if the client is closed.</returns>
+    public bool Stop(byte[]? additionalData = null) {
+        if (Closed) { return false; }
         additionalData ??= [];
         OnDisconnect?.Invoke(this, false, additionalData);
         SendPacket(new DisconnectPacket(additionalData));
         Dispose();
+        return true;
     }
     /// <summary>
     /// Disconnects from the server and disposes everything (asynchronous).
     /// </summary>
     /// <param name="additionalData">The optional additional data send to the server.</param>
-    public async ValueTask StopAsync(byte[]? additionalData = null) {
-        if (Closed) { return; }
+    /// <returns>True if it succeeded, false if the client is closed.</returns>
+    public async ValueTask<bool> StopAsync(byte[]? additionalData = null) {
+        if (Closed) { return false; }
         Logger?.LogDebug("Stopping");
         additionalData ??= [];
         OnDisconnect?.Invoke(this, false, additionalData);
-        await SendPacketAsync(new DisconnectPacket(additionalData ?? []));
+        await SendPacketAsync(new DisconnectPacket(additionalData));
         Dispose();
+        return true;
     }
     /// <inheritdoc/>
     /// <remarks>

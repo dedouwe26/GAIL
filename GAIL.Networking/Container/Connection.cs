@@ -52,13 +52,6 @@ public class Connection : IDisposable {
     }
 
     /// <summary>
-    /// Disposes the connection.
-    /// </summary>
-    ~Connection() {
-        Dispose();
-    }
-
-    /// <summary>
     /// Converts the connection ID to a string.
     /// </summary>
     /// <returns>The connection ID string.</returns>

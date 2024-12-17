@@ -8,7 +8,7 @@ namespace GAIL.Networking;
 /// </summary>
 public class DisconnectPacket : Packet {
     /// <inheritdoc/>
-    public override SerializableInfo[] Format { get => [BytesSerializable.Info]; }
+    public override SerializableInfo[] Format => [BytesSerializable.Info];
 
     /// <summary>
     /// The optional additional data.
@@ -34,5 +34,20 @@ public class DisconnectPacket : Packet {
     /// <inheritdoc/>
     public override void Parse(List<ISerializable> fields) {
         AdditionalData = (fields[0] as BytesSerializable)!.Value;
+    }
+}
+
+public class LogPacket : Packet
+{
+    public override SerializableInfo[] Format => [ByteSerializable.Info, LongSerializable.Info, ];
+
+    public override List<ISerializable> GetFields()
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void Parse(List<ISerializable> fields)
+    {
+        throw new NotImplementedException();
     }
 }

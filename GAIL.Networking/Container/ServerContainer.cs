@@ -148,18 +148,22 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
     /// </summary>
     /// <param name="packet">The packet to send to the client.</param>
     /// <param name="connection">The connection to send the packet to.</param>
-    public void SendPacket(Packet packet, Connection connection) {
-        if (Closed) { return; }
+    /// <returns>True if it succeeded, false if the server is closed or the server could not send the packet.</returns>
+    public bool SendPacket(Packet packet, Connection connection) {
+        if (Closed) { return false; }
         NetworkSerializer serializer = new(connection.Stream);
         try {
             serializer.WritePacket(packet, GlobalFormatter);
         } catch (IOException e) {
             Logger?.LogError($"Could not send packet (connection ID: {connection.ToConnectionID()}): '{e.Message}'.");
             OnException?.Invoke(e, connection);
+            serializer.Dispose();
+            return false;
         }
         serializer.Dispose();
         connection.Stream.Flush();
         OnPacketSent?.Invoke(this, connection, packet);
+        return true;
     }
 
     /// <summary>
@@ -167,25 +171,26 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
     /// </summary>
     /// <param name="packet">The packet to send to the client.</param>
     /// <param name="ID">The ID of the connection to send the packet to.</param>
-    /// <returns>True if an connection has been found, otherwise false.</returns>
+    /// <returns>True if an connection has been found and the sending the packet succeeded, otherwise false.</returns>
     public bool SendPacket(Packet packet, byte[] ID) {
         if (Closed) { return false; }
         if (!connections.TryGetValue(ID, out Connection? connection)) {
             return false;
         }
-        SendPacket(packet, connection);
-        return true;
+        return SendPacket(packet, connection);
     }
 
     /// <summary>
     /// Broadcasts a packet to all clients.
     /// </summary>
     /// <param name="packet">The packet to broadcast.</param>
-    public void BroadcastPacket(Packet packet) {
-        if (Closed) { return; }
+    /// <returns>True if the server is still running, otherwise false.</returns>
+    public bool BroadcastPacket(Packet packet) {
+        if (Closed) { return false; }
         foreach (Connection connection in connections.Values) {
             SendPacket(packet, connection);
         }
+        return true;
     }
     
     #endregion Send
@@ -198,18 +203,23 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
     /// </summary>
     /// <param name="packet">The packet to send to the client.</param>
     /// <param name="connection">The connection to send the packet to.</param>
-    public async ValueTask SendPacketAsync(Packet packet, Connection connection) {
-        if (Closed) { return; }
+    /// <returns>True if it succeeded, false if the server is closed or the server could not send the packet.</returns>
+    public async ValueTask<bool> SendPacketAsync(Packet packet, Connection connection) {
+        if (Closed) { return false; }
         NetworkSerializer serializer = new(connection.Stream);
         try {
             serializer.WritePacket(packet, GlobalFormatter); // TODO?: this isnt really async.
         } catch (IOException e) {
             Logger?.LogError($"Could not send packet (connection ID: {connection.ToConnectionID()}): '{e.Message}'.");
             OnException?.Invoke(e, connection);
+            serializer.Dispose();
+            return false;
         }
         
         await connection.Stream.FlushAsync();
+        serializer.Dispose();
         OnPacketSent?.Invoke(this, connection, packet);
+        return true;
     }
 
     /// <summary>
@@ -217,25 +227,26 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
     /// </summary>
     /// <param name="packet">The packet to send to the client.</param>
     /// <param name="ID">The ID of the connection to send the packet to.</param>
-    /// <returns>True if an connection has been found, otherwise false.</returns>
+    /// <returns>True if an connection has been found and the sending the packet succeeded, otherwise false.</returns>
     public async ValueTask<bool> SendPacketAsync(Packet packet, byte[] ID) {
         if (Closed) { return false; }
         if (!connections.TryGetValue(ID, out Connection? connection)) {
             return false;
         }
-        await SendPacketAsync(packet, connection);
-        return true;
+        return await SendPacketAsync(packet, connection);
     }
 
     /// <summary>
     /// Broadcasts a packet to all clients (asynchronous).
     /// </summary>
     /// <param name="packet">The packet to broadcast.</param>
-    public async ValueTask BroadcastPacketAsync(Packet packet) {
-        if (Closed) { return; }
+    /// <returns>True if the server is still running, otherwise false.</returns>
+    public async ValueTask<bool> BroadcastPacketAsync(Packet packet) {
+        if (Closed) { return false; }
         foreach (Connection connection in connections.Values) {
             await SendPacketAsync(packet, connection);
         }
+        return true;
     }
 
     #endregion Send Asynchronous
@@ -248,38 +259,40 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
     /// </summary>
     /// <param name="connection"></param>
     /// <param name="additionalData">The additional data for disconnection (default: empty).</param>
-    public void Disconnect(Connection connection, byte[]? additionalData = null) {
-        if (Closed) { return; }
+    /// <returns>True if it succeeded, false if the server is closed or the server could not send the <see cref="DisconnectPacket"/>.</returns>
+    public bool Disconnect(Connection connection, byte[]? additionalData = null) {
+        if (Closed) { return false; }
         additionalData ??= [];
-        SendPacket(new DisconnectPacket(additionalData), connection);
+        if (!SendPacket(new DisconnectPacket(additionalData), connection)) return false;
         connections.Remove(connection.ID);
         connection.Dispose();
         OnDisconnect?.Invoke(this, connection, false, additionalData);
-        
+        return true;
     }
 
     /// <summary>
     /// Disconnects a connection using an ID.
     /// </summary>
     /// <param name="ID">The ID of the connection used to disconnect the client.</param>
-    /// <returns>True if an connection has been found, otherwise false.</returns>
+    /// <returns>True if an connection has been found and sending the <see cref="DisconnectPacket"/> succeeded, otherwise false.</returns>
     public bool Disconnect(byte[] ID) {
         if (Closed) { return false; }
         if (!connections.TryGetValue(ID, out Connection? connection)) {
             return false;
         }
-        Disconnect(connection);
-        return true;
+        return Disconnect(connection);
     }
 
     /// <summary>
     /// Kicks or disconnects all clients from this server.
     /// </summary>
-    public void DisconnectAll() {
-        if (Closed) { return; }
+    /// <returns>True if the server is still running, otherwise false.</returns>
+    public bool DisconnectAll() {
+        if (Closed) { return false; }
         foreach (Connection connection in connections.Values) {
             Disconnect(connection);
         }
+        return true;
     }
 
     #endregion Disconnect
@@ -292,39 +305,44 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
     /// </summary>
     /// <param name="connection"></param>
     /// <param name="additionalData">The additional data for disconnection (default: empty).</param>
-    public async ValueTask DisconnectAsync(Connection connection, byte[]? additionalData = null) {
-        if (Closed) { return; }
+    /// <returns>True if an connection has been found and sending the <see cref="DisconnectPacket"/> succeeded, otherwise false.</returns>
+    public async ValueTask<bool> DisconnectAsync(Connection connection, byte[]? additionalData = null) {
+        if (Closed) { return false; }
         additionalData ??= [];
-        await SendPacketAsync(new DisconnectPacket(additionalData), connection);
+        if (!await SendPacketAsync(new DisconnectPacket(additionalData), connection)) {
+            return false;
+        }
         connections.Remove(connection.ID);
         connection.Dispose();
         OnDisconnect?.Invoke(this, connection, false, additionalData);
+        return true;
     }
 
     /// <summary>
     /// Disconnects a connection using an ID (asynchronous).
     /// </summary>
     /// <param name="ID">The ID of the connection used to disconnect the client.</param>
-    /// <returns>True if an connection has been found, otherwise false.</returns>
     /// <param name="additionalData">The additional data for disconnection (default: empty).</param>
+    /// <returns>True if an connection has been found and sending the <see cref="DisconnectPacket"/> succeeded, otherwise false.</returns>
     public async ValueTask<bool> DisconnectAsync(byte[] ID, byte[]? additionalData = null) {
         if (Closed) { return false; }
         if (!connections.TryGetValue(ID, out Connection? connection)) {
             return false;
         }
-        await DisconnectAsync(connection, additionalData);
-        return true;
+        return await DisconnectAsync(connection, additionalData);
     }
 
     /// <summary>
     /// Kicks or disconnects all clients from this server (asynchronous).
     /// </summary>
     /// <param name="additionalData">The additional data for disconnection (default: empty).</param>
-    public async ValueTask DisconnectAllAsync(byte[]? additionalData = null) {
-        if (Closed) { return; }
+    /// <returns>True if the server is still running, otherwise false.</returns>
+    public async ValueTask<bool> DisconnectAllAsync(byte[]? additionalData = null) {
+        if (Closed) { return false; }
         foreach (Connection connection in connections.Values) {
             await DisconnectAsync(connection, additionalData);
         }
+        return true;
     }
 
     #endregion Disconnect Asynchronous
