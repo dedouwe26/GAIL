@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="0xDED.Terminal" Version="4.0.0" />
+    <PackageReference Include="0xDED.Terminal" Version="4.1.0" />
   </ItemGroup>
 
   <ItemGroup>

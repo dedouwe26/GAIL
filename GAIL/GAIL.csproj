@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -20,11 +20,11 @@
 
   <ItemGroup>
   <None Include="GAIL.nuspec" Pack="true" PackagePath="\" />
-    <PackageReference Include="0xDED.Terminal" Version="4.0.0" />
-    <PackageReference Include="Silk.NET" Version="2.21.0" /> <!-- TODO: Subdivide Silk.NET into smaller pieces (also in nuspec). -->
-    <PackageReference Include="Silk.NET.Assimp" Version="2.21.0" /> <!-- is this used? -->
-    <PackageReference Include="Silk.NET.OpenAL.Extensions.EXT" Version="2.21.0" />
-    <PackageReference Include="Silk.NET.Vulkan.Extensions.EXT" Version="2.21.0" />
+    <PackageReference Include="0xDED.Terminal" Version="4.1.0" />
+    <PackageReference Include="Silk.NET" Version="2.22.0" /> <!-- TODO: Subdivide Silk.NET into smaller pieces (also in nuspec). -->
+    <PackageReference Include="Silk.NET.Assimp" Version="2.22.0" /> <!-- is this used? -->
+    <PackageReference Include="Silk.NET.OpenAL.Extensions.EXT" Version="2.22.0" />
+    <PackageReference Include="Silk.NET.Vulkan.Extensions.EXT" Version="2.22.0" />
   </ItemGroup>
 
 </Project>
