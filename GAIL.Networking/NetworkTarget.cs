@@ -31,7 +31,6 @@ public class NetworkTarget : ITarget {
 
     public void Write<T>(Severity severity, DateTime time, Logger _, T? text) {
         sendMethod.Invoke(new LogPacket());
-        FileTarget
     }
     public void Dispose() {
         
