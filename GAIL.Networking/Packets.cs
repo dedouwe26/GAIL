@@ -1,5 +1,6 @@
 using GAIL.Networking.Parser;
 using GAIL.Serializing;
+using OxDED.Terminal.Logging;
 
 namespace GAIL.Networking;
 
@@ -37,17 +38,38 @@ public class DisconnectPacket : Packet {
     }
 }
 
-public class LogPacket : Packet
-{
-    public override SerializableInfo[] Format => [ByteSerializable.Info, LongSerializable.Info, ];
+public class LogPacket : Packet {
+    public override SerializableInfo[] Format => [ByteSerializable.Info, LongSerializable.Info, StringSerializable.Info, StringSerializable.Info, StringSerializable.Info];
+    
+    public Severity Severity { get; private set; }
+    public DateTime Time { get; private set; }
+    public string ID { get; private set; }
+    public string Name { get; private set; }
+    public string Text { get; private set; }
 
-    public override List<ISerializable> GetFields()
-    {
-        throw new NotImplementedException();
+    public LogPacket(Severity severity, DateTime time, string id, string name, string text) {
+        Severity = severity;
+        Time = time;
+        ID = id;
+        Name = name;
+        Text = text;
     }
 
-    public override void Parse(List<ISerializable> fields)
-    {
-        throw new NotImplementedException();
+    public override List<ISerializable> GetFields() {
+        return [
+            new ByteSerializable((byte)Severity),
+            new LongSerializable(Time.ToBinary()),
+            new StringSerializable(ID),
+            new StringSerializable(Name),
+            new StringSerializable(Text)
+        ];
+    }
+
+    public override void Parse(List<ISerializable> fields) {
+        Severity = (Severity)(fields[0] as ByteSerializable)!.Value;
+        Time = DateTime.FromBinary((fields[1] as LongSerializable)!.Value);
+        ID = (fields[2] as StringSerializable)!.Value;
+        Name = (fields[3] as StringSerializable)!.Value;
+        Text = (fields[4] as StringSerializable)!.Value;
     }
 }

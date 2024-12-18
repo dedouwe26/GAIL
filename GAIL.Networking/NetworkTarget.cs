@@ -1,10 +1,11 @@
 using GAIL.Networking.Client;
 using GAIL.Networking.Server;
 using OxDED.Terminal.Logging;
+using OxDED.Terminal.Logging.Targets;
 
 namespace GAIL.Networking;
 
-public class NetworkTarget : ITarget {
+public class NetworkTarget : FormattedTarget {
     private Action<LogPacket> sendMethod;
 
     public NetworkTarget(ClientContainer client) {
@@ -29,10 +30,10 @@ public class NetworkTarget : ITarget {
         };
     }
 
-    public void Write<T>(Severity severity, DateTime time, Logger _, T? text) {
-        sendMethod.Invoke(new LogPacket());
+    public override void Write<T>(Severity severity, DateTime time, Logger logger, T? text) where T : default {
+        sendMethod.Invoke(new LogPacket(severity, time, logger.ID ?? "-", GetName(logger), text?.ToString() ?? ""));
     }
-    public void Dispose() {
+    public override void Dispose() {
         
     }
 }
