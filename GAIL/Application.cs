@@ -4,6 +4,7 @@ using GAIL.Input;
 using GAIL.Window;
 using OxDED.Terminal;
 using OxDED.Terminal.Logging;
+using OxDED.Terminal.Logging.Targets;
 
 namespace GAIL
 {
@@ -75,15 +76,14 @@ namespace GAIL
         /// <summary>
         /// Creates a GAIL application.
         /// </summary>
-        /// <param name="applicationName">The name of this application (used for the logger ID: GAIL.App.{here}).</param>
         /// <param name="logger">The optional logger to use.</param>
         /// <param name="severity">The severity to use if the logger isn't specified (defaults to Info).</param>
-        public Application(string applicationName, Logger? logger = null, Severity severity = Severity.Info) {  
+        public Application(Logger? logger = null, Severity severity = Severity.Info) {  
             HasStopped = true;
             IsDisposed = true;
             
             globals = new() {
-                logger = logger ?? new Logger("GAIL.App."+applicationName, "GAIL", severity, new(){[typeof(TerminalTarget)] = new TerminalTarget()})
+                logger = logger ?? new Logger(name:"GAIL", severity:severity, targets:new(){[typeof(TerminalTarget)] = new TerminalTarget()})
             };
             
             if (globals.logger.HasTarget<TerminalTarget>()) {
@@ -97,13 +97,13 @@ namespace GAIL
 
             globals.logger.LogDebug("Initializing all managers.");
 
-            globals.windowManager = new WindowManager(globals.logger.CreateSubLogger("Window", "Window", globals.logger.logLevel));
+            globals.windowManager = new WindowManager(globals.logger.CreateSubLogger("Window", "Window", false, globals.logger.logLevel));
 
-            globals.inputManager = new InputManager(globals, globals.logger.CreateSubLogger("Input", "Input", globals.logger.logLevel));
+            globals.inputManager = new InputManager(globals, globals.logger.CreateSubLogger("Input", "Input", false, globals.logger.logLevel));
 
-            globals.graphicsManager = new GraphicsManager(globals.logger.CreateSubLogger("Graphics", "Graphics", globals.logger.logLevel));
+            globals.graphicsManager = new GraphicsManager(globals.logger.CreateSubLogger("Graphics", "Graphics", false, globals.logger.logLevel));
 
-            globals.audioManager = new AudioManager(globals.logger.CreateSubLogger("Audio", "Audio", globals.logger.logLevel));
+            globals.audioManager = new AudioManager(globals.logger.CreateSubLogger("Audio", "Audio", false, globals.logger.logLevel));
         }
         /// <summary>
         /// Initializes the application after the settings have been applied.
