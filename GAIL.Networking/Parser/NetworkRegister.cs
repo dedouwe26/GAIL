@@ -1,6 +1,8 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using GAIL.Serializing;
 using GAIL.Serializing.Formatters;
+using OxDED.Terminal.Logging;
 
 namespace GAIL.Networking.Parser;
 
@@ -8,30 +10,87 @@ namespace GAIL.Networking.Parser;
 /// A register that registers and creates packets for the network parser and serializer.
 /// </summary>
 public static class NetworkRegister {
+    /// <summary>
+    /// The ID of the network register logger.
+    /// </summary>
+    public const string LoggerID = "GAIL.Networking.Parser.NetworkRegister";
+    private static Logger? logger;
+    /// <summary>
+    /// The logger for the network register.
+    /// </summary>
+    public static Logger Logger { get {
+        if (logger == null) {
+            try {
+                logger = new Logger("Network Register", LoggerID);
+            } catch (ArgumentException) {
+                logger = Loggers.Get(LoggerID) ?? new Logger("Network Register");
+            }
+        }
+        return logger;
+    } }
     static NetworkRegister() {
         // All built-in packets.
-        RegisterPacket(new DisconnectPacket());
+        RegisterPackets(typeof(DisconnectPacket).Assembly);
     }
     private record struct PacketData(ConstructorInfo Constructor, SerializableInfo[] Format, IFormatter Formatter);
     private static readonly Dictionary<uint, PacketData> Packets = [];
 
-
-    #region Constructors
-    private static ConstructorInfo GetConstructor(Packet p) {
-        return p.GetType().GetConstructor([typeof(List<ISerializable>)]) ?? throw new InvalidOperationException($"Packet ({p.GetType().Name}) does not contain a List<ISerializable> constructor. Add this: 'public {p.GetType().Name}(List<ISerializable> fields) : base(fields)  {'{'} {'}'}'");
+    [SuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "Removed types don't need to get registered.")]
+    private static IEnumerable<Type> GetTypesWithAttribute<T>(Assembly assembly) where T : Attribute {
+        foreach (Type type in assembly.DefinedTypes) {
+            if (type.GetCustomAttributes(typeof(Attribute), true).Length > 0) {
+                yield return type;
+            }
+        }
     }
-    #endregion Constructors
+    private static ConstructorInfo? GetConstructor([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type type) {
+        foreach (ConstructorInfo constructor in type.GetConstructors()) {
+            if (constructor.GetParameters().Length < 1 && constructor.GetCustomAttributes<PacketConstructorAttribute>() != null) {
+                return constructor;
+            }
+        }
+        return null;
+    }
 
+    private static SerializableInfo[]? GetFormat(Type type) {
+        foreach (PropertyInfo property in type.GetProperties()) {
+            if (property.GetCustomAttributes<PacketFieldAttribute>() != null) {
+                
+            }
+        }
+    }
 
     #region Packets
+    
+    public static void RegisterPackets(Assembly assembly) {
+        foreach (Type packetType in GetTypesWithAttribute<PacketAttribute>(assembly)) {
+            RegisterPacket(packetType);
+        }
+    }
     /// <summary>
     /// Registers a packet.
     /// </summary>
-    /// <param name="p">The packet instance, only used for getting the constructors.</param>
+    /// <param name="type">The type of the packet.</param>
     /// <returns>The packet ID.</returns>
+    /// <exception cref="ArgumentException"></exception>
     /// <exception cref="InvalidOperationException"></exception>
-    public static uint RegisterPacket(Packet p) {
-        PacketData packetData = new (GetConstructor(p), p.Format, p.Formatter);
+    [SuppressMessage("Trimming", "IL2067:Target parameter argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to target method. The parameter of method does not have matching annotations.", Justification = "Try-catch is used")]
+    public static uint RegisterPacket(Type type) {
+        ConstructorInfo? constructor;
+        try {
+            constructor = GetConstructor(type);
+        } catch (Exception e) {
+            constructor = null;
+            Logger.LogError($"Failed to get constructor of packet ({type.Name}): " + e);
+            throw new ArgumentException("Failed to get constructor of packet", e);
+        }
+        if (constructor == null) {
+            Logger.LogError($"Failed to get constructor of packet ({type.Name})");
+            throw new ArgumentException("Failed to get constructor of packet");
+        }
+
+        PacketData packetData = new(constructor, );
+
         foreach (KeyValuePair<uint, PacketData> packet in Packets) {
             if (packet.Value.Equals(packetData)) {
                 throw new InvalidOperationException("Packet is already registered");

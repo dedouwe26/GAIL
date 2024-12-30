@@ -6,6 +6,7 @@ using GAIL.Serializing.Formatters;
 using GAIL.Serializing.Streams;
 using OxDED.Terminal;
 using OxDED.Terminal.Logging;
+using OxDED.Terminal.Logging.Targets;
 
 namespace GAIL.Networking.Server;
 

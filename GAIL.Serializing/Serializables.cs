@@ -6,11 +6,11 @@ using GAIL.Serializing.Streams;
 /// <summary>
 /// A bool serializable.
 /// </summary>
-public class BoolSerializable : ISerializable {
+public class BoolSerializable : ByteSerializer {
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
-    public readonly static SerializableInfo Info = ISerializable.CreateInfo(() => {return new BoolSerializable(default);});
+    public readonly static SerializableInfo Info = ISerializable.CreateInfo(() => {return new ByteSerializable(default);});
     /// <summary>
     /// The value of this serializable.
     /// </summary>
@@ -84,7 +84,7 @@ public class BoolSerializable : ISerializable {
 /// <summary>
 /// A float serializable.
 /// </summary>
-public class FloatSerializable : ISerializable {
+public class FloatSerializable : ISerializer<T> {
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
@@ -116,7 +116,7 @@ public class FloatSerializable : ISerializable {
 /// <summary>
 /// A double serializable.
 /// </summary>
-public class DoubleSerializable : ISerializable {
+public class DoubleSerializable : ISerializer<T> {
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
@@ -147,7 +147,7 @@ public class DoubleSerializable : ISerializable {
 /// <summary>
 /// A byte serializable.
 /// </summary>
-public class ByteSerializable : ISerializable {
+public class ByteSerializable : ISerializer<T> {
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
@@ -178,7 +178,7 @@ public class ByteSerializable : ISerializable {
 /// <summary>
 /// A short serializable.
 /// </summary>
-public class ShortSerializable : ISerializable {
+public class ShortSerializable : ISerializer<T> {
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
@@ -208,7 +208,7 @@ public class ShortSerializable : ISerializable {
 /// <summary>
 /// A int serializable.
 /// </summary>
-public class IntSerializable : ISerializable {
+public class IntSerializable : ISerializer<T> {
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
@@ -238,7 +238,7 @@ public class IntSerializable : ISerializable {
 /// <summary>
 /// A long serializable.
 /// </summary>
-public class LongSerializable : ISerializable {
+public class LongSerializable : ISerializer<T> {
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
@@ -268,7 +268,7 @@ public class LongSerializable : ISerializable {
 /// <summary>
 /// A signed byte serializable.
 /// </summary>
-public class SByteSerializable : ISerializable {
+public class SByteSerializable : ISerializer<T> {
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
@@ -298,7 +298,7 @@ public class SByteSerializable : ISerializable {
 /// <summary>
 /// An unsigned short serializable.
 /// </summary>
-public class UShortSerializable : ISerializable {
+public class UShortSerializable : ISerializer<T> {
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
@@ -328,7 +328,7 @@ public class UShortSerializable : ISerializable {
 /// <summary>
 /// An unsigned int serializable.
 /// </summary>
-public class UIntSerializable : ISerializable {
+public class UIntSerializable : ISerializer<T> {
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
@@ -358,7 +358,7 @@ public class UIntSerializable : ISerializable {
 /// <summary>
 /// An unsigned long serializable.
 /// </summary>
-public class ULongSerializable : ISerializable {
+public class ULongSerializable : ISerializer<T> {
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
@@ -388,7 +388,7 @@ public class ULongSerializable : ISerializable {
 /// <summary>
 /// A byte array serializable.
 /// </summary>
-public class BytesSerializable : ISerializable {
+public class BytesSerializable : ISerializer<T> {
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
@@ -420,7 +420,7 @@ public class BytesSerializable : ISerializable {
 /// <summary>
 /// A string serializable (UTF-8).
 /// </summary>
-public class StringSerializable : ISerializable {
+public class StringSerializable : ISerializer<T> {
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
@@ -452,7 +452,7 @@ public class StringSerializable : ISerializable {
 /// A list serializable.
 /// </summary>
 /// <typeparam name="T">The serializable list type.</typeparam>
-public class ListSerializable<T> : ISerializable where T : ISerializable {
+public class ListSerializable<T> : ISerializer<T> where T : ISerializer<T> {
     /// <summary>
     /// Creates the info for a list.
     /// </summary>
@@ -509,7 +509,7 @@ public class ListSerializable<T> : ISerializable where T : ISerializable {
 /// </summary>
 /// <typeparam name="TKey">The serializable dictionary key type.</typeparam>
 /// <typeparam name="TValue">The serializable dictionary value type.</typeparam>
-public class DictionarySerializable<TKey, TValue> : ISerializable where TKey : ISerializable where TValue : ISerializable {
+public class DictionarySerializable<TKey, TValue> : ISerializer<T> where TKey : ISerializer<T> where TValue : ISerializer<T> {
     /// <summary>
     /// Creates the info for a dictionary.
     /// </summary>

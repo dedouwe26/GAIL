@@ -1,5 +1,6 @@
 using GAIL.Serializing;
 using GAIL.Serializing.Formatters;
+using OxDED.Terminal.Logging;
 
 namespace GAIL.Networking.Parser;
 
@@ -7,6 +8,24 @@ namespace GAIL.Networking.Parser;
 /// A parser that can parse the network format (opposite of: <see cref="NetworkSerializer"/>).
 /// </summary>
 public class NetworkParser : Serializing.Streams.Parser {
+    /// <summary>
+    /// The ID of the network parser logger.
+    /// </summary>
+    public const string LoggerID = "GAIL.Networking.Parser.NetworkParser";
+    private static Logger? logger;
+    /// <summary>
+    /// The logger for the network parser.
+    /// </summary>
+    public static Logger Logger { get {
+        if (logger == null) {
+            try {
+                logger = new Logger("Network Parser", LoggerID);
+            } catch (ArgumentException) {
+                logger = Loggers.Get(LoggerID) ?? new Logger("Network Parser");
+            }
+        }
+        return logger;
+    } }
     /// <summary>
     /// The stream to read from while formatting.
     /// </summary>
@@ -93,15 +112,17 @@ public class NetworkParser : Serializing.Streams.Parser {
     /// <param name="onPacket">The callback for when a packet has been received. Returns true if it should stop.</param>
     /// <returns>True if it was successful, otherwise false.</returns>
     public bool Parse(IFormatter globalFormatter, Func<bool> isClosed, Func<Packet, bool> onPacket) {
+        Logger.LogDebug("Starting to parse the stream for packets...");
         while (!isClosed()) {
             try {
                 onPacket(ReadPacket(globalFormatter));
-            } catch (EndOfStreamException) {
+            } catch (EndOfStreamException e) {
+                Logger.LogError("End of stream while parsing: "+e);
                 return false;
             }
-            
-        }
 
+        }
+        Logger.LogDebug("Finished parsing the stream for packets.");
         return true;
     }
 }

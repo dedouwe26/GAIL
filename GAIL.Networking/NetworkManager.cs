@@ -27,7 +27,7 @@ public static class NetworkManager {
     /// <exception cref="ArgumentException"></exception>
     public static ClientContainer? CreateClient(string host, int port, IPEndPoint? local = null) {
         IPAddress[] addresses = Dns.GetHostAddresses(host);
-        if (addresses.Length < 1) { throw new ArgumentException("Could not get IP address.", nameof(host)); }
+        if (addresses.Length < 1) { throw new ArgumentException("Could not get IP address", nameof(host)); }
         return CreateClient(new IPEndPoint(addresses[0], port), local);
     }
     /// <summary>

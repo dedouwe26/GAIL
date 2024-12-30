@@ -42,3 +42,13 @@ public interface ISerializable {
     /// <param name="data">The serialized bytes (from <see cref="Serialize"/> ).</param>
     public void Parse(byte[] data);
 }
+/// <summary>
+/// Represents a class that turns <typeparamref name="T"/> into bytes and the other way around.
+/// </summary>
+/// <typeparam name="T">The type of the object to be serializable.</typeparam>
+public interface ISerializer<T> : ISerializable {
+    /// <summary>
+    /// The value of the serializable.
+    /// </summary>
+    public T Value { get; set; }
+}

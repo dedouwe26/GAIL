@@ -5,6 +5,7 @@ using GAIL.Networking.Parser;
 using GAIL.Serializing.Formatters;
 using OxDED.Terminal;
 using OxDED.Terminal.Logging;
+using OxDED.Terminal.Logging.Targets;
 using IFormatter = GAIL.Serializing.Formatters.IFormatter;
 
 namespace GAIL.Networking.Client;
