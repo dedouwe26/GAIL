@@ -46,7 +46,7 @@ public interface ISerializable {
 /// Represents a class that turns <typeparamref name="T"/> into bytes and the other way around.
 /// </summary>
 /// <typeparam name="T">The type of the object to be serializable.</typeparam>
-public interface ISerializer<T> : ISerializable {
+public interface ISerializable<T> : ISerializable {
     /// <summary>
     /// The value of the serializable.
     /// </summary>

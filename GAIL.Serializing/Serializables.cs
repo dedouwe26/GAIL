@@ -1,20 +1,20 @@
-namespace GAIL.Serializing;
-
 using System.Text;
 using GAIL.Serializing.Streams;
+
+namespace GAIL.Serializing;
 
 /// <summary>
 /// A bool serializable.
 /// </summary>
-public class BoolSerializable : ByteSerializer {
+public class BoolSerializable : ISerializable {
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
-    public readonly static SerializableInfo Info = ISerializable.CreateInfo(() => {return new ByteSerializable(default);});
+    public readonly static SerializableInfo Info = ISerializable.CreateInfo(() => {return new BoolSerializable();});
     /// <summary>
     /// The value of this serializable.
     /// </summary>
-    public byte Value;
+    public byte Value { get; set; }
     /// <summary>
     /// The first boolean (msb).
     /// </summary>
@@ -47,6 +47,10 @@ public class BoolSerializable : ByteSerializer {
     /// The eighth boolean (lsb).
     /// </summary>
     public bool B8 { get => (Value & 0x01) != 0; set { if (value) { Value |= 0x01; } else { Value &= 0xfe; } } }
+    /// <summary>
+    /// Creates an empty serializable.
+    /// </summary>
+    public  BoolSerializable() : this(default) { }
     /// <summary>
     /// Creates a new serializable (stores 8 bools in 1 byte).
     /// </summary>
@@ -84,7 +88,7 @@ public class BoolSerializable : ByteSerializer {
 /// <summary>
 /// A float serializable.
 /// </summary>
-public class FloatSerializable : ISerializer<T> {
+public class FloatSerializable : ISerializable<float> {
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
@@ -92,7 +96,7 @@ public class FloatSerializable : ISerializer<T> {
     /// <summary>
     /// The value of this serializable.
     /// </summary>
-    public float Value;
+    public float Value { get; set; }
     /// <summary>
     /// Creates a new serializable.
     /// </summary>
@@ -116,7 +120,7 @@ public class FloatSerializable : ISerializer<T> {
 /// <summary>
 /// A double serializable.
 /// </summary>
-public class DoubleSerializable : ISerializer<T> {
+public class DoubleSerializable : ISerializable<double> {
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
@@ -124,7 +128,7 @@ public class DoubleSerializable : ISerializer<T> {
     /// <summary>
     /// The value of this serializable.
     /// </summary>
-    public double Value;
+    public double Value { get; set; }
     /// <summary>
     /// Creates a new serializable.
     /// </summary>
@@ -147,7 +151,7 @@ public class DoubleSerializable : ISerializer<T> {
 /// <summary>
 /// A byte serializable.
 /// </summary>
-public class ByteSerializable : ISerializer<T> {
+public class ByteSerializable : ISerializable<byte> {
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
@@ -155,7 +159,7 @@ public class ByteSerializable : ISerializer<T> {
     /// <summary>
     /// The value of this serializable.
     /// </summary>
-    public byte Value;
+    public byte Value { get; set; }
     /// <summary>
     /// Creates a new serializable.
     /// </summary>
@@ -178,7 +182,7 @@ public class ByteSerializable : ISerializer<T> {
 /// <summary>
 /// A short serializable.
 /// </summary>
-public class ShortSerializable : ISerializer<T> {
+public class ShortSerializable : ISerializable<short> {
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
@@ -186,7 +190,7 @@ public class ShortSerializable : ISerializer<T> {
     /// <summary>
     /// The value of this serializable.
     /// </summary>
-    public short Value;
+    public short Value { get; set; }
     /// <summary>
     /// Creates a new serializable.
     /// </summary>
@@ -208,7 +212,7 @@ public class ShortSerializable : ISerializer<T> {
 /// <summary>
 /// A int serializable.
 /// </summary>
-public class IntSerializable : ISerializer<T> {
+public class IntSerializable : ISerializable<int> {
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
@@ -216,7 +220,7 @@ public class IntSerializable : ISerializer<T> {
     /// <summary>
     /// The value of this serializable.
     /// </summary>
-    public int Value;
+    public int Value { get; set; }
     /// <summary>
     /// Creates a new serializable.
     /// </summary>
@@ -238,7 +242,7 @@ public class IntSerializable : ISerializer<T> {
 /// <summary>
 /// A long serializable.
 /// </summary>
-public class LongSerializable : ISerializer<T> {
+public class LongSerializable : ISerializable<long> {
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
@@ -253,7 +257,7 @@ public class LongSerializable : ISerializer<T> {
     /// <summary>
     /// The value of this serializable.
     /// </summary>
-    public long Value;
+    public long Value { get; set; }
     /// <inheritdoc/>
     public uint? FixedSize => 8;
     /// <inheritdoc/>
@@ -268,7 +272,7 @@ public class LongSerializable : ISerializer<T> {
 /// <summary>
 /// A signed byte serializable.
 /// </summary>
-public class SByteSerializable : ISerializer<T> {
+public class SByteSerializable : ISerializable<sbyte> {
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
@@ -283,7 +287,7 @@ public class SByteSerializable : ISerializer<T> {
     /// <summary>
     /// The value of this serializable.
     /// </summary>
-    public sbyte Value;
+    public sbyte Value { get; set; }
     /// <inheritdoc/>
     public uint? FixedSize => 1;
     /// <inheritdoc/>
@@ -298,7 +302,7 @@ public class SByteSerializable : ISerializer<T> {
 /// <summary>
 /// An unsigned short serializable.
 /// </summary>
-public class UShortSerializable : ISerializer<T> {
+public class UShortSerializable : ISerializable<ushort> {
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
@@ -313,7 +317,7 @@ public class UShortSerializable : ISerializer<T> {
     /// <summary>
     /// The value of this serializable.
     /// </summary>
-    public ushort Value;
+    public ushort Value { get; set; }
     /// <inheritdoc/>
     public uint? FixedSize => 2;
     /// <inheritdoc/>
@@ -328,7 +332,7 @@ public class UShortSerializable : ISerializer<T> {
 /// <summary>
 /// An unsigned int serializable.
 /// </summary>
-public class UIntSerializable : ISerializer<T> {
+public class UIntSerializable : ISerializable<uint> {
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
@@ -343,9 +347,10 @@ public class UIntSerializable : ISerializer<T> {
     /// <summary>
     /// The value of this serializable.
     /// </summary>
-    public uint Value;
+    public uint Value { get; set; }
     /// <inheritdoc/>
     public uint? FixedSize => 4;
+
     /// <inheritdoc/>
     public byte[] Serialize() {
         return BitConverter.IsLittleEndian ? BitConverter.GetBytes(Value) : BitConverter.GetBytes(Value).Reverse().ToArray();
@@ -358,7 +363,7 @@ public class UIntSerializable : ISerializer<T> {
 /// <summary>
 /// An unsigned long serializable.
 /// </summary>
-public class ULongSerializable : ISerializer<T> {
+public class ULongSerializable : ISerializable<ulong> {
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
@@ -373,7 +378,7 @@ public class ULongSerializable : ISerializer<T> {
     /// <summary>
     /// The value of this serializable.
     /// </summary>
-    public ulong Value;
+    public ulong Value { get; set; }
     /// <inheritdoc/>
     public uint? FixedSize => 8;
     /// <inheritdoc/>
@@ -388,7 +393,7 @@ public class ULongSerializable : ISerializer<T> {
 /// <summary>
 /// A byte array serializable.
 /// </summary>
-public class BytesSerializable : ISerializer<T> {
+public class BytesSerializable : ISerializable<byte[]> {
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
@@ -403,7 +408,7 @@ public class BytesSerializable : ISerializer<T> {
     /// <summary>
     /// The value of this serializable.
     /// </summary>
-    public byte[] Value;
+    public byte[] Value { get; set; }
 
     /// <inheritdoc/>
     public uint? FixedSize => null;
@@ -420,7 +425,7 @@ public class BytesSerializable : ISerializer<T> {
 /// <summary>
 /// A string serializable (UTF-8).
 /// </summary>
-public class StringSerializable : ISerializer<T> {
+public class StringSerializable : ISerializable<string> {
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
@@ -435,7 +440,7 @@ public class StringSerializable : ISerializer<T> {
     /// <summary>
     /// The value of this serializable.
     /// </summary>
-    public string Value;
+    public string Value { get; set; }
     /// <inheritdoc/>
     public uint? FixedSize => null;
     /// <inheritdoc/>
@@ -452,7 +457,7 @@ public class StringSerializable : ISerializer<T> {
 /// A list serializable.
 /// </summary>
 /// <typeparam name="T">The serializable list type.</typeparam>
-public class ListSerializable<T> : ISerializer<T> where T : ISerializer<T> {
+public class ListSerializable<T> : ISerializable<List<T>> where T : ISerializable {
     /// <summary>
     /// Creates the info for a list.
     /// </summary>
@@ -477,7 +482,7 @@ public class ListSerializable<T> : ISerializer<T> where T : ISerializer<T> {
     /// <summary>
     /// The list itself.
     /// </summary>
-    public List<T> Value;
+    public List<T> Value { get; set; }
     private readonly SerializableInfo Info;
     /// <inheritdoc/>
     public uint? FixedSize => null;
@@ -509,7 +514,7 @@ public class ListSerializable<T> : ISerializer<T> where T : ISerializer<T> {
 /// </summary>
 /// <typeparam name="TKey">The serializable dictionary key type.</typeparam>
 /// <typeparam name="TValue">The serializable dictionary value type.</typeparam>
-public class DictionarySerializable<TKey, TValue> : ISerializer<T> where TKey : ISerializer<T> where TValue : ISerializer<T> {
+public class DictionarySerializable<TKey, TValue> : ISerializable<Dictionary<TKey, TValue>> where TKey : ISerializable where TValue : ISerializable {
     /// <summary>
     /// Creates the info for a dictionary.
     /// </summary>
@@ -541,10 +546,10 @@ public class DictionarySerializable<TKey, TValue> : ISerializer<T> where TKey : 
     /// <summary>
     /// The dictionary itself.
     /// </summary>
-    public Dictionary<TKey, TValue> Value;
+    public Dictionary<TKey, TValue> Value { get; set; }
 
     /// <inheritdoc/>
-    public uint? FixedSize => throw new NotImplementedException();
+    public uint? FixedSize => null;
 
     /// <inheritdoc/>
     public byte[] Serialize() {

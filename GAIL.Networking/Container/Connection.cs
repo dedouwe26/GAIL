@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Sockets;
+using GAIL.Networking.Parser;
 
 namespace GAIL.Networking.Server;
 
@@ -40,6 +41,24 @@ public class Connection : IDisposable {
     /// True if this connection is closed.
     /// </summary>
     public bool Closed { get; private set;}
+    private NetworkSerializer? serializer;
+    internal NetworkSerializer Serializer {
+        get {
+            if (serializer == null) {
+                serializer = new NetworkSerializer(Stream, false);
+            }
+            return serializer;
+        }
+    }
+    private NetworkParser? parser;
+    internal NetworkParser Parser {
+        get {
+            if (parser == null) {
+                parser = new NetworkParser(Stream, false);
+            }
+            return parser;
+        }
+    }
     internal Connection(TcpClient client) {
         Closed = false;
         if (client.Client.RemoteEndPoint == null) {

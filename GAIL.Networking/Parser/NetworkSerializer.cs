@@ -46,11 +46,12 @@ public class NetworkSerializer : Serializer {
     /// </summary>
     /// <param name="packet">The packet to format.</param>
     /// <param name="globalFormatter">The formatter used for global purposes (multiple packets).</param>
+    /// <exception cref="InvalidOperationException"/>
     public void WritePacket(Packet packet, IFormatter globalFormatter) {
         foreach (ISerializable field in packet.GetFields()) {
             WriteSerializable(field);
         }
-        uint ID = NetworkRegister.GetPacketID(packet);
+        uint ID = NetworkRegister.GetPacketID(packet) ?? throw new InvalidOperationException($"{packet.GetType().Name} packet is not registered");
         Encode(globalFormatter, ID, NetworkRegister.GetPacketFormatter(ID));
     }
     /// <inheritdoc/>

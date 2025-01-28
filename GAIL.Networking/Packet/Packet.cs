@@ -12,6 +12,7 @@ public abstract class Packet {
     /// <summary>
     /// The formatter used for encoding / decoding this packet.
     /// </summary>
+    [PacketFormatter]
     public virtual IFormatter Formatter => new DefaultFormatter();
     /// <summary>
     /// Creates a packet (add own data here).
@@ -39,5 +40,6 @@ public abstract class Packet {
     /// <summary>
     /// The ID of this packet.
     /// </summary>
-    public uint ID { get => NetworkRegister.GetPacketID(this); }
+    /// <exception cref="InvalidOperationException"/>
+    public uint ID { get => NetworkRegister.GetPacketID(this) ?? throw new InvalidOperationException($"{GetType().Name} packet is not registered"); }
 }

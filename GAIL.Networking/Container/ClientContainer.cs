@@ -118,25 +118,25 @@ public class ClientContainer : IDisposable {
     /// <summary>
     /// Sets the logger of this client.
     /// </summary>
-    /// <param name="logger">The logger for this client ( default: ID: GAIL.Networking.Client.{ Connection.CreateID( localEndpoint ) } ).</param>
+    /// <param name="logger">The logger for this client (on default only contains a terminal target).</param>
     /// <param name="disable">If it should disable the logging.</param>
     public void SetLogger(Logger? logger = null, bool disable = false) {
-        Logger = disable ? null : (logger ?? new Logger(
-            $"GAIL.Networking.Client.{Networking.Server.Connection.CreateID(IP)}",
-            "Networking Client",
-            Severity.Info,
-            new () {
-                [typeof(TerminalTarget)] = new TerminalTarget()
-            }
-        ));
-        
-        if (Logger?.HasTarget(typeof(TerminalTarget)) ?? false) {
-            Logger.GetTarget<TerminalTarget>().Format = "<{0}>: ("+Color.DarkBlue.ToForegroundANSI()+"{2}"+ANSI.Styles.ResetAll+")[{5}"+ANSI.Styles.Bold+"{3}"+ANSI.Styles.ResetAll+"] : {5}{4}"+ANSI.Styles.ResetAll;
-            Logger.GetTarget<TerminalTarget>().NameFormat =  "{0} - {1}";
+        Logger = logger ?? new Logger(
+            name: "Networking Client",
+            severity: Severity.Info,
+            targets: [
+                new TerminalTarget()
+            ]
+        );
+        int index = Logger.GetTargetIndex<TerminalTarget>();
+        if (index > -1) {
+            Logger.GetTarget<TerminalTarget>(index)!.Format = "<{0}>: ("+Color.DarkBlue.ToForegroundANSI()+"{2}"+ANSI.Styles.ResetAll+")[{5}"+ANSI.Styles.Bold+"{3}"+ANSI.Styles.ResetAll+"] : {5}{4}"+ANSI.Styles.ResetAll;
+            Logger.GetTarget<TerminalTarget>(index)!.NameFormat =  "{0} - {1}";
         }
-        if (Logger?.HasTarget(typeof(FileTarget)) ?? false) {
-            Logger.GetTarget<FileTarget>().Format = "<{0}>: ({2})[{3}] : {4}";
-            Logger.GetTarget<FileTarget>().NameFormat =  "{0} - {1}";
+        index = Logger.GetTargetIndex<FileTarget>();
+        if (index > -1) {
+            Logger.GetTarget<FileTarget>(index)!.Format = "<{0}>: ({2})[{3}] : {4}";
+            Logger.GetTarget<FileTarget>(index)!.NameFormat =  "{0} - {1}";
         }
     }
 

@@ -120,25 +120,24 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
     /// <summary>
     /// Sets the logger of this server.
     /// </summary>
-    /// <param name="logger">The logger for this server ( default: ID: GAIL.Networking.Server.{ Connection.CreateID( IP ) } ).</param>
-    /// <param name="disable">If it should disable the logging.</param>
-    public void SetLogger(Logger? logger = null, bool disable = false) {
-        Logger = disable ? null : (logger ?? new Logger(
-            $"GAIL.Networking.Server.{Connection.CreateID(IP)}",
-            "Networking Server",
-            Severity.Info,
-            new () {
-                [typeof(TerminalTarget)] = new TerminalTarget()
-            }
-        ));
-        
-        if (Logger?.HasTarget(typeof(TerminalTarget)) ?? false) {
-            Logger.GetTarget<TerminalTarget>().Format = "<{0}>: ("+Color.DarkBlue.ToForegroundANSI()+"{2}"+ANSI.Styles.ResetAll+")[{5}"+ANSI.Styles.Bold+"{3}"+ANSI.Styles.ResetAll+"] : {5}{4}"+ANSI.Styles.ResetAll;
-            Logger.GetTarget<TerminalTarget>().NameFormat =  "{0} - {1}";
+    /// <param name="logger">The logger for this server (on default only contains a terminal target).</param>
+    public void SetLogger(Logger? logger = null) {
+        Logger = logger ?? new Logger(
+            name: "Networking Server",
+            severity: Severity.Info,
+            targets: [
+                new TerminalTarget()
+            ]
+        );
+        int index = Logger.GetTargetIndex<TerminalTarget>();
+        if (index > -1) {
+            Logger.GetTarget<TerminalTarget>(index)!.Format = "<{0}>: ("+Color.DarkBlue.ToForegroundANSI()+"{2}"+ANSI.Styles.ResetAll+")[{5}"+ANSI.Styles.Bold+"{3}"+ANSI.Styles.ResetAll+"] : {5}{4}"+ANSI.Styles.ResetAll;
+            Logger.GetTarget<TerminalTarget>(index)!.NameFormat =  "{0} - {1}";
         }
-        if (Logger?.HasTarget(typeof(FileTarget)) ?? false) {
-            Logger.GetTarget<FileTarget>().Format = "<{0}>: ({2})[{3}] : {4}";
-            Logger.GetTarget<FileTarget>().NameFormat =  "{0} - {1}";
+        index = Logger.GetTargetIndex<FileTarget>();
+        if (index > -1) {
+            Logger.GetTarget<FileTarget>(index)!.Format = "<{0}>: ({2})[{3}] : {4}";
+            Logger.GetTarget<FileTarget>(index)!.NameFormat =  "{0} - {1}";
         }
     }
 
@@ -152,16 +151,15 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
     /// <returns>True if it succeeded, false if the server is closed or the server could not send the packet.</returns>
     public bool SendPacket(Packet packet, Connection connection) {
         if (Closed) { return false; }
-        NetworkSerializer serializer = new(connection.Stream);
         try {
-            serializer.WritePacket(packet, GlobalFormatter);
+            connection.Serializer.WritePacket(packet, GlobalFormatter);
         } catch (IOException e) {
             Logger?.LogError($"Could not send packet (connection ID: {connection.ToConnectionID()}): '{e.Message}'.");
             OnException?.Invoke(e, connection);
-            serializer.Dispose();
+            connection.Serializer.Dispose();
             return false;
         }
-        serializer.Dispose();
+        connection.Serializer.Dispose();
         connection.Stream.Flush();
         OnPacketSent?.Invoke(this, connection, packet);
         return true;
@@ -207,18 +205,17 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
     /// <returns>True if it succeeded, false if the server is closed or the server could not send the packet.</returns>
     public async ValueTask<bool> SendPacketAsync(Packet packet, Connection connection) {
         if (Closed) { return false; }
-        NetworkSerializer serializer = new(connection.Stream);
         try {
-            serializer.WritePacket(packet, GlobalFormatter); // TODO?: this isnt really async.
+            connection.Serializer.WritePacket(packet, GlobalFormatter); // TODO?: this isnt really async.
         } catch (IOException e) {
             Logger?.LogError($"Could not send packet (connection ID: {connection.ToConnectionID()}): '{e.Message}'.");
             OnException?.Invoke(e, connection);
-            serializer.Dispose();
+            connection.Serializer.Dispose();
             return false;
         }
         
         await connection.Stream.FlushAsync();
-        serializer.Dispose();
+        connection.Serializer.Dispose();
         OnPacketSent?.Invoke(this, connection, packet);
         return true;
     }
@@ -364,9 +361,8 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
         
         connections.Add(connection.ID, connection);
         OnConnect?.Invoke(this, connection);
-        NetworkParser parser = new(connection.Stream);
         try {
-            if (!parser.Parse(GlobalFormatter, () => Closed || connection.Closed, (Packet p) => {
+            if (!connection.Parser.Parse(GlobalFormatter, () => Closed || connection.Closed, (Packet p) => {
                 OnPacket?.Invoke(this, connection, p);
                 if (p is DisconnectPacket) {
                     connections.Remove(connection.ID);
