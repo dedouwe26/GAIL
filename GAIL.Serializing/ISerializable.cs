@@ -1,4 +1,6 @@
-﻿using System.Diagnostics.Contracts;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
+using System.Reflection;
 
 namespace GAIL.Serializing;
 
@@ -13,6 +15,29 @@ public record SerializableInfo (uint? FixedSize, Func<byte[], ISerializable> Cre
 /// Represents a class that can be turned into bytes and can be created from bytes.
 /// </summary>
 public interface ISerializable {
+    /// <summary>
+    /// Gets the serializable info of a serializable.
+    /// </summary>
+    /// <param name="t">The type of the serializable.</param>
+    /// <returns>The info if it has one.</returns>
+    public static SerializableInfo? GetInfo(
+        [DynamicallyAccessedMembers(
+            DynamicallyAccessedMemberTypes.PublicFields | DynamicallyAccessedMemberTypes.NonPublicFields|
+            DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.NonPublicProperties
+        )] Type t
+    ) {
+        foreach (FieldInfo property in t.GetFields(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)) {
+            if (property.IsDefined(typeof(SerializableInfoAttribute), true)) {
+                return property.GetValue(null) as SerializableInfo;
+            }
+        }
+        foreach (PropertyInfo property in t.GetProperties(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)) {
+            if (property.IsDefined(typeof(SerializableInfoAttribute), true)) {
+                return property.GetValue(null) as SerializableInfo;
+            }
+        }
+        return null;
+    }
     /// <summary>
     /// Creates a serializable info.
     /// </summary>

@@ -12,19 +12,7 @@ public sealed class PacketConstructorAttribute : Attribute { }
 /// An attribute that will register a packet field.
 /// </summary>
 [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
-public sealed class PacketFieldAttribute : Attribute {
-    /// <summary>
-    /// The serializable info of the packet field.
-    /// </summary>
-    public SerializableInfo Info { get; private set; }
-    /// <summary>
-    /// Creates an attribute that will register a packet field.
-    /// </summary>
-    /// <param name="info">The serializable info of the packet field.</param>
-    public PacketFieldAttribute(SerializableInfo info) {
-        Info = info;
-    }
-}
+public sealed class PacketFieldAttribute : Attribute { }
 
 /// <summary>
 /// An attribute that will set the formatter of the packet.

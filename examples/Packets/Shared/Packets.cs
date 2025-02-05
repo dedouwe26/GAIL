@@ -15,8 +15,8 @@ public static class Packets {
 }
 
 public class MessagePacket : Packet {
-    [PacketField(StringSerializable.Info)] 
-    public StringSerializable messageField { get; set; }
+    [PacketField]
+    public StringSerializable MessageField { get => new(message); set => message = value.Value; }
 
     // Assign default values (for empty constructor).
     public string message = "";

@@ -36,15 +36,6 @@ public static class NetworkRegister {
     private record class PacketInfo(string FullyQualifiedName, Func<ISerializable[], Packet> Creator, SerializableInfo[] Format, IFormatter Formatter, Func<Packet, ISerializable[]> Destructor);
     private static readonly List<PacketInfo> Packets = [];
 
-    [SuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "Removed types don't need to get registered.")]
-    private static IEnumerable<Type> GetTypesWithAttribute<T>(Assembly assembly, bool inherit = false) where T : Attribute {
-        foreach (Type type in assembly.GetTypes()) {
-            if (type.GetCustomAttributes(typeof(T), inherit).Length > 0) {
-                yield return type;
-            }
-        }
-    }
-
     #region Packet Reflection
 
     private static ConstructorInfo? GetConstructor(ConstructorInfo[] constructors) {
@@ -77,6 +68,11 @@ public static class NetworkRegister {
                 if (!typeof(ISerializable).IsAssignableFrom(property.PropertyType)) {
                     throw new ArgumentException($"Property {property.Name} in {property.ReflectedType?.Name ?? "packet"} is not a serializable");
                 }
+                SerializableInfo? info;
+                try {
+                    info = ISerializable.GetInfo(property.PropertyType);
+                }
+                f.Add(new PacketFieldInfo(property, ))
             }
         }
         return [.. f];
