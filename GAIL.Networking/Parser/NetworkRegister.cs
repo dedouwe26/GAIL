@@ -68,11 +68,7 @@ public static class NetworkRegister {
                 if (!typeof(ISerializable).IsAssignableFrom(property.PropertyType)) {
                     throw new ArgumentException($"Property {property.Name} in {property.ReflectedType?.Name ?? "packet"} is not a serializable");
                 }
-                SerializableInfo? info;
-                try {
-                    info = ISerializable.GetInfo(property.PropertyType);
-                }
-                f.Add(new PacketFieldInfo(property, ))
+                f.Add(new PacketFieldInfo(property, property.GetValue))
             }
         }
         return [.. f];

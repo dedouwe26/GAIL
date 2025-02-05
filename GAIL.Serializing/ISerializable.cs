@@ -16,29 +16,6 @@ public record SerializableInfo (uint? FixedSize, Func<byte[], ISerializable> Cre
 /// </summary>
 public interface ISerializable {
     /// <summary>
-    /// Gets the serializable info of a serializable.
-    /// </summary>
-    /// <param name="t">The type of the serializable.</param>
-    /// <returns>The info if it has one.</returns>
-    public static SerializableInfo? GetInfo(
-        [DynamicallyAccessedMembers(
-            DynamicallyAccessedMemberTypes.PublicFields | DynamicallyAccessedMemberTypes.NonPublicFields|
-            DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.NonPublicProperties
-        )] Type t
-    ) {
-        foreach (FieldInfo property in t.GetFields(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)) {
-            if (property.IsDefined(typeof(SerializableInfoAttribute), true)) {
-                return property.GetValue(null) as SerializableInfo;
-            }
-        }
-        foreach (PropertyInfo property in t.GetProperties(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)) {
-            if (property.IsDefined(typeof(SerializableInfoAttribute), true)) {
-                return property.GetValue(null) as SerializableInfo;
-            }
-        }
-        return null;
-    }
-    /// <summary>
     /// Creates a serializable info.
     /// </summary>
     /// <param name="creator">The creator that creates an empty instance.</param>
@@ -50,6 +27,18 @@ public interface ISerializable {
             return inst;
         });
     }
+    /// <summary>
+    /// Creates a serializable info.
+    /// </summary>
+    /// <typeparam name="T">The type of the serializable.</typeparam>
+    /// <returns>A new serializable info.</returns>
+    public static SerializableInfo CreateInfo<T>() where T : ISerializable, new() {
+        return CreateInfo(() => new T());
+    }
+    /// <summary>
+    /// The info of this serializable.
+    /// </summary>
+    public SerializableInfo Info { get; }
 
     /// <summary>
     /// Determines whether the return value of <see cref="Serialize"/> has a fixed length and if so what the length is (in bytes). Must always be the same.
