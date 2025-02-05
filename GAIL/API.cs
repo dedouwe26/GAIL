@@ -11,6 +11,7 @@ namespace GAIL {
         static API() {
             Instance = new API();
         }
+        private API() { }
         /// <summary>
         /// Instance of API holder.
         /// </summary>
@@ -36,13 +37,17 @@ namespace GAIL {
         private readonly ALContext alc = ALContext.GetApi();
         private readonly Vk vk = Vk.GetApi();
 
-        /// <summary>Calls <see cref="Dispose"/></summary>
+        /// <summary>Disposes all api's.</summary>
         ~API() {
-            Dispose();
+            SubDispose();
         }
 
         /// <inheritdoc/>
         public void Dispose() {
+            SubDispose();
+            GC.SuppressFinalize(this);
+        }
+        private void SubDispose() {
             vk.Dispose();
             glfw.Dispose();
             alc.Dispose();

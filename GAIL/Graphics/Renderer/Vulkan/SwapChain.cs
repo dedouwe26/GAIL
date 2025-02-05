@@ -140,8 +140,8 @@ namespace GAIL.Graphics.Renderer.Vulkan
 
             }
             if (!API.Vk.TryGetDeviceExtension(instance, device.logicalDevice, out extension)) {
-                Logger.LogFatal("Vulkan: Failed to get Swapchain extension!");
-                throw new APIBackendException("Vulkan", "Failed to get VK_KHR_swapchain extension.");
+                Logger.LogFatal("Vulkan: Failed at getting Swapchain extension!");
+                throw new APIBackendException("Vulkan", "Failed at getting VK_KHR_swapchain extension.");
             }
             unsafe {
                 _ = Utils.Check(extension.CreateSwapchain(device.logicalDevice, createInfo, Allocator.allocatorPtr, out swapchain), Logger, "Failed to create swapchain", true);

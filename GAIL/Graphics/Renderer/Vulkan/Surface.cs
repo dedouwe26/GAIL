@@ -21,8 +21,8 @@ namespace GAIL.Graphics.Renderer.Vulkan
             instance = renderer.instance;
 
             if (!API.Vk.TryGetInstanceExtension(instance, out surfaceExtension)) {
-                renderer.Logger.LogFatal("Vulkan: Failed to get Surface extension!");
-                throw new APIBackendException("Vulkan", "Failed to get VK_KHR_surface extension.");
+                renderer.Logger.LogFatal("Vulkan: Failed at getting Surface extension!");
+                throw new APIBackendException("Vulkan", "Failed at getting VK_KHR_surface extension.");
             }
 
             unsafe {

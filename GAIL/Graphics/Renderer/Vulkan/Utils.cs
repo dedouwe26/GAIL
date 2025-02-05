@@ -61,7 +61,7 @@ public static class Utils {
         if (!Check(
             arrayGetter(Pointer<T>.FromNull(), ref count),
             logger,
-            $"Failed to get array '{arrayName}' of type {typeof(T).Name}.",
+            $"Failed at getting array '{arrayName}' of type {typeof(T).Name}.",
             fatal
         )) {
             array = [];
@@ -84,7 +84,7 @@ public static class Utils {
         if (!Check(
             arrayGetter(Pointer<T>.FromNull(), Pointer<uint>.From(ref count)),
             logger,
-            $"Failed to get array '{arrayName}' of type {typeof(T).Name}.",
+            $"Failed at getting array '{arrayName}' of type {typeof(T).Name}.",
             fatal
         )) {
             array = [];
@@ -113,7 +113,7 @@ public static class Utils {
         }
         if (!Check(
             arrayGetter(Pointer<T>.FromArray(ref array), ref count),
-            logger, $"Failed to get array '{arrayName}' of type {typeof(T).Name}.",
+            logger, $"Failed at getting array '{arrayName}' of type {typeof(T).Name}.",
             fatal
         )) {
             array = [];

@@ -30,10 +30,11 @@ public static class NetworkRegister {
     } }
     static NetworkRegister() {
         // All built-in packets.
-        RegisterPackets(typeof(DisconnectPacket).Assembly);
+        RegisterPacket<DisconnectPacket>();
     }
-    private record struct PacketData(ConstructorInfo Constructor, SerializableInfo[] Format, IFormatter Formatter);
-    private static readonly List<PacketData> Packets = [];
+    private record class PacketFieldInfo(PropertyInfo Property, SerializableInfo Info);
+    private record class PacketInfo(string FullyQualifiedName, Func<ISerializable[], Packet> Creator, SerializableInfo[] Format, IFormatter Formatter, Func<Packet, ISerializable[]> Destructor);
+    private static readonly List<PacketInfo> Packets = [];
 
     [SuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "Removed types don't need to get registered.")]
     private static IEnumerable<Type> GetTypesWithAttribute<T>(Assembly assembly, bool inherit = false) where T : Attribute {
@@ -46,124 +47,152 @@ public static class NetworkRegister {
 
     #region Packet Reflection
 
-    private static ConstructorInfo? GetConstructor(Type type) {
-        foreach (ConstructorInfo constructor in type.GetConstructors(BindingFlags.Instance)) {
-            if (constructor.IsDefined(typeof(PacketConstructorAttribute)) && constructor.GetParameters().Length < 1) {
+    private static ConstructorInfo? GetConstructor(ConstructorInfo[] constructors) {
+        foreach (ConstructorInfo constructor in constructors) {
+            if (constructor.IsDefined(typeof(PacketConstructorAttribute))) {
+                if (constructor.GetParameters().Length > 0) {
+                    throw new ArgumentException($"Constructor {constructor.Name} in {constructor.ReflectedType?.Name ?? "packet"} cannot have parameters");
+                }
                 return constructor;
             }
         }
         return null;
     }
-    private static ConstructorInfo? GetConstructorNonPublic([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicConstructors)] Type type) {
-        foreach (ConstructorInfo constructor in type.GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic)) {
-            if (constructor.IsDefined(typeof(PacketConstructorAttribute)) && constructor.GetParameters().Length < 1) {
-                return constructor;
-            }
-        }
-        return null;
-    }
-    private static IFormatter? GetFormatter(Type type) {
-        foreach (PropertyInfo property in type.GetProperties(BindingFlags.Instance)) {
-            if (property.IsDefined(typeof(PacketFormatterAttribute)) && property.PropertyType == typeof(IFormatter)) {
+    private static IFormatter? GetFormatter(PropertyInfo[] properties) {
+        foreach (PropertyInfo property in properties) {
+            if (property.IsDefined(typeof(PacketFormatterAttribute))) {
+                if (property.PropertyType != typeof(IFormatter)) {
+                    throw new ArgumentException($"Property {property.Name} in {property.ReflectedType?.Name ?? "packet"} is not an IFormatter");
+                }
                 return property.GetValue(null) as IFormatter;
             }
         }
         return null;
     }
-    private static IFormatter? GetFormatterNonPublic([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicProperties)] Type type) {
-        foreach (PropertyInfo property in type.GetProperties(BindingFlags.Instance | BindingFlags.NonPublic)) {
-            if (property.IsDefined(typeof(PacketFormatterAttribute)) && property.PropertyType == typeof(IFormatter)) {
-                return property.GetValue(null) as IFormatter;
+    private static PacketFieldInfo[] GetFields(PropertyInfo[] properties) {
+        List<PacketFieldInfo> f = [];
+        foreach (PropertyInfo property in properties) {
+            PacketFieldAttribute? attribute = property.GetCustomAttribute<PacketFieldAttribute>();
+            if (attribute != null) {
+                if (!typeof(ISerializable).IsAssignableFrom(property.PropertyType)) {
+                    throw new ArgumentException($"Property {property.Name} in {property.ReflectedType?.Name ?? "packet"} is not a serializable");
+                }
+            }
+        }
+        return [.. f];
+    }
+    private static MethodInfo? GetSerializeMethod(MethodInfo[] methods) {
+        foreach (MethodInfo method in methods) {
+            if (method.IsDefined(typeof(PacketSerializeAttribute))) {
+                if (method.GetParameters().Length > 0) {
+                    throw new ArgumentException($"Method {method.Name} in {method.ReflectedType?.Name ?? "packet"} cannot have parameters");
+                }
+                return method;
             }
         }
         return null;
     }
-    private static SerializableInfo[] GetFormat(Type type) {
-        List<SerializableInfo> format = [];
-        foreach (PropertyInfo property in type.GetProperties(BindingFlags.Instance)) {
-            PacketFieldAttribute? attribute = property.GetCustomAttribute<PacketFieldAttribute>();
-            if (attribute != null) {
-                if (!typeof(ISerializable).IsAssignableFrom(property.PropertyType)) {
-                    throw new ArgumentException($"Property {property.Name} in {type.Name} is not an ISerializable");
+    private static MethodInfo? GetParseMethod(MethodInfo[] methods) {
+        foreach (MethodInfo method in methods) {
+            if (method.IsDefined(typeof(PacketParseAttribute))) {
+                if (method.GetParameters().Length > 0) {
+                    throw new ArgumentException($"Method {method.Name} in {method.ReflectedType?.Name ?? "packet"} cannot have parameters");
                 }
-                format.Add(attribute.Info);
+                return method;
             }
         }
-        return [.. format];
-    }
-    private static SerializableInfo[] GetFormatNonPublic([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicProperties)] Type type) {
-        List<SerializableInfo> format = [];
-        foreach (PropertyInfo property in type.GetProperties(BindingFlags.Instance | BindingFlags.NonPublic)) {
-            PacketFieldAttribute? attribute = property.GetCustomAttribute<PacketFieldAttribute>();
-            if (attribute != null) {
-                if (!typeof(ISerializable).IsAssignableFrom(property.PropertyType)) {
-                    throw new ArgumentException($"Property {property.Name} in {type.Name} is not an ISerializable");
-                }
-                format.Add(attribute.Info);
-            }
-        }
-        return [.. format];
+        return null;
     }
 
     #endregion Packet Reflection
 
     #region Packets
     
-    /// <summary>
-    /// Registers all packets in an assembly.
-    /// </summary>
-    /// <param name="assembly">The assembly of the packets to register.</param>
-    public static void RegisterPackets(Assembly assembly) {
-        foreach (Type packetType in GetTypesWithAttribute<PacketAttribute>(assembly)) {
-            RegisterPacket(packetType);
-        }
-    }
-    /// <summary>
-    /// Registers a packet where only the public parts will be checked.
-    /// </summary>
-    /// <param name="type">The type of the packet.</param>
-    /// <returns>The packet ID.</returns>
-    /// <exception cref="ArgumentException"></exception>
-    /// <exception cref="InvalidOperationException"></exception>
-    public static uint RegisterPacket(Type type) {
+    private static uint RegisterPacket(string fullyQualifiedName, ConstructorInfo[] constructors, PropertyInfo[] properties, MethodInfo[] methods, string name = "unnamed") {
         ConstructorInfo? constructor;
         try {
-            constructor = GetConstructor(type);
+            constructor = GetConstructor(constructors);
         } catch (Exception e) {
-            Logger.LogError($"Failed to get constructor of packet ({type.Name}):");
+            Logger.LogError($"Failed at getting the constructor of packet ({name}):");
             Logger.LogException(e);
-            throw new ArgumentException($"Failed to get constructor of packet ({type.Name})", e);
+            throw new ArgumentException($"Failed at the getting constructor of packet ({name})", e);
         }
         if (constructor == null) {
-            Logger.LogError($"Could not find constructor of packet ({type.Name})");
-            throw new ArgumentException($"Could not find constructor of packet ({type.Name})");
+            Logger.LogError($"Could not find the constructor of packet ({name})");
+            throw new ArgumentException($"Could not find the constructor of packet ({name})");
         }
 
-        SerializableInfo[] format;
+        PacketFieldInfo[] fields;
         try {
-            format = GetFormat(type);
+            fields = GetFields(properties);
         } catch (Exception e) {
-            Logger.LogError($"Failed to get format of packet ({type.Name}):");
+            Logger.LogError($"Failed at getting the format of packet ({name}):");
             Logger.LogException(e);
-            throw new ArgumentException($"Failed to get format of packet ({type.Name})", e);
+            throw new ArgumentException($"Failed at getting the format of packet ({name})", e);
         }
-
+        
         IFormatter? formatter;
         try {
-            formatter = GetFormatter(type);
+            formatter = GetFormatter(properties);
         } catch (Exception e) {
-            Logger.LogError($"Failed to get formatter of packet ({type.Name}):");
+            Logger.LogError($"Failed at getting the formatter of packet ({name}):");
             Logger.LogException(e);
-            throw new ArgumentException($"Failed to get formatter of packet", e);
+            throw new ArgumentException($"Failed at getting the formatter of packet", e);
         }
         if (formatter == null) {
-            Logger.LogError($"Could not find formatter of packet ({type.Name})");
-            throw new ArgumentException($"Could not find formatter of packet ({type.Name})");
+            Logger.LogError($"Could not find the formatter of packet ({name})");
+            throw new ArgumentException($"Could not find formatter of packet ({name})");
         }
 
-        PacketData packetData = new(constructor, format, formatter);
+        MethodInfo? serializeMethod;
+        MethodInfo? parseMethod;
+        try {
+            serializeMethod = GetSerializeMethod(methods);
+            parseMethod = GetParseMethod(methods);
+        } catch (Exception e) {
+            Logger.LogError($"Failed at getting the serialize- and parse-methods of packet ({name}):");
+            Logger.LogException(e);
+            throw new ArgumentException($"Failed at getting the serialize and parse methods of packet ({name})", e);
+        }
 
-        foreach (PacketData packet in Packets) {
+        Packet CreatePacket(ISerializable[] serializables) {
+            if (constructor.Invoke(null) is not Packet packet) {
+                throw new InvalidOperationException($"Failed at creating packet ({name})");
+            }
+
+            for (int i = 0; i < fields.Length; i++) {
+                try {
+                fields[i].Property.SetValue(packet, serializables[i]);
+                } catch (Exception e) {
+                    Logger.LogError($"Failed at setting field {fields[i].Property.Name} in packet ({name}):");
+                    Logger.LogException(e);
+                    throw new InvalidOperationException($"Failed at setting field {fields[i].Property.Name} in packet ({name})", e);
+                }
+            }
+            return packet;
+        }
+        ISerializable[] DestructPacket(Packet packet) {
+            List<ISerializable> result = [];
+            foreach (PacketFieldInfo field in fields) {
+                object? gainedValue;
+                try {
+                    gainedValue = field.Property.GetValue(packet);
+                } catch (Exception e) {
+                    Logger.LogError($"Failed at getting field {field.Property.Name} in packet ({name}):");
+                    Logger.LogException(e);
+                    throw new InvalidOperationException($"Failed at getting field {field.Property.Name} in packet ({name})", e);
+                }
+                if (gainedValue is not ISerializable serializable) {
+                    throw new InvalidOperationException($"Field {field.Property.Name} in {name} is not a serializable");
+                }
+                result.Add(serializable);
+            }
+            return [.. result];
+        }
+
+        PacketInfo packetData = new(fullyQualifiedName, CreatePacket, [.. fields.Select(f => f.Info)], formatter, DestructPacket);
+
+        foreach (PacketInfo packet in Packets) {
             if (packet.Equals(packetData)) {
                 throw new InvalidOperationException("Packet is already registered");
             }
@@ -178,51 +207,20 @@ public static class NetworkRegister {
     /// <returns>The packet ID.</returns>
     /// <exception cref="ArgumentException"></exception>
     /// <exception cref="InvalidOperationException"></exception>
-    public static uint RegisterPacketNonPublic([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicProperties|DynamicallyAccessedMemberTypes.NonPublicConstructors)] Type type) {
-        ConstructorInfo? constructor;
-        try {
-            constructor = GetConstructorNonPublic(type);
-        } catch (Exception e) {
-            Logger.LogError($"Failed to get constructor of packet ({type.Name}):");
-            Logger.LogException(e);
-            throw new ArgumentException($"Failed to get constructor of packet ({type.Name})", e);
-        }
-        if (constructor == null) {
-            Logger.LogError($"Could not find constructor of packet ({type.Name})");
-            throw new ArgumentException($"Could not find constructor of packet ({type.Name})");
-        }
-
-        SerializableInfo[] format;
-        try {
-            format = GetFormatNonPublic(type);
-        } catch (Exception e) {
-            Logger.LogError($"Failed to get format of packet ({type.Name}):");
-            Logger.LogException(e);
-            throw new ArgumentException($"Failed to get format of packet ({type.Name})", e);
-        }
-
-        IFormatter? formatter;
-        try {
-            formatter = GetFormatterNonPublic(type);
-        } catch (Exception e) {
-            Logger.LogError($"Failed to get formatter of packet ({type.Name}):");
-            Logger.LogException(e);
-            throw new ArgumentException($"Failed to get formatter of packet", e);
-        }
-        if (formatter == null) {
-            Logger.LogError($"Could not find formatter of packet ({type.Name})");
-            throw new ArgumentException($"Could not find formatter of packet ({type.Name})");
-        }
-
-        PacketData packetData = new(constructor, format, formatter);
-
-        foreach (PacketData packet in Packets) {
-            if (packet.Equals(packetData)) {
-                throw new InvalidOperationException("Packet is already registered");
-            }
-        }
-        Packets.Add(packetData);
-        return (uint)(Packets.Count - 1);
+    public static uint RegisterPacket(
+        [DynamicallyAccessedMembers(
+            DynamicallyAccessedMemberTypes.NonPublicProperties|DynamicallyAccessedMemberTypes.PublicProperties|
+            DynamicallyAccessedMemberTypes.NonPublicConstructors|DynamicallyAccessedMemberTypes.PublicConstructors|
+            DynamicallyAccessedMemberTypes.NonPublicMethods|DynamicallyAccessedMemberTypes.PublicMethods
+        )] Type type
+    ) {
+        return RegisterPacket(
+            type.AssemblyQualifiedName!,
+            type.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic),
+            type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic),
+            type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic),
+            type.Name
+        );
     }
     /// <summary>
     /// Registers a packet where the non-public parts will be checked.
@@ -242,7 +240,7 @@ public static class NetworkRegister {
     /// <exception cref="ArgumentException"></exception>
     /// <exception cref="InvalidOperationException"></exception>
     public static uint RegisterPacket(Packet packet) {
-        return RegisterPacketNonPublic(packet.GetType());
+        return RegisterPacket(packet.GetType());
     }
     /// <summary>
     /// Gets the ID of the packet.
@@ -252,8 +250,8 @@ public static class NetworkRegister {
     /// <exception cref="ArgumentException"></exception>
     public static uint? GetPacketID(Packet packet) {
         for (int i = 0; i < Packets.Count; i++) {
-            PacketData packetData = Packets[i];
-            if (packetData.Constructor.Equals(GetConstructor(packet.GetType()))) {
+            PacketInfo packetData = Packets[i];
+            if (packetData.FullyQualifiedName == packet.GetType().AssemblyQualifiedName!) {
                 return (uint)i;
             }
         }
@@ -266,13 +264,13 @@ public static class NetworkRegister {
     /// <param name="fields">All the fields of this packet.</param>
     /// <returns>The parsed packet.</returns>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
-    public static Packet CreatePacket(uint packetID, List<ISerializable> fields) {
+    public static Packet CreatePacket(uint packetID, ISerializable[] fields) {
         if (Packets.Count <= packetID) {
             Logger.LogError($"Invalid packet ID: {packetID}, is it registered?");
             throw new ArgumentOutOfRangeException($"Invalid packet ID: {packetID}, is it registered?");
         }
-        PacketData packetData = Packets[(int)packetID];
-        return (packetData.Constructor.Invoke([fields]) as Packet)!;
+        PacketInfo packetData = Packets[(int)packetID];
+        return packetData.Creator(fields);
     }
 
     /// <summary>

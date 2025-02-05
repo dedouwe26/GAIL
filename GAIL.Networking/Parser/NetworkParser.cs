@@ -41,7 +41,7 @@ public class NetworkParser : Serializing.Streams.Parser {
     /// <inheritdoc/>
     public NetworkParser(byte[] input, bool shouldCloseStream = false) : base(new MemoryStream(), shouldCloseStream) { InStream = new MemoryStream(input); }
 
-    private List<ISerializable> ReadFields(SerializableInfo[] format) {
+    private ISerializable[] ReadFields(SerializableInfo[] format) {
         List<ISerializable> fields = [];
         int formatIndex = 0;
 
@@ -49,11 +49,11 @@ public class NetworkParser : Serializing.Streams.Parser {
             try {
                 fields.Add(ReadSerializable(format[formatIndex]));
             } catch (EndOfStreamException) {
-                return fields;
+                return [.. fields];
             }
             
             if (format.Length <= (++formatIndex)) {
-                return fields;
+                return [.. fields];
             }
         }
     }

@@ -140,7 +140,7 @@ namespace GAIL.Graphics.Renderer.Vulkan
             var details = new SwapChain.SupportDetails();
 
             unsafe {
-                _ = Utils.Check(surface.surfaceExtension.GetPhysicalDeviceSurfaceCapabilities(device, surface.surface, out details.Capabilities), Logger, "Failed to get PhysicalDevice surface capabilities", true);
+                _ = Utils.Check(surface.surfaceExtension.GetPhysicalDeviceSurfaceCapabilities(device, surface.surface, out details.Capabilities), Logger, "Failed at getting PhysicalDevice surface capabilities", true);
 
                 // Surface formats
                 Utils.GetArray((Pointer<SurfaceFormatKHR> pointer, Pointer<uint> count) => {
