@@ -441,7 +441,7 @@ public class StringSerializable : ISerializable<string> {
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
-    public readonly static SerializableInfo Info = ISerializable.CreateInfo(() => {return new StringSerializable(string.Empty);});
+    public readonly static SerializableInfo Info = ISerializable.CreateInfo(() => {return new StringSerializable("");});
     SerializableInfo ISerializable.Info { get => Info; }
     /// <summary>
     /// Creates a new serializable.

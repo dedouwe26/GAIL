@@ -72,20 +72,20 @@ public class NetworkParser : Serializing.Streams.Parser {
         byte[] raw = new byte[4];
         InStream.Read(raw);
 
-        IntSerializable intSerializable = new(default);
-        intSerializable.Parse(raw);
-        raw = new byte[intSerializable.Value];
+        IntSerializable size = new(default);
+        size.Parse(raw);
+        raw = new byte[size.Value];
 
         InStream.Read(raw);
         raw = globalFormatter.Decode(raw);
 
-        UIntSerializable uintSerializable = new(default);
-        uintSerializable.Parse(raw.Take(4).ToArray());
-        raw = packetFormatter.Invoke(uintSerializable.Value).Decode(raw.Skip(4).ToArray());
+        UIntSerializable id = new(default);
+        id.Parse([.. raw.Take(4)]);
+        raw = packetFormatter.Invoke(id.Value).Decode([.. raw.Skip(4)]);
 
         BaseStream = new MemoryStream(raw);
 
-        return uintSerializable.Value;
+        return id.Value;
     }
 
     /// <summary>
@@ -117,7 +117,12 @@ public class NetworkParser : Serializing.Streams.Parser {
             try {
                 onPacket(ReadPacket(globalFormatter));
             } catch (EndOfStreamException e) {
-                Logger.LogError("End of stream while parsing: "+e);
+                Logger.LogError("End of stream while parsing:");
+                Logger.LogException(e, Severity.Error);
+                return false;
+            } catch (Exception e) {
+                Logger.LogError("Exception while parsing:");
+                Logger.LogException(e, Severity.Error);
                 return false;
             }
 

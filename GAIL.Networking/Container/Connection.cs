@@ -44,18 +44,14 @@ public class Connection : IDisposable {
     private NetworkSerializer? serializer;
     internal NetworkSerializer Serializer {
         get {
-            if (serializer == null) {
-                serializer = new NetworkSerializer(Stream, false);
-            }
+            serializer ??= new NetworkSerializer(Stream, false);
             return serializer;
         }
     }
     private NetworkParser? parser;
     internal NetworkParser Parser {
         get {
-            if (parser == null) {
-                parser = new NetworkParser(Stream, false);
-            }
+            parser ??= new NetworkParser(Stream, false);
             return parser;
         }
     }
@@ -103,6 +99,8 @@ public class Connection : IDisposable {
     /// </remarks>
     public void Dispose() {
         if (Closed) { return; }
+        serializer?.Dispose();
+        parser?.Dispose();
         Stream.Close();
         TcpClient.Close();
         Closed = true;

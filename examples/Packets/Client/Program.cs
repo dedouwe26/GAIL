@@ -1,9 +1,7 @@
 using System.Net;
-using System.Runtime.Serialization;
 using examples.Packets.Shared;
 using GAIL.Networking;
 using GAIL.Networking.Client;
-using GAIL.Networking.Parser;
 using GAIL.Serializing;
 using OxDED.Terminal;
 
@@ -42,42 +40,41 @@ class Program {
         await client.StartAsync();
     }
 
-    private static void OnStop(ClientContainer client) {
-        // Clears whole screen
+    static void OnStop(ClientContainer client) {
         Terminal.WriteLine("Stopped.");
     }
-    private static async ValueTask ReadMessage(ClientContainer client) {
-        // Send a new message back.
-        Terminal.Write("Message: ");
-        string message = Terminal.ReadLine()!;
-        if (message.StartsWith("/exit ")) {
-            // Sends custom data.
-            // Field is just for dealing with strings and endianness,
-            // you could also use BitConverter.
-            await client.StopAsync(new StringSerializable(message[6..]).Serialize());
-        } else {
-            await client.SendPacketAsync(new MessagePacket(message));
+
+    static async void ReadMessage(ClientContainer client) {
+        while (!client.Closed) {
+            // Send a new message back.
+            Terminal.Write("Message: ");
+            string message = Terminal.ReadLine()!;
+            if (message.StartsWith("/exit ")) {
+                // Sends custom data when disconnecting.
+                await client.StopAsync(new StringSerializable(message[6..]).Serialize());
+            } else {
+                await client.SendPacketAsync(new MessagePacket(message));
+            }
         }
     }
-    private static async void OnConnect(ClientContainer client) {
+
+    static async void OnConnect(ClientContainer client) {
         // Send register packet.
         Terminal.Write("Connected. Enter name: ");
         string name = Terminal.ReadLine()!;
         // Sends a register packet with the name.
         await client.SendPacketAsync(new RegisterPacket(name));
         // Usage
-        Terminal.WriteLine("Enter /exit ... to exit with text");
+        Terminal.WriteLine("# Enter /exit ... to exit with a message.");
 
-        await ReadMessage(client);
+        ReadMessage(client);
     }
 
-    private static async void OnPacket(ClientContainer client, Packet packet) {
+    static void OnPacket(ClientContainer client, Packet packet) {
         // Check if packet is a message packet.
         if (packet is NameMessagePacket messagePacket) {
             // Append message to messages.
             Terminal.WriteLine($"<{messagePacket.name}> : {messagePacket.message}");
-
-            await ReadMessage(client);
         }
     }
 }

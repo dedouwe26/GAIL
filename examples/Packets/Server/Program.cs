@@ -3,7 +3,6 @@ using examples.Packets.Shared;
 using GAIL.Networking;
 using GAIL.Networking.Server;
 using GAIL.Serializing;
-using GAIL.Serializing.Formatters;
 using OxDED.Terminal;
 
 namespace examples.Packets.Server;
@@ -27,7 +26,7 @@ class Program {
         // server.GlobalFormatter = new GZipFormatter();
 
         // Stop when key pressed.
-        Terminal.OnKeyPress+=async (ConsoleKey key, char ch, bool alt, bool shift, bool control) => {
+        Terminal.OnKeyPress+=async (key, ch, alt, shift, control) => {
             await server.StopAsync();
             mre.Set();
         };
@@ -44,14 +43,13 @@ class Program {
     }
 
     private static void OnDisconnect(ServerContainer server, Connection connection, bool byClient, byte[] additionalData) {
-        StringSerializable ss = new(string.Empty);
-        ss.Parse(additionalData);
-        Terminal.WriteLine(connection.GetData<string>() + " left with message: " + ss.Value);
+        StringSerializable msg = new("");
+        msg.Parse(additionalData);
+        Terminal.WriteLine(connection.GetData<string>() + " left with message: " + msg.Value);
     }
     
     private static void OnPacket(ServerContainer server, Connection connection, Packet packet) {
         if (packet is RegisterPacket registerPacket) {
-
             // Checks if there already is a name set (registered).
             if (connection.GetData<string>() == null) {
                 // Sets the data of the connection.
@@ -62,10 +60,10 @@ class Program {
             // Ensure that the client is registered.
             if (connection.data == null) { return; }
 
-            Terminal.WriteLine($"<{connection.GetData<string>()}> : {messagePacket.message}");
+            Terminal.WriteLine($"<{BitConverter.ToString(connection.ID)}> : {messagePacket.message}");
 
             // Send a NameMessagePacket back to all the clients.
-            server.BroadcastPacket(new NameMessagePacket(connection.GetData<string>()!, messagePacket.message));
+            server.BroadcastPacket(new NameMessagePacket(BitConverter.ToString(connection.ID), messagePacket.message));
         }
     }
 }

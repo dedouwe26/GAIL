@@ -49,18 +49,7 @@ public static class NetworkRegister {
         }
         return null;
     }
-    private static IFormatter? GetFormatter(PropertyInfo[] properties) {
-        foreach (PropertyInfo property in properties) {
-            if (property.IsDefined(typeof(PacketFormatterAttribute))) {
-                if (property.PropertyType != typeof(IFormatter)) {
-                    throw new ArgumentException($"Property {property.Name} in {property.ReflectedType?.Name ?? "packet"} is not an IFormatter");
-                }
-                return property.GetValue(null) as IFormatter;
-            }
-        }
-        return null;
-    }
-    private static PacketFieldInfo[] GetFields(PropertyInfo[] properties) {
+    private static PacketFieldInfo[] GetFields(PropertyInfo[] properties, object instance) {
         List<PacketFieldInfo> f = [];
         foreach (PropertyInfo property in properties) {
             PacketFieldAttribute? attribute = property.GetCustomAttribute<PacketFieldAttribute>();
@@ -68,7 +57,9 @@ public static class NetworkRegister {
                 if (!typeof(ISerializable).IsAssignableFrom(property.PropertyType)) {
                     throw new ArgumentException($"Property {property.Name} in {property.ReflectedType?.Name ?? "packet"} is not a serializable");
                 }
-                f.Add(new PacketFieldInfo(property, property.GetValue))
+                ISerializable? serializable = property.GetValue(instance) as ISerializable
+                    ?? throw new ArgumentException($"Property {property.Name} in {property.ReflectedType?.Name ?? "packet"} is not a serializable");
+                f.Add(new PacketFieldInfo(property, serializable.Info));
             }
         }
         return [.. f];
@@ -99,11 +90,34 @@ public static class NetworkRegister {
     #endregion Packet Reflection
 
     #region Packets
-    
-    private static uint RegisterPacket(string fullyQualifiedName, ConstructorInfo[] constructors, PropertyInfo[] properties, MethodInfo[] methods, string name = "unnamed") {
+
+    /// <summary>
+    /// Registers a packet where the non-public parts will be checked.
+    /// </summary>
+    /// <typeparam name="T">The type of the packet.</typeparam>
+    /// <returns>The packet ID.</returns>
+    /// <exception cref="ArgumentException"></exception>
+    /// <exception cref="InvalidOperationException"></exception>
+    public static uint RegisterPacket<T>() where T : Packet, new() {
+        return RegisterPacket(new T());
+    }
+    /// <summary>
+    /// Registers a packet where the non-public parts will be checked.
+    /// </summary>
+    /// <param name="packet">The packet to register.</param>
+    /// <returns>The packet ID.</returns>
+    /// <exception cref="ArgumentException"></exception>
+    /// <exception cref="InvalidOperationException"></exception>
+    public static uint RegisterPacket(Packet packet) {
+        Type type = packet.GetType();
+        string name = type.Name;
+
+        PropertyInfo[] properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        MethodInfo[] methods = type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+
         ConstructorInfo? constructor;
         try {
-            constructor = GetConstructor(constructors);
+            constructor = GetConstructor(type.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic));
         } catch (Exception e) {
             Logger.LogError($"Failed at getting the constructor of packet ({name}):");
             Logger.LogException(e);
@@ -116,25 +130,14 @@ public static class NetworkRegister {
 
         PacketFieldInfo[] fields;
         try {
-            fields = GetFields(properties);
+            fields = GetFields(properties, packet);
         } catch (Exception e) {
             Logger.LogError($"Failed at getting the format of packet ({name}):");
             Logger.LogException(e);
             throw new ArgumentException($"Failed at getting the format of packet ({name})", e);
         }
         
-        IFormatter? formatter;
-        try {
-            formatter = GetFormatter(properties);
-        } catch (Exception e) {
-            Logger.LogError($"Failed at getting the formatter of packet ({name}):");
-            Logger.LogException(e);
-            throw new ArgumentException($"Failed at getting the formatter of packet", e);
-        }
-        if (formatter == null) {
-            Logger.LogError($"Could not find the formatter of packet ({name})");
-            throw new ArgumentException($"Could not find formatter of packet ({name})");
-        }
+        IFormatter formatter = packet.Formatter;
 
         MethodInfo? serializeMethod;
         MethodInfo? parseMethod;
@@ -161,10 +164,16 @@ public static class NetworkRegister {
                     throw new InvalidOperationException($"Failed at setting field {fields[i].Property.Name} in packet ({name})", e);
                 }
             }
+
+            parseMethod?.Invoke(packet, null);
+
             return packet;
         }
         ISerializable[] DestructPacket(Packet packet) {
+            serializeMethod?.Invoke(packet, null);
+
             List<ISerializable> result = [];
+            
             foreach (PacketFieldInfo field in fields) {
                 object? gainedValue;
                 try {
@@ -182,10 +191,10 @@ public static class NetworkRegister {
             return [.. result];
         }
 
-        PacketInfo packetData = new(fullyQualifiedName, CreatePacket, [.. fields.Select(f => f.Info)], formatter, DestructPacket);
+        PacketInfo packetData = new(type.AssemblyQualifiedName!, CreatePacket, [.. fields.Select(f => f.Info)], formatter, DestructPacket);
 
-        foreach (PacketInfo packet in Packets) {
-            if (packet.Equals(packetData)) {
+        foreach (PacketInfo p in Packets) {
+            if (p.Equals(packetData)) {
                 throw new InvalidOperationException("Packet is already registered");
             }
         }
@@ -193,53 +202,10 @@ public static class NetworkRegister {
         return (uint)(Packets.Count - 1);
     }
     /// <summary>
-    /// Registers a packet where the non-public parts will be checked too.
-    /// </summary>
-    /// <param name="type">The type of the packet.</param>
-    /// <returns>The packet ID.</returns>
-    /// <exception cref="ArgumentException"></exception>
-    /// <exception cref="InvalidOperationException"></exception>
-    public static uint RegisterPacket(
-        [DynamicallyAccessedMembers(
-            DynamicallyAccessedMemberTypes.NonPublicProperties|DynamicallyAccessedMemberTypes.PublicProperties|
-            DynamicallyAccessedMemberTypes.NonPublicConstructors|DynamicallyAccessedMemberTypes.PublicConstructors|
-            DynamicallyAccessedMemberTypes.NonPublicMethods|DynamicallyAccessedMemberTypes.PublicMethods
-        )] Type type
-    ) {
-        return RegisterPacket(
-            type.AssemblyQualifiedName!,
-            type.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic),
-            type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic),
-            type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic),
-            type.Name
-        );
-    }
-    /// <summary>
-    /// Registers a packet where the non-public parts will be checked.
-    /// </summary>
-    /// <typeparam name="T">The type of the packet.</typeparam>
-    /// <returns>The packet ID.</returns>
-    /// <exception cref="ArgumentException"></exception>
-    /// <exception cref="InvalidOperationException"></exception>
-    public static uint RegisterPacket<T>() where T : Packet, new() {
-        return RegisterPacket(new T());
-    }
-    /// <summary>
-    /// Registers a packet where the non-public parts will be checked.
-    /// </summary>
-    /// <param name="packet">The packet to register.</param>
-    /// <returns>The packet ID.</returns>
-    /// <exception cref="ArgumentException"></exception>
-    /// <exception cref="InvalidOperationException"></exception>
-    public static uint RegisterPacket(Packet packet) {
-        return RegisterPacket(packet.GetType());
-    }
-    /// <summary>
     /// Gets the ID of the packet.
     /// </summary>
     /// <param name="packet">The packet to get the ID of.</param>
     /// <returns>The ID of the first packet that matches.</returns>
-    /// <exception cref="ArgumentException"></exception>
     public static uint? GetPacketID(Packet packet) {
         for (int i = 0; i < Packets.Count; i++) {
             PacketInfo packetData = Packets[i];
@@ -259,10 +225,24 @@ public static class NetworkRegister {
     public static Packet CreatePacket(uint packetID, ISerializable[] fields) {
         if (Packets.Count <= packetID) {
             Logger.LogError($"Invalid packet ID: {packetID}, is it registered?");
-            throw new ArgumentOutOfRangeException($"Invalid packet ID: {packetID}, is it registered?");
+            throw new ArgumentOutOfRangeException(nameof(packetID), $"Invalid packet ID: {packetID}, is it registered?");
         }
         PacketInfo packetData = Packets[(int)packetID];
         return packetData.Creator(fields);
+    }
+
+    /// <summary>
+    /// Destructs a packet from its original state.
+    /// </summary>
+    /// <param name="packet">The packet to destruct.</param>
+    /// <returns>The fields of the packet.</returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    public static ISerializable[] DestructPacket(Packet packet) {
+        if (packet.ID >= Packets.Count || packet.ID < 0) {
+            throw new InvalidOperationException($"Invalid packet ID: {packet.ID} of packet {packet.GetType().Name}");
+        }
+        PacketInfo info = Packets[(int)packet.ID];
+        return info.Destructor(packet);
     }
 
     /// <summary>
@@ -274,7 +254,7 @@ public static class NetworkRegister {
     public static SerializableInfo[] GetPacketFormat(uint packetID) {
         if (Packets.Count <= packetID) {
             Logger.LogError($"Invalid packet ID: {packetID}, is it registered?");
-            throw new ArgumentOutOfRangeException($"Invalid packet ID: {packetID}, is it registered?");
+            throw new ArgumentOutOfRangeException(nameof(packetID), $"Invalid packet ID: {packetID}, is it registered?");
         }
         return Packets[(int)packetID].Format;
     }
@@ -288,7 +268,7 @@ public static class NetworkRegister {
     public static IFormatter GetPacketFormatter(uint packetID) {
         if (Packets.Count <= packetID) {
             Logger.LogError($"Invalid packet ID: {packetID}, is it registered?");
-            throw new ArgumentOutOfRangeException($"Invalid packet ID: {packetID}, is it registered?");
+            throw new ArgumentOutOfRangeException(nameof(packetID), $"Invalid packet ID: {packetID}, is it registered?");
         }
         return Packets[(int)packetID].Formatter;
     }

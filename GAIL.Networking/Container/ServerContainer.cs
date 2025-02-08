@@ -1,9 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Net;
 using System.Net.Sockets;
-using GAIL.Networking.Parser;
 using GAIL.Serializing.Formatters;
-using GAIL.Serializing.Streams;
 using OxDED.Terminal;
 using OxDED.Terminal.Logging;
 using OxDED.Terminal.Logging.Targets;
@@ -66,7 +64,7 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
     /// </summary>
     public event ConnectCallback? OnConnect;
     /// <summary>
-    /// An event that is called when a client is disconnected.
+    /// An event that is called when a client is safely disconnected.
     /// </summary>
     public event DisconnectCallback? OnDisconnect;
     /// <summary>
@@ -78,17 +76,25 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
     /// </summary>
     public event PacketSentCallback? OnPacketSent;
     /// <summary>
-    /// An event for when an exception is thrown (only IOException, SocketException).
+    /// An event for when an exception is thrown.
     /// </summary>
+    /// <remarks>
+    /// As a result, the connection might be removed.
+    /// </remarks>
     public event ExceptionCallback? OnException;
 
     /// <summary>
     /// If the server is closed.
     /// </summary>
     public bool Closed {get; private set;}
-    private ServerContainer(IPEndPoint ip) {
+    private ServerContainer(IPEndPoint ip, bool enableLogging = false, Logger? logger = null) {
         Closed = true;
         IP = ip;
+
+        if (enableLogging) {
+            SetLogger(logger);
+        }
+
         tcpListener = new TcpListener(ip);
     }
 
@@ -107,7 +113,8 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
         try {
             tcpListener.Start();
         } catch (SocketException e) {
-            Logger?.LogFatal("Unable to start listening: '"+e.Message+"'.");
+            Logger?.LogFatal("Unable to start listening:");
+            Logger?.LogException(e, Severity.Fatal);
             OnException?.Invoke(e, null);
             return false;
         }
@@ -154,9 +161,11 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
         try {
             connection.Serializer.WritePacket(packet, GlobalFormatter);
         } catch (IOException e) {
-            Logger?.LogError($"Could not send packet (connection ID: {connection.ToConnectionID()}): '{e.Message}'.");
+            Logger?.LogError($"Could not send packet (connection ID: {connection.ToConnectionID()}):");
+            Logger?.LogException(e, Severity.Error);
             OnException?.Invoke(e, connection);
-            connection.Serializer.Dispose();
+            connections.Remove(connection.ID);
+            connection.Dispose();
             return false;
         }
         connection.Serializer.Dispose();
@@ -208,9 +217,11 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
         try {
             connection.Serializer.WritePacket(packet, GlobalFormatter); // TODO?: this isnt really async.
         } catch (IOException e) {
-            Logger?.LogError($"Could not send packet (connection ID: {connection.ToConnectionID()}): '{e.Message}'.");
+            Logger?.LogError($"Could not send packet (connection ID: {connection.ToConnectionID()}):");
+            Logger?.LogException(e, Severity.Error);
             OnException?.Invoke(e, connection);
-            connection.Serializer.Dispose();
+            connections.Remove(connection.ID);
+            connection.Dispose();
             return false;
         }
         
@@ -362,7 +373,7 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
         connections.Add(connection.ID, connection);
         OnConnect?.Invoke(this, connection);
         try {
-            if (!connection.Parser.Parse(GlobalFormatter, () => Closed || connection.Closed, (Packet p) => {
+            if (!connection.Parser.Parse(GlobalFormatter, () => Closed || connection.Closed, p => {
                 OnPacket?.Invoke(this, connection, p);
                 if (p is DisconnectPacket) {
                     connections.Remove(connection.ID);
@@ -380,7 +391,8 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
             if (Closed || connection.Closed) {
                 return;
             }
-            Logger?.LogWarning($"Could not read from network stream (connection ID: {connection.ToConnectionID()}): '{e.Message}'.");
+            Logger?.LogWarning($"Could not read from network stream (connection ID: {connection.ToConnectionID()}):");
+            Logger?.LogException(e, Severity.Warning);
             OnException?.Invoke(e, connection);
         }
         

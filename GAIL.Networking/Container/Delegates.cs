@@ -39,6 +39,9 @@ namespace GAIL.Networking.Server {
     /// <summary>
     /// An callback for when an exception is thrown (only IOException and SocketException).
     /// </summary>
+    /// <remarks>
+    /// As a result, the connection might be removed.
+    /// </remarks>
     /// <param name="exception">The exception that is thrown (only IOException and SocketException).</param>
     /// <param name="connection">The connection where the exception occured in (if there is one).</param>
     public delegate void ExceptionCallback(Exception exception, Connection? connection);
@@ -61,7 +64,7 @@ namespace GAIL.Networking.Server {
     /// <param name="connection">The connection that is established.</param>
     public delegate void ConnectCallback(ServerContainer server, Connection connection);
     /// <summary>
-    /// An callback for when a client has disconnected.
+    /// An callback for when a client has safely disconnected.
     /// </summary>
     /// <param name="server">The server.</param>
     /// <param name="connection">The disconnected client.</param>

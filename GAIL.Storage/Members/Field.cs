@@ -20,7 +20,7 @@ public abstract class Field : Member, IMember, ISerializable {
     /// <param name="creator">The field creator that creates a field from a key.</param>
     /// <returns>A new field info.</returns>
     public static FieldInfo CreateFieldInfo(Func<string, Field> creator) {
-        return new(creator(string.Empty).FixedSize, (byte[] raw, string key) => {
+        return new(creator("").FixedSize, (byte[] raw, string key) => {
             Field field = creator(key);
             field.Parse(raw);
             return field;

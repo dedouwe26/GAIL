@@ -5,17 +5,17 @@
     "version": "0.2.0",
     "configurations": [
         {
-        "name": "C#: GAIL - HelloTriangle",
-        "type": "coreclr",
-        "request": "launch",
-        "preLaunchTask": "Build examples.HelloTriangle",
-        "program": "${workspaceFolder}/examples/HelloTriangle/bin/Debug/net8.0/HelloTriangle.dll",
-        "cwd": "${workspaceFolder}",
-        "stopAtEntry": false,
-        "console": "integratedTerminal"
-    },
+            "name": "GAIL - HelloTriangle Debug",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "Build examples.HelloTriangle",
+            "program": "${workspaceFolder}/examples/HelloTriangle/bin/Debug/net8.0/HelloTriangle.dll",
+            "cwd": "${workspaceFolder}",
+            "stopAtEntry": false,
+            "console": "integratedTerminal"
+        },
         {
-            "name": "C#: Packets-Client Debug",
+            "name": "GAIL Networking - Client Debug",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "Build examples.Packets.Client",
@@ -25,7 +25,7 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "C#: Packets-Server Debug",
+            "name": "GAIL Networking - Server Debug",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "Build examples.Packets.Server",
@@ -35,7 +35,7 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "C#: Packets-Client2 Debug",
+            "name": "GAIL Networking - Client2 Debug",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "Build examples.Packets.Client2",
@@ -45,7 +45,7 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "C#: Storage Debug",
+            "name": "GAIL Storage - Debug",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "Build examples.Storage",
@@ -53,16 +53,6 @@
             "cwd": "${workspaceFolder}/examples/Storage/bin/Debug/net8.0/",
             "stopAtEntry": false,
             "console": "integratedTerminal"
-        },
-        // {
-        //     "name": "C#: HelloTriangle Debug",
-        //     "type": "dotnet",
-        //     "request": "launch",
-        //     "projectPath": "${workspaceFolder}\\examples\\HelloTriangle\\HelloTriangle.csproj",
-        //     "windows": {
-        //         "projectPath": "${workspaceFolder}\\examples\\HelloTriangle\\HelloTriangle.csproj"
-        //     }
-        // }
-
+        }
     ]
 }

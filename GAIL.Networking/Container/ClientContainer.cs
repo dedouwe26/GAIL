@@ -20,7 +20,7 @@ public class ClientContainer : IDisposable {
     /// <param name="server">The server end point (IP address and port).</param>
     /// <param name="local">The local end point (for different port, etc).</param>
     /// <param name="enableLogging">If the client should start logging.</param>
-    /// <param name="logger">The logger to use (default: ID: GAIL.Networking.Client.{ Connection.CreateID( localEndpoint ) } ).</param>
+    /// <param name="logger">The logger to use.</param>
     /// <returns>The created client, if it didn't fail.</returns>
     public static ClientContainer? Create(IPEndPoint server, IPEndPoint? local = null, bool enableLogging = false, Logger? logger = null) {
         ClientContainer client;
@@ -92,6 +92,11 @@ public class ClientContainer : IDisposable {
     private ClientContainer(IPEndPoint server, IPEndPoint? local, bool enableLogging = false, Logger? logger = null) {
         Server = server;
         Closed = true;
+
+        if (enableLogging) {
+            SetLogger(logger);
+        }
+
         try {
             if (local == null) {
                 tcpClient = new TcpClient();
@@ -100,11 +105,10 @@ public class ClientContainer : IDisposable {
             }
 
             IP = (tcpClient.Client.LocalEndPoint! as IPEndPoint)!;
-            if (enableLogging) {
-                SetLogger(logger);
-            }
+            
         } catch (SocketException e) {
-            logger?.LogFatal("Unable to initiate the socket: '"+e.Message+"'");
+            Logger?.LogFatal("Unable to initiate the socket:");
+            Logger?.LogException(e, Severity.Fatal);
             throw;
         }
     }
@@ -167,7 +171,8 @@ public class ClientContainer : IDisposable {
         try {
             tcpClient.Connect(Server);
         } catch (SocketException e) {
-            Logger?.LogFatal("Unable to connect to server: '"+e.Message+"'.");
+            Logger?.LogFatal("Unable to connect to server:");
+            Logger?.LogException(e, Severity.Fatal);
             OnException?.Invoke(e);
             return false;
         }
@@ -181,7 +186,7 @@ public class ClientContainer : IDisposable {
     private void Listen() {
         NetworkParser parser = new(NetworkStream!);
         try {
-            if (!parser.Parse(GlobalFormatter, () => Closed, (Packet p) => {
+            if (!parser.Parse(GlobalFormatter, () => Closed, p => {
                 OnPacket?.Invoke(this, p);
                 if (p is DisconnectPacket dp) {
                     OnDisconnect?.Invoke(this, true, dp.AdditionalData);
@@ -197,7 +202,8 @@ public class ClientContainer : IDisposable {
             if (Closed) {
                 return;
             }
-            Logger?.LogError("Could not read from network stream: '"+e.Message+"'.");
+            Logger?.LogError("Could not read from network stream:");
+            Logger?.LogException(e, Severity.Error);
             OnException?.Invoke(e);
         }
         
@@ -213,7 +219,8 @@ public class ClientContainer : IDisposable {
         try {
             serializer.WritePacket(packet, GlobalFormatter);
         } catch (IOException e) {
-            Logger?.LogError("Could not send packet: '"+e.Message+"'.");
+            Logger?.LogError("Could not send packet:");
+            Logger?.LogException(e, Severity.Error);
             OnException?.Invoke(e);
             return false;
         }
@@ -233,7 +240,8 @@ public class ClientContainer : IDisposable {
         try {
             serializer.WritePacket(packet, GlobalFormatter); // TODO?: this isnt really async.
         } catch (IOException e) {
-            Logger?.LogError("Could not send packet: '"+e.Message+"'.");
+            Logger?.LogError("Could not send packet:");
+            Logger?.LogException(e, Severity.Error);
             OnException?.Invoke(e);
             return false;
         }

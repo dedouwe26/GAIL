@@ -1,5 +1,3 @@
-using GAIL.Serializing;
-
 namespace GAIL.Networking.Parser;
 
 /// <summary>
@@ -13,12 +11,6 @@ public sealed class PacketConstructorAttribute : Attribute { }
 /// </summary>
 [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
 public sealed class PacketFieldAttribute : Attribute { }
-
-/// <summary>
-/// An attribute that will set the formatter of the packet.
-/// </summary>
-[AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
-public sealed class PacketFormatterAttribute : Attribute { }
 
 /// <summary>
 /// Defines a method that will be called before serializing the packet.

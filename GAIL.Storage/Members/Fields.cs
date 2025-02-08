@@ -395,7 +395,7 @@ public sealed class StringField : SerializableField<StringSerializable> {
     /// <summary>
     /// The member info of this member.
     /// </summary>
-    public static readonly FieldInfo Info = CreateFieldInfo(key => new StringField(key, string.Empty));
+    public static readonly FieldInfo Info = CreateFieldInfo(key => new StringField(key, ""));
     /// <summary>
     /// The value of this field.
     /// </summary>

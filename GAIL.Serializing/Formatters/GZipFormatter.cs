@@ -1,5 +1,4 @@
 using System.IO.Compression;
-using GAIL.Serializing.Streams;
 
 namespace GAIL.Serializing.Formatters;
 

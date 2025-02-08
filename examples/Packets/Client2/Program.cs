@@ -9,17 +9,18 @@ Packets.RegisterPackets();
 
 // Ask for port for the client to connect on.
 Terminal.Write("Port of client: ");
-string port = Terminal.ReadLine()!;
+int port = int.Parse(Terminal.ReadLine()!);
 
 // Creating a client.
 ClientContainer? client = ClientContainer.Create(
     new IPEndPoint(IPAddress.Parse("127.0.0.1"), 3003), // The server endpoint.
-    new IPEndPoint(IPAddress.Parse("127.0.0.1"), int.Parse(port)), // The local endpoint (where the client is listening).
+    new IPEndPoint(IPAddress.Parse("127.0.0.1"), port), // The local endpoint (where the client is listening).
     true // Enables logging.
 );
 
-// Connection failed, so return.
+// Connection failed, so quit.
 if (client == null) {
+    Terminal.WriteLine("Connection failed");
     return;
 }
 
@@ -29,10 +30,10 @@ client.OnConnect+=OnConnect;
 client.OnPacketSent+=OnPacketSent;
 client.OnStop+=OnStop;
 
-Terminal.OnKeyPress += async (ConsoleKey key, char keyChar, bool alt, bool shift, bool control) => {
-    // Send packet when key pressed
+Terminal.OnKeyPress += async (key, keyChar, alt, shift, control) => {
+    // Sends a packet when a key has been pressed.
     
-    if (control && key == ConsoleKey.X) { // Stopping on CTRL+X
+    if (control && key == ConsoleKey.X) { // Stopping when CTRL+X has been pressed.
         Terminal.WriteLine("Stopping...");
         await client.StopAsync();
     } else {
@@ -54,9 +55,10 @@ static void OnStop(ClientContainer client) {
     Terminal.ListenForKeys = false;
 }
 
+// NOTE: Could also use OnDisconnect.
 static void OnPacketSent(ClientContainer client, Packet packet) {
     if (packet is DisconnectPacket) {
-        Terminal.WriteLine("disconnecting...");
+        Terminal.WriteLine("Disconnecting...");
     }
 }
 
@@ -67,6 +69,7 @@ static async void OnConnect(ClientContainer client) {
     // Sends a register packet with the name.
     await client.SendPacketAsync(new RegisterPacket(name));
 }
+
 static void OnPacket(ClientContainer client, Packet packet) {
     // Check if packet is a message packet.
     if (packet is NameMessagePacket messagePacket) {

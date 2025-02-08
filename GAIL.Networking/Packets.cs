@@ -5,69 +5,74 @@ using OxDED.Terminal.Logging;
 namespace GAIL.Networking;
 
 /// <summary>
-/// A DisconnectPacket used byt <see cref="Client.ClientContainer"/> and <see cref="Server.ServerContainer"/>
+/// A disconnect packet used by the <see cref="Client.ClientContainer"/> and <see cref="Server.ServerContainer"/> to notify the other of a disconnection.
 /// </summary>
-[Packet]
 public class DisconnectPacket : Packet {
-    /// <inheritdoc/>
-    public override SerializableInfo[] Format => [BytesSerializable.Info];
-
     /// <summary>
     /// The optional additional data.
     /// </summary>
     public byte[] AdditionalData = [];
+    [PacketField]
+    private BytesSerializable AdditionalDataField { get => new(AdditionalData); set => AdditionalData = value.Value;}
 
     /// <summary>
     /// Creates an empty disconnect packet.
     /// </summary>
+    [PacketConstructor]
     public DisconnectPacket() { }
     /// <summary>
     /// Creates a disconnect packet with additional data.
     /// </summary>
     /// <param name="additionalData">The additional data to send.</param>
     public DisconnectPacket(byte[] additionalData) { AdditionalData = additionalData; }
-    /// <inheritdoc/>
-    public DisconnectPacket(List<ISerializable> fields) : base(fields)  { }
-
-    /// <inheritdoc/>
-    public override List<ISerializable> GetFields() {
-        return [new BytesSerializable(AdditionalData)];
-    }
-    /// <inheritdoc/>
-    public override void Parse(List<ISerializable> fields) {
-        AdditionalData = (fields[0] as BytesSerializable)!.Value;
-    }
 }
 
 /// <summary>
 /// A packet that sends a log.
 /// </summary>
-// [Packet] : Should only be registered if it is used in the connections.
 public class LogPacket : Packet {
-    /// <inheritdoc/>
-    public override SerializableInfo[] Format => [ByteSerializable.Info, LongSerializable.Info, StringSerializable.Info, StringSerializable.Info, StringSerializable.Info];
-    
     /// <summary>
     /// The severity of the log.
     /// </summary>
     public Severity Severity { get; private set; }
+    [PacketField]
+    private ByteSerializable SeverityField { get => new((byte)Severity); set => Severity = (Severity)value.Value; }
     /// <summary>
     /// The time the log was created.
     /// </summary>
     public DateTime Time { get; private set; }
+    [PacketField]
+    private LongSerializable TimeField { get => new(Time.ToBinary()); set => Time = DateTime.FromBinary(value.Value); }
     /// <summary>
     /// The ID of the logger.
     /// </summary>
     public string LoggerID { get; private set; }
+    [PacketField]
+    private StringSerializable IDField { get => new(LoggerID); set => LoggerID = value.Value; }
     /// <summary>
     /// The name of the logger.
     /// </summary>
     public string Name { get; private set; }
+    [PacketField]
+    private StringSerializable NameField { get => new(Name); set => Name = value.Value; }
     /// <summary>
     /// The content of the log.
     /// </summary>
     public string Text { get; private set; }
+    [PacketField]
+    private StringSerializable TextField { get => new(Text); set => Text = value.Value; }
 
+    /// <summary>
+    /// Creates an empty log packet.
+    /// </summary>
+    [PacketConstructor]
+    public LogPacket() {
+        Severity = default;
+        Time = default;
+        LoggerID = "";
+        Name = "";
+        Text = "";
+    }
     /// <summary>
     /// Creates a new log packet.
     /// </summary>
@@ -82,25 +87,5 @@ public class LogPacket : Packet {
         LoggerID = id;
         Name = name;
         Text = text;
-    }
-
-    /// <inheritdoc/>
-    public override List<ISerializable> GetFields() {
-        return [
-            new ByteSerializable((byte)Severity),
-            new LongSerializable(Time.ToBinary()),
-            new StringSerializable(LoggerID),
-            new StringSerializable(Name),
-            new StringSerializable(Text)
-        ];
-    }
-
-    /// <inheritdoc/>
-    public override void Parse(List<ISerializable> fields) {
-        Severity = (Severity)(fields[0] as ByteSerializable)!.Value;
-        Time = DateTime.FromBinary((fields[1] as LongSerializable)!.Value);
-        LoggerID = (fields[2] as StringSerializable)!.Value;
-        Name = (fields[3] as StringSerializable)!.Value;
-        Text = (fields[4] as StringSerializable)!.Value;
     }
 }
