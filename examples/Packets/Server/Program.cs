@@ -60,10 +60,10 @@ class Program {
             // Ensure that the client is registered.
             if (connection.data == null) { return; }
 
-            Terminal.WriteLine($"<{BitConverter.ToString(connection.ID)}> : {messagePacket.message}");
+            Terminal.WriteLine($"<{connection.GetData<string>()}> : {messagePacket.message}");
 
             // Send a NameMessagePacket back to all the clients.
-            server.BroadcastPacket(new NameMessagePacket(BitConverter.ToString(connection.ID), messagePacket.message));
+            server.BroadcastPacket(new NameMessagePacket(connection.GetData<string>()!, messagePacket.message));
         }
     }
 }

@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using GAIL.Serializing;
 using GAIL.Serializing.Formatters;
+using OxDED.Terminal;
 using OxDED.Terminal.Logging;
 
 namespace GAIL.Networking.Parser;
@@ -59,6 +60,7 @@ public static class NetworkRegister {
                 }
                 ISerializable? serializable = property.GetValue(instance) as ISerializable
                     ?? throw new ArgumentException($"Property {property.Name} in {property.ReflectedType?.Name ?? "packet"} is not a serializable");
+                Terminal.WriteLine(property.Name);
                 f.Add(new PacketFieldInfo(property, serializable.Info));
             }
         }
@@ -154,14 +156,15 @@ public static class NetworkRegister {
             if (constructor.Invoke(null) is not Packet packet) {
                 throw new InvalidOperationException($"Failed at creating packet ({name})");
             }
-
+            
             for (int i = 0; i < fields.Length; i++) {
+                PacketFieldInfo field = fields[i];
                 try {
-                fields[i].Property.SetValue(packet, serializables[i]);
+                    field.Property.SetValue(packet, serializables[i]);
                 } catch (Exception e) {
-                    Logger.LogError($"Failed at setting field {fields[i].Property.Name} in packet ({name}):");
+                    Logger.LogError($"Failed at setting field {field.Property.Name} in packet ({name}):");
                     Logger.LogException(e);
-                    throw new InvalidOperationException($"Failed at setting field {fields[i].Property.Name} in packet ({name})", e);
+                    throw new InvalidOperationException($"Failed at setting field {field.Property.Name} in packet ({name})", e);
                 }
             }
 
@@ -186,6 +189,7 @@ public static class NetworkRegister {
                 if (gainedValue is not ISerializable serializable) {
                     throw new InvalidOperationException($"Field {field.Property.Name} in {name} is not a serializable");
                 }
+
                 result.Add(serializable);
             }
             return [.. result];

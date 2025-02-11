@@ -115,7 +115,9 @@ public class NetworkParser : Serializing.Streams.Parser {
         Logger.LogDebug("Starting to parse the stream for packets...");
         while (!isClosed()) {
             try {
-                onPacket(ReadPacket(globalFormatter));
+                if (onPacket(ReadPacket(globalFormatter))) {
+                    return true;
+                }
             } catch (EndOfStreamException e) {
                 Logger.LogError("End of stream while parsing:");
                 Logger.LogException(e, Severity.Error);

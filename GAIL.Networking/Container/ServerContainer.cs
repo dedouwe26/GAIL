@@ -168,7 +168,6 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
             connection.Dispose();
             return false;
         }
-        connection.Serializer.Dispose();
         connection.Stream.Flush();
         OnPacketSent?.Invoke(this, connection, packet);
         return true;
@@ -226,7 +225,6 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
         }
         
         await connection.Stream.FlushAsync();
-        connection.Serializer.Dispose();
         OnPacketSent?.Invoke(this, connection, packet);
         return true;
     }

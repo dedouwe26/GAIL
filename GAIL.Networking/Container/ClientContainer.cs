@@ -41,6 +41,13 @@ public class ClientContainer : IDisposable {
     /// </summary>
     public readonly IPEndPoint IP;
     private Thread? listenThread;
+    private NetworkSerializer? serializer;
+    private NetworkSerializer Serializer { get {
+        if (serializer == null) {
+            serializer = new(NetworkStream!);
+        }
+        return serializer;
+    } }
     /// <summary>
     /// The logger of this client.
     /// Set it using <see cref="SetLogger"/>
@@ -215,9 +222,8 @@ public class ClientContainer : IDisposable {
     /// <returns>True if it succeeded, false if the client is closed or the client could not send the packet.</returns>
     public bool SendPacket(Packet packet) {
         if (Closed) { return false; }
-        NetworkSerializer serializer = new(NetworkStream!);
         try {
-            serializer.WritePacket(packet, GlobalFormatter);
+            Serializer.WritePacket(packet, GlobalFormatter);
         } catch (IOException e) {
             Logger?.LogError("Could not send packet:");
             Logger?.LogException(e, Severity.Error);
@@ -236,9 +242,8 @@ public class ClientContainer : IDisposable {
     /// <returns>True if it succeeded, false if the client is closed or the client could not send the packet.</returns>
     public async ValueTask<bool> SendPacketAsync(Packet packet) {
         if (Closed) { return false; }
-        NetworkSerializer serializer = new(NetworkStream!);
         try {
-            serializer.WritePacket(packet, GlobalFormatter); // TODO?: this isnt really async.
+            Serializer.WritePacket(packet, GlobalFormatter); // TODO?: this isnt really async.
         } catch (IOException e) {
             Logger?.LogError("Could not send packet:");
             Logger?.LogException(e, Severity.Error);
