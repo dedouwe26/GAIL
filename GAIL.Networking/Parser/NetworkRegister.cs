@@ -60,7 +60,7 @@ public static class NetworkRegister {
                 }
                 ISerializable? serializable = property.GetValue(instance) as ISerializable
                     ?? throw new ArgumentException($"Property {property.Name} in {property.ReflectedType?.Name ?? "packet"} is not a serializable");
-                Terminal.WriteLine(property.Name);
+
                 f.Add(new PacketFieldInfo(property, serializable.Info));
             }
         }
@@ -189,7 +189,7 @@ public static class NetworkRegister {
                 if (gainedValue is not ISerializable serializable) {
                     throw new InvalidOperationException($"Field {field.Property.Name} in {name} is not a serializable");
                 }
-
+                Terminal.WriteLine(field.Property.Name);
                 result.Add(serializable);
             }
             return [.. result];
