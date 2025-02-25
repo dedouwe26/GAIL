@@ -189,7 +189,7 @@ public static class NetworkRegister {
                 if (gainedValue is not ISerializable serializable) {
                     throw new InvalidOperationException($"Field {field.Property.Name} in {name} is not a serializable");
                 }
-                Terminal.WriteLine(field.Property.Name);
+                Terminal.Write(field.Property.Name);
                 result.Add(serializable);
             }
             return [.. result];

@@ -43,9 +43,7 @@ public class ClientContainer : IDisposable {
     private Thread? listenThread;
     private NetworkSerializer? serializer;
     private NetworkSerializer Serializer { get {
-        if (serializer == null) {
-            serializer = new(NetworkStream!);
-        }
+        serializer ??= new(NetworkStream!);
         return serializer;
     } }
     /// <summary>
