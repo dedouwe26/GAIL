@@ -1,4 +1,4 @@
-<h1 align="center"><img src="https://raw.githubusercontent.com/dedouwe26/GAIL/main/Logo.svg" alt="logo" width="500", href="https://github.com/dedouwe26/GAIL"/> <br/>
+<h1 align="center"><img src="https://raw.githubusercontent.com/dedouwe26/GAIL/main/Logo.png" alt="logo" width="500", href="https://github.com/dedouwe26/GAIL"/> <br/>
 <code>Graphics Audio Input Library</code> <br/></h1>
 This library is built using Vulkan, OpenAL and GLFW for the graphics, audio and input / window management.<br/>
 <ul>
