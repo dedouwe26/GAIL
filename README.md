@@ -30,3 +30,5 @@ Most releases come pre-built, but if you want to build an example project or jus
 Else run <code>dotnet run</code> to run it, or <code>dotnet build</code> to build it.
 </li>
 </ol>
+
+Made in Europe 🇪🇺
