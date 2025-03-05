@@ -8,7 +8,7 @@ using OxDED.Terminal;
 namespace examples.Packets.Server;
 
 class Program {
-    private static readonly ManualResetEvent mre = new(false);
+    private static readonly string serverName = new StyleBuilder().Foreground(Color.Blue).Text("System").ResetForeground().ToString();
     public static void Main(string[] args) {
         // Registers all three packets.
         Shared.Packets.RegisterPackets();
@@ -20,6 +20,7 @@ class Program {
 
         // Listening to events
         server.OnPacket+=OnPacket;
+        server.OnStop+=OnStop;
         server.OnDisconnect+=OnDisconnect;
 
         // Applies a formatter for all packets (note that is must happen both on the client and the server).
@@ -28,7 +29,7 @@ class Program {
         // Stop when key pressed.
         Terminal.OnKeyPress+=async (key, ch, alt, shift, control) => {
             await server.StopAsync();
-            mre.Set();
+            
         };
 
         // Don't forget to start the server.
@@ -37,15 +38,32 @@ class Program {
         // Starts listening (non-thread blocking).
         server.Start();
 
-        Terminal.ListenForKeys = true;
-
-        mre.WaitOne(); // Block the thread.
+        Terminal.ListenForKeys = true; // Thread blocking.
     }
 
     private static void OnDisconnect(ServerContainer server, Connection connection, bool byClient, byte[] additionalData) {
+        string text;
+        // If the client has been kicked by this server.
+        if (!byClient) {
+            text = connection.GetData<string>() + " has been kicked.";
+            Terminal.WriteLine(text);
+            
+            // Notifies all the other clients.
+            server.BroadcastPacket(new NameMessagePacket(serverName, text));
+            return;
+        }
         StringSerializable msg = new("");
         msg.Parse(additionalData);
-        Terminal.WriteLine(connection.GetData<string>() + " left with message: " + msg.Value);
+        text = connection.GetData<string>() + " left with message: '" + msg.Value + "'.";
+        Terminal.WriteLine(text);
+
+        // Notifies all the other clients.
+        server.BroadcastPacket(new NameMessagePacket(serverName, text));
+    }
+
+    private static void OnStop(ServerContainer server) {
+        Terminal.WriteLine("Stopped.");
+        Terminal.ListenForKeys = false;
     }
     
     private static void OnPacket(ServerContainer server, Connection connection, Packet packet) {
@@ -54,7 +72,12 @@ class Program {
             if (connection.GetData<string>() == null) {
                 // Sets the data of the connection.
                 connection.SetData(registerPacket.name);
-                Terminal.WriteLine(registerPacket.name + " joined.");
+
+                string text = registerPacket.name + " joined.";
+                Terminal.WriteLine(text);
+
+                // Notifies all the other clients.
+                server.BroadcastPacket(new NameMessagePacket(serverName, text));
             }
         } else if (packet is MessagePacket messagePacket) {
             // Ensure that the client is registered.

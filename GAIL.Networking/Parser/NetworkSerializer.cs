@@ -39,6 +39,7 @@ public class NetworkSerializer : Serializer {
         
         OutStream.Write(new IntSerializable(result.Length).Serialize());
         OutStream.Write(result);
+        BaseStream.SetLength(0);
     }
     
     /// <summary>

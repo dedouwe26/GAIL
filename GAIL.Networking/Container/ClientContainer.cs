@@ -194,7 +194,7 @@ public class ClientContainer : IDisposable {
             if (!parser.Parse(GlobalFormatter, () => Closed, p => {
                 OnPacket?.Invoke(this, p);
                 if (p is DisconnectPacket dp) {
-                    OnDisconnect?.Invoke(this, true, dp.AdditionalData);
+                    OnDisconnect?.Invoke(this, true, dp.additionalData);
                     Dispose();
                     return true;
                 }

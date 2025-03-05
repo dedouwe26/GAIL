@@ -43,6 +43,9 @@ public abstract class Field : Member, IMember, ISerializable {
     public abstract uint? FixedSize { get; }
 
     /// <inheritdoc/>
+    public abstract SerializableInfo Info { get; }
+
+    /// <inheritdoc/>
     public abstract void Parse(byte[] data);
 
     /// <inheritdoc/>

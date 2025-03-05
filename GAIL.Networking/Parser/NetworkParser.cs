@@ -119,10 +119,16 @@ public class NetworkParser : Serializing.Streams.Parser {
                     return true;
                 }
             } catch (EndOfStreamException e) {
+                if (isClosed()) {
+                    return true;
+                }
                 Logger.LogError("End of stream while parsing:");
                 Logger.LogException(e, Severity.Error);
                 return false;
             } catch (Exception e) {
+                if (isClosed()) {
+                    return true;
+                }
                 Logger.LogError("Exception while parsing:");
                 Logger.LogException(e, Severity.Error);
                 return false;

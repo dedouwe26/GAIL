@@ -33,7 +33,7 @@ class Program {
         client.OnConnect+=OnConnect;
         client.OnStop+=OnStop;
 
-        // Applies a formatter for all packets (note that is must happen both on the client and the server).
+        // Applies a formatter for all packets (note that this must be set on both the client and the server).
         // server.GlobalFormatter = new GZipFormatter();
 
         // Don't forget to start the client.
@@ -44,18 +44,21 @@ class Program {
         Terminal.WriteLine("Stopped.");
     }
 
-    static async void ReadMessage(ClientContainer client) {
-        while (!client.Closed) {
-            // Send a new message back.
-            Terminal.Write("Message: ");
-            string message = Terminal.ReadLine()!;
-            if (message.StartsWith("/exit ")) {
-                // Sends custom data when disconnecting.
-                await client.StopAsync(new StringSerializable(message[6..]).Serialize());
-            } else {
-                await client.SendPacketAsync(new MessagePacket(message));
+    static void ReadMessage(ClientContainer client) {
+        Task.Run(
+            async () => {
+                while (!client.Closed) {
+                    // Send a new message back.
+                    string message = Terminal.ReadLine()!;
+                    if (message.StartsWith("/exit ")) {
+                        // Sends custom data when disconnecting.
+                        await client.StopAsync(new StringSerializable(message[6..]).Serialize());
+                    } else {
+                        await client.SendPacketAsync(new MessagePacket(message));
+                    }
+                }
             }
-        }
+        );
     }
 
     static async void OnConnect(ClientContainer client) {

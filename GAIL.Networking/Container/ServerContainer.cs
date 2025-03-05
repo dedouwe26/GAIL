@@ -376,7 +376,7 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
                 if (p is DisconnectPacket) {
                     connections.Remove(connection.ID);
                     connection.Dispose();
-                    OnDisconnect?.Invoke(this, connection, true, (p as DisconnectPacket)!.AdditionalData);
+                    OnDisconnect?.Invoke(this, connection, true, (p as DisconnectPacket)!.additionalData);
                     return true;
                 }
                 return false;

@@ -16,12 +16,43 @@ public record SerializableInfo (uint? FixedSize, Func<byte[], ISerializable> Cre
 /// </summary>
 public interface ISerializable {
     /// <summary>
+    /// Tries to get the serializable info of a serializable.
+    /// </summary>
+    /// <param name="serializable">The serializable of which to get the info from.</param>
+    /// <returns>The info, if it is found, of that serializable.</returns>
+    public static SerializableInfo? TryGetInfo(ISerializable serializable) {
+        try {
+            PropertyInfo[] infos = serializable.GetType().GetProperties(BindingFlags.Static | BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+
+            foreach (PropertyInfo info in infos) {
+                if (info.GetCustomAttribute<SerializableInfoAttribute>() is not null) {
+                    if (info.GetValue(serializable) is SerializableInfo s) {
+                        return s;
+                    } else {
+                        throw new InvalidOperationException($"SerializableInfo property {info.Name} did not return a SerializableInfo.");
+                    }
+                }
+            }
+        } catch (Exception) {
+            return null;
+        }
+        return null;
+    }
+    /// <summary>
+    /// Tries to get the serializable info of a serializable.
+    /// </summary>
+    /// <typeparam name="T">The serializable type of which to get the info from.</typeparam>
+    /// <returns>The info, if it is found, of that serializable.</returns>
+    public static SerializableInfo? TryGetInfo<T>() where T : ISerializable, new() {
+        return TryGetInfo(new T());
+    }
+    /// <summary>
     /// Creates a serializable info.
     /// </summary>
     /// <param name="creator">The creator that creates an empty instance.</param>
     /// <returns>A new serializable info.</returns>
     public static SerializableInfo CreateInfo(Func<ISerializable> creator) {
-        return new (creator().FixedSize, (byte[] raw) => {
+        return new (creator().FixedSize, raw => {
             ISerializable inst = creator();
             inst.Parse(raw);
             return inst;
@@ -35,10 +66,10 @@ public interface ISerializable {
     public static SerializableInfo CreateInfo<T>() where T : ISerializable, new() {
         return CreateInfo(() => new T());
     }
-    /// <summary>
-    /// The info of this serializable.
-    /// </summary>
-    public SerializableInfo Info { get; }
+    // /// <summary>
+    // /// The info of this serializable.
+    // /// </summary>
+    // public SerializableInfo Info { get; }
 
     /// <summary>
     /// Determines whether the return value of <see cref="Serialize"/> has a fixed length and if so what the length is (in bytes). Must always be the same.

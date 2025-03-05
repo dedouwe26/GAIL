@@ -2,6 +2,7 @@
 using examples.Packets.Shared;
 using GAIL.Networking;
 using GAIL.Networking.Client;
+using GAIL.Serializing;
 using OxDED.Terminal;
 
 // Registers all three packets.
@@ -35,7 +36,7 @@ Terminal.OnKeyPress += async (key, keyChar, alt, shift, control) => {
     
     if (control && key == ConsoleKey.X) { // Stopping when CTRL+X has been pressed.
         Terminal.WriteLine("Stopping...");
-        await client.StopAsync();
+        await client.StopAsync(new StringSerializable("Bye!").Serialize());
     } else {
         client.SendPacket(new MessagePacket("test"));
     }

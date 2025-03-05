@@ -2,6 +2,7 @@
 using GAIL.Serializing.Formatters;
 using GAIL.Storage;
 using GAIL.Storage.Members;
+using OxDED.Terminal;
 
 // Generate a key and IV for AES encryption.
 byte[] key = new byte[32];
@@ -41,7 +42,8 @@ RandomNumberGenerator.Fill(iv);
 
     // Saves the storage to a file.
     if (!storage.Save("./example.dat")) {
-        Console.WriteLine("Failed to save to file...");
+        Terminal.WriteLine("Failed to save to file...");
+        return;
     }
 }
 {
@@ -51,23 +53,26 @@ RandomNumberGenerator.Fill(iv);
     storage.Formatter = new AESFormatter(key, iv);
     
     // Loads the storage file.
-    storage.Load("./example.dat");
+    if (!storage.Load("./example.dat")) {
+        Terminal.WriteLine("Failed to load from file...");
+        return;
+    }
 
-    Console.WriteLine(storage.Get("MyNumber")?.Type);
+    Terminal.WriteLine(storage.Get("MyNumber")?.Type);
     int myNumber = storage.Get<IntField>("MyNumber")!.Value;
-    Console.WriteLine(myNumber);
+    Terminal.WriteLine(myNumber);
 
     string personName = storage.Get<StringField>("person.name")!.Value;
-    Console.WriteLine("Name: "+personName);
+    Terminal.WriteLine("Name: "+personName);
 
     int ID = storage.Get<IntField>(["person", "id"])!.Value;
-    Console.WriteLine("ID: "+ID);
+    Terminal.WriteLine("ID: "+ID);
 
     List numbers = storage.Get<List>("numbers")!;
     foreach (IMember member in numbers) {
-        Console.WriteLine(member.Type);
+        Terminal.WriteLine(member.Type);
         if (member is IntField field) {
-            Console.WriteLine(field.Value);
+            Terminal.WriteLine(field.Value);
         }
     }
 }

@@ -11,6 +11,34 @@ namespace GAIL.Networking.Parser;
 /// A register that registers and creates packets for the network parser and serializer.
 /// </summary>
 public static class NetworkRegister {
+    private class PacketInfo {
+        public readonly string FullyQualifiedName;
+
+        public readonly ConstructorInfo Constructor;
+
+        public readonly PacketFieldInfo[] Fields;
+
+        public readonly MethodInfo? SerializeMethod;
+
+        public readonly MethodInfo? ParseMethod;
+
+        public readonly IFormatter Formatter;
+
+        public PacketInfo(string fullyQualifiedName, ConstructorInfo constructor, PacketFieldInfo[] fields, IFormatter formatter, MethodInfo? serializeMethod, MethodInfo? parseMethod) {
+            FullyQualifiedName = fullyQualifiedName;
+            Constructor = constructor;
+            Fields = fields;
+            Formatter = formatter;
+            SerializeMethod = serializeMethod;
+            ParseMethod = parseMethod;
+        }
+
+        private SerializableInfo[]? format;
+        public SerializableInfo[] Format { get {
+            format ??= [.. Fields.Select(f => f.Info)];
+            return format;
+        } }
+    }
     /// <summary>
     /// The ID of the network register logger.
     /// </summary>
@@ -34,7 +62,6 @@ public static class NetworkRegister {
         RegisterPacket<DisconnectPacket>();
     }
     private record class PacketFieldInfo(PropertyInfo Property, SerializableInfo Info);
-    private record class PacketInfo(string FullyQualifiedName, Func<ISerializable[], Packet> Creator, SerializableInfo[] Format, IFormatter Formatter, Func<Packet, ISerializable[]> Destructor);
     private static readonly List<PacketInfo> Packets = [];
 
     #region Packet Reflection
@@ -61,7 +88,7 @@ public static class NetworkRegister {
                 ISerializable? serializable = property.GetValue(instance) as ISerializable
                     ?? throw new ArgumentException($"Property {property.Name} in {property.ReflectedType?.Name ?? "packet"} is not a serializable");
 
-                f.Add(new PacketFieldInfo(property, serializable.Info));
+                f.Add(new PacketFieldInfo(property, ISerializable.TryGetInfo(serializable) ?? throw new InvalidOperationException($"Serializable of packet field {property.Name} in {property.ReflectedType?.Name ?? "packet"} does not have a serializable info")));
             }
         }
         return [.. f];
@@ -152,50 +179,7 @@ public static class NetworkRegister {
             throw new ArgumentException($"Failed at getting the serialize and parse methods of packet ({name})", e);
         }
 
-        Packet CreatePacket(ISerializable[] serializables) {
-            if (constructor.Invoke(null) is not Packet packet) {
-                throw new InvalidOperationException($"Failed at creating packet ({name})");
-            }
-            
-            for (int i = 0; i < fields.Length; i++) {
-                PacketFieldInfo field = fields[i];
-                try {
-                    field.Property.SetValue(packet, serializables[i]);
-                } catch (Exception e) {
-                    Logger.LogError($"Failed at setting field {field.Property.Name} in packet ({name}):");
-                    Logger.LogException(e);
-                    throw new InvalidOperationException($"Failed at setting field {field.Property.Name} in packet ({name})", e);
-                }
-            }
-
-            parseMethod?.Invoke(packet, null);
-
-            return packet;
-        }
-        ISerializable[] DestructPacket(Packet packet) {
-            serializeMethod?.Invoke(packet, null);
-
-            List<ISerializable> result = [];
-            
-            foreach (PacketFieldInfo field in fields) {
-                object? gainedValue;
-                try {
-                    gainedValue = field.Property.GetValue(packet);
-                } catch (Exception e) {
-                    Logger.LogError($"Failed at getting field {field.Property.Name} in packet ({name}):");
-                    Logger.LogException(e);
-                    throw new InvalidOperationException($"Failed at getting field {field.Property.Name} in packet ({name})", e);
-                }
-                if (gainedValue is not ISerializable serializable) {
-                    throw new InvalidOperationException($"Field {field.Property.Name} in {name} is not a serializable");
-                }
-                Terminal.Write(field.Property.Name);
-                result.Add(serializable);
-            }
-            return [.. result];
-        }
-
-        PacketInfo packetData = new(type.AssemblyQualifiedName!, CreatePacket, [.. fields.Select(f => f.Info)], formatter, DestructPacket);
+        PacketInfo packetData = new(type.AssemblyQualifiedName!, constructor, fields, formatter, serializeMethod, parseMethod);
 
         foreach (PacketInfo p in Packets) {
             if (p.Equals(packetData)) {
@@ -231,8 +215,26 @@ public static class NetworkRegister {
             Logger.LogError($"Invalid packet ID: {packetID}, is it registered?");
             throw new ArgumentOutOfRangeException(nameof(packetID), $"Invalid packet ID: {packetID}, is it registered?");
         }
-        PacketInfo packetData = Packets[(int)packetID];
-        return packetData.Creator(fields);
+        PacketInfo info = Packets[(int)packetID];
+
+        if (info.Constructor.Invoke(null) is not Packet packet) {
+            throw new InvalidOperationException($"Failed at creating packet ({info.FullyQualifiedName})");
+        }
+        
+        for (int i = 0; i < fields.Length; i++) {
+            PacketFieldInfo field = info.Fields[i];
+            try {
+                field.Property.SetValue(packet, fields[i]);
+            } catch (Exception e) {
+                Logger.LogError($"Failed at setting field {field.Property.Name} in packet ({info.FullyQualifiedName}):");
+                Logger.LogException(e);
+                throw new InvalidOperationException($"Failed at setting field {field.Property.Name} in packet ({info.FullyQualifiedName})", e);
+            }
+        }
+
+        info.ParseMethod?.Invoke(packet, null);
+
+        return packet;
     }
 
     /// <summary>
@@ -246,7 +248,27 @@ public static class NetworkRegister {
             throw new InvalidOperationException($"Invalid packet ID: {packet.ID} of packet {packet.GetType().Name}");
         }
         PacketInfo info = Packets[(int)packet.ID];
-        return info.Destructor(packet);
+
+        info.SerializeMethod?.Invoke(packet, null);
+
+        List<ISerializable> result = [];
+        
+        foreach (PacketFieldInfo field in info.Fields) {
+            object? gainedValue;
+            try {
+                gainedValue = field.Property.GetValue(packet);
+            } catch (Exception e) {
+                Logger.LogError($"Failed at getting field {field.Property.Name} in packet ({info.FullyQualifiedName}):");
+                Logger.LogException(e);
+                throw new InvalidOperationException($"Failed at getting field {field.Property.Name} in packet ({info.FullyQualifiedName})", e);
+            }
+            if (gainedValue is not ISerializable serializable) {
+                throw new InvalidOperationException($"Field {field.Property.Name} in {info.FullyQualifiedName} is not a serializable");
+            }
+            
+            result.Add(serializable);
+        }
+        return [.. result];
     }
 
     /// <summary>

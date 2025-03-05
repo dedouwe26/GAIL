@@ -11,20 +11,20 @@ public class DisconnectPacket : Packet {
     /// <summary>
     /// The optional additional data.
     /// </summary>
-    public byte[] AdditionalData = [];
+    public byte[] additionalData;
     [PacketField]
-    private BytesSerializable AdditionalDataField { get => new(AdditionalData); set => AdditionalData = value.Value;}
+    private BytesSerializable AdditionalDataField { get => new(additionalData); set => additionalData = value.Value;}
 
     /// <summary>
     /// Creates an empty disconnect packet.
     /// </summary>
     [PacketConstructor]
-    public DisconnectPacket() { }
+    public DisconnectPacket() { this.additionalData = []; }
     /// <summary>
     /// Creates a disconnect packet with additional data.
     /// </summary>
     /// <param name="additionalData">The additional data to send.</param>
-    public DisconnectPacket(byte[] additionalData) { AdditionalData = additionalData; }
+    public DisconnectPacket(byte[] additionalData) { this.additionalData = additionalData; }
 }
 
 /// <summary>
