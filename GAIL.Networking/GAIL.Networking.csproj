@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="0xDED.Terminal" Version="4.2.3" />
+    <PackageReference Include="0xDED.Terminal" Version="4.2.4" />
   </ItemGroup>
 
   <ItemGroup>
