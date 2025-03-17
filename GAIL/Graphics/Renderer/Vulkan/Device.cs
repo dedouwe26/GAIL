@@ -1,11 +1,9 @@
-using System.Drawing;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using GAIL.Core;
 using OxDED.Terminal.Logging;
 using Silk.NET.Core;
 using Silk.NET.Core.Native;
-using Silk.NET.OpenGL;
 using Silk.NET.Vulkan;
 using Silk.NET.Vulkan.Extensions.KHR;
 
@@ -27,7 +25,7 @@ namespace GAIL.Graphics.Renderer.Vulkan
         /// If this class is already disposed.
         /// </summary>
         public bool IsDisposed { get; private set; }
-        public static readonly string[] deviceExtensions = [KhrSwapchain.ExtensionName];
+        public static readonly string[] DeviceExtensions = [KhrSwapchain.ExtensionName];
         public readonly PhysicalDevice physicalDevice;
         public Silk.NET.Vulkan.Device logicalDevice;
         public Queue graphicsQueue;
@@ -87,8 +85,8 @@ namespace GAIL.Graphics.Renderer.Vulkan
                     QueueCreateInfoCount = (uint)uniqueQueueFamilies.Length,
                     PQueueCreateInfos = queueCreateInfos,
                     PEnabledFeatures = Pointer<PhysicalDeviceFeatures>.From(ref deviceFeatures),
-                    EnabledExtensionCount = (uint)deviceExtensions.Length,
-                    PpEnabledExtensionNames = (byte**)SilkMarshal.StringArrayToPtr(deviceExtensions),
+                    EnabledExtensionCount = (uint)DeviceExtensions.Length,
+                    PpEnabledExtensionNames = (byte**)SilkMarshal.StringArrayToPtr(DeviceExtensions),
                     EnabledLayerCount = 0
                 };
                 
@@ -173,9 +171,9 @@ namespace GAIL.Graphics.Renderer.Vulkan
 
             // Check if all the extensions are supported.
             unsafe {
-                HashSet<string?> availableExtensionNames = availableExtensions.Select(extension => Marshal.PtrToStringAnsi((IntPtr)extension.ExtensionName)).ToHashSet();
+                HashSet<string?> availableExtensionNames = [.. availableExtensions.Select(extension => Marshal.PtrToStringAnsi((IntPtr)extension.ExtensionName))];
 
-                return deviceExtensions.All(availableExtensionNames.Contains);
+                return DeviceExtensions.All(availableExtensionNames.Contains);
             }
         }
 
@@ -230,7 +228,7 @@ namespace GAIL.Graphics.Renderer.Vulkan
                 PSwapchains = Pointer<SwapchainKHR>.FromArray(ref swapchains),
                 PImageIndices = Pointer<uint>.From(ref imageIndex)
             };
-            Result result = renderer.Swapchain.extension.QueuePresent(presentQueue, presentInfo);
+            Result result = renderer.Swapchain.Extension.QueuePresent(presentQueue, in presentInfo);
 
             if (result == Result.ErrorOutOfDateKhr || result == Result.SuboptimalKhr) {
                 // if (shouldRecreateSwapchain) { Logger.LogDebug("Goes via shouldRecreateSwapchain."); }

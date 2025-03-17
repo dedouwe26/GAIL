@@ -17,7 +17,16 @@ namespace GAIL.Graphics.Renderer.Vulkan
         /// </summary>
         public bool IsDisposed { get; private set; }
         public bool AreFramebuffersDisposed { get; private set; }
-        public KhrSwapchain? extension;
+        private KhrSwapchain? extension;
+        public KhrSwapchain Extension { get {
+            if (extension == null) {
+                if (!API.Vk.TryGetDeviceExtension(instance, device.logicalDevice, out extension)) {
+                    Logger.LogFatal("Vulkan: Failed at getting Swapchain extension!");
+                    throw new APIBackendException("Vulkan", "Failed at getting VK_KHR_swapchain extension.");
+                }
+            }
+            return extension!;
+        } }
         public SwapchainKHR swapchain;
         public Image[]? images;
         public ImageView[] imageViews { get; private set; }
@@ -29,21 +38,23 @@ namespace GAIL.Graphics.Renderer.Vulkan
         private readonly WindowManager window;
         private readonly Device device;
         private readonly Logger Logger;
+        private readonly Instance instance;
 
         public SwapChain(VulkanRenderer renderer, WindowManager windowManager) {
             Logger = renderer.Logger;
+            instance = renderer.instance;
             surface = renderer.surface;
             device = renderer.device;
             window = windowManager;
 
-            CreateSwapChain(renderer.instance!);
+            CreateSwapChain();
 
             imageViews = CreateImageViews();
         }
 
         public uint? AcquireNextImage(VulkanRenderer renderer) {
             uint index = default;
-            Result result = extension.AcquireNextImage(device.logicalDevice, swapchain, ulong.MaxValue, renderer.Syncronization.imageAvailable[renderer.CurrentFrame], default, ref index);
+            Result result = Extension.AcquireNextImage(device.logicalDevice, swapchain, ulong.MaxValue, renderer.Syncronization.imageAvailable[renderer.CurrentFrame], default, ref index);
             
             if (result == Result.ErrorOutOfDateKhr) {
                 return null;
@@ -56,7 +67,7 @@ namespace GAIL.Graphics.Renderer.Vulkan
 
         public ImageView[] CreateImageViews() {
             Logger.LogDebug("Creating Vulkan image views.");
-            imageViews = new ImageView[images.Length];
+            imageViews = new ImageView[images!.Length];
 
             for (int i = 0; i < imageViews.Length; i++) {
                 ImageViewCreateInfo createInfo = new() {
@@ -80,13 +91,13 @@ namespace GAIL.Graphics.Renderer.Vulkan
                 };
 
                 unsafe {
-                    _ = Utils.Check(API.Vk.CreateImageView(device.logicalDevice, createInfo, Allocator.allocatorPtr, out imageViews[i]), Logger, "Failed to create image view", true);
+                    _ = Utils.Check(API.Vk.CreateImageView(device.logicalDevice, in createInfo, Allocator.allocatorPtr, out imageViews[i]), Logger, "Failed to create image view", true);
                 }
             }
             return imageViews;
         }
 
-        public void CreateSwapChain(Instance instance) {
+        public void CreateSwapChain() {
             SupportDetails swapChainSupport = device.CheckSwapChainSupport(device.physicalDevice);
             SurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(swapChainSupport.Formats);
             PresentModeKHR presentMode = ChoosePresentMode(swapChainSupport.PresentModes);
@@ -139,15 +150,12 @@ namespace GAIL.Graphics.Renderer.Vulkan
                 }
 
             }
-            if (!API.Vk.TryGetDeviceExtension(instance, device.logicalDevice, out extension)) {
-                Logger.LogFatal("Vulkan: Failed at getting Swapchain extension!");
-                throw new APIBackendException("Vulkan", "Failed at getting VK_KHR_swapchain extension.");
-            }
+            
             unsafe {
-                _ = Utils.Check(extension.CreateSwapchain(device.logicalDevice, createInfo, Allocator.allocatorPtr, out swapchain), Logger, "Failed to create swapchain", true);
-
+                _ = Utils.Check(Extension.CreateSwapchain(device.logicalDevice, in createInfo, Allocator.allocatorPtr, out swapchain), Logger, "Failed to create swapchain", true);
+            
                 Utils.GetArray((Pointer<Image> ptr, ref uint count) => { // NOTE: There is only a minimal image count specified.
-                    return extension.GetSwapchainImages(device.logicalDevice, swapchain, ref count, ptr);
+                    return Extension.GetSwapchainImages(device.logicalDevice, swapchain, ref count, ptr);
                 }, out images, Logger, "SwapchainImages", true);
             }
             imageFormat = surfaceFormat.Format;
@@ -166,7 +174,7 @@ namespace GAIL.Graphics.Renderer.Vulkan
                 }
             }
         }
-        public PresentModeKHR ChoosePresentMode(PresentModeKHR[] presentModes) {
+        public static PresentModeKHR ChoosePresentMode(PresentModeKHR[] presentModes) {
             foreach (var presentMode in presentModes) {
                 if (presentMode == PresentModeKHR.MailboxKhr) {
                     return presentMode;
@@ -174,7 +182,7 @@ namespace GAIL.Graphics.Renderer.Vulkan
             }
             return PresentModeKHR.FifoKhr;
         }
-        public SurfaceFormatKHR ChooseSwapSurfaceFormat(SurfaceFormatKHR[] surfaceFormats) {
+        public static SurfaceFormatKHR ChooseSwapSurfaceFormat(SurfaceFormatKHR[] surfaceFormats) {
             foreach (SurfaceFormatKHR availableFormat in surfaceFormats) {
                 if (availableFormat.Format == Format.B8G8R8A8Srgb && availableFormat.ColorSpace == ColorSpaceKHR.SpaceSrgbNonlinearKhr) {
                     return availableFormat;
@@ -233,8 +241,11 @@ namespace GAIL.Graphics.Renderer.Vulkan
                 }
             }
             unsafe {
-                extension.DestroySwapchain(device.logicalDevice, swapchain, Allocator.allocatorPtr);
+                Extension.DestroySwapchain(device.logicalDevice, swapchain, Allocator.allocatorPtr);
             }
+
+            extension?.Dispose();
+
             IsDisposed = true;
             
             GC.SuppressFinalize(this);

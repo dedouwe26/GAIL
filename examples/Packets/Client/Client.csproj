@@ -6,7 +6,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="0xDED.Terminal" Version="4.2.4" />
+    <PackageReference Include="0xDED.Terminal" Version="4.2.5" />
   </ItemGroup>
 
   <PropertyGroup>

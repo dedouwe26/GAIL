@@ -32,6 +32,7 @@ namespace GAIL {
         /// The Vulkan API.
         /// </summary>
         public static Vk Vk {get {return Instance.vk;}}
+        
         private readonly Glfw glfw = Glfw.GetApi();
         private readonly AL al = AL.GetApi();
         private readonly ALContext alc = ALContext.GetApi();

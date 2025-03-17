@@ -121,7 +121,7 @@ public interface IRasterizationLayerSettings {
 /// <summary>
 /// The values of the settings for a rasterization layer.
 /// </summary>
-public struct RasterizationLayerSettings {
+public class RasterizationLayerSettings {
     /// <summary>
     /// If the renderer should render. Defaults to true.
     /// </summary>
@@ -162,7 +162,7 @@ public abstract class RasterizationLayerSettings<TLayer> : IRasterizationLayerSe
     /// </summary>
     /// <param name="layer">The back-end rasterization layer to use for these settings.</param>
     /// <param name="values">The initial values of these settings.</param>
-    protected RasterizationLayerSettings(TLayer layer, ref RasterizationLayerSettings values) {
+    protected RasterizationLayerSettings(TLayer layer, RasterizationLayerSettings values) {
         this.layer = layer;
         shouldRender = values.ShouldRender;
         fillMode = values.FillMode;

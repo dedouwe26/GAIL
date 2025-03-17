@@ -75,30 +75,13 @@ namespace GAIL.Graphics
         /// </summary>
         /// <param name="settings">The default settings of the layer.</param>
         /// <returns>The created rasterization layer, if it succeeded in creating a rasterization layer.</returns>
-        public IRasterizationLayer? CreateRasterizationLayer(ref RasterizationLayerSettings settings) {
+        public IRasterizationLayer? CreateRasterizationLayer(RasterizationLayerSettings settings) {
             if (Renderer == null) {
-                Logger.LogError("Renderer is not initialized. On creating rasterization layer.");
+                Logger.LogError("Renderer is not initialized.");
                 return default;
             }
 
-            return Renderer.CreateRasterizationLayer(ref settings);
-        }
-        /// <summary>
-        /// Creates a new shader from the corresponding shader code.
-        /// </summary>
-        /// <returns>
-        /// The created shader, if it succeeded in creating a rasterization layer.
-        /// </returns>
-        /// <param name="vertexShader">The per-vertex shader (in SPIR-V compiled).</param>
-        /// <param name="fragmentShader">The per-pixel shader (in SPIR-V compiled).</param>
-        /// <param name="geometryShader">The geometry shader (in SPIR-V compiled).</param>
-        public IShader? CreateShader(byte[] vertexShader, byte[]? fragmentShader = null, byte[]? geometryShader = null) {
-            if (Renderer == null) {
-                Logger.LogError("Renderer is not initialized. On creating rasterization layer.");
-                return null;
-            }
-
-            return Renderer.CreateShader(vertexShader, fragmentShader, geometryShader);
+            return Renderer.CreateRasterizationLayer(settings);
         }
 
         /// <inheritdoc/>

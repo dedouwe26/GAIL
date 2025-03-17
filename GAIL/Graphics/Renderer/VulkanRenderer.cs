@@ -64,6 +64,8 @@ public class VulkanRenderer : IRenderer<IVulkanLayer> {
     public uint ImageIndex { get; private set; }
     internal Logger Logger;
 
+    # region Utilities
+
     /// <summary>
     /// The vulkan devices utility, for custom usage.
     /// </summary>
@@ -94,6 +96,8 @@ public class VulkanRenderer : IRenderer<IVulkanLayer> {
     /// </summary>
     public readonly Instance instance;
 
+    # endregion Utilities
+
     private readonly Application.Globals globals;
     private readonly VulkanSettings settings;
     /// <inheritdoc/>
@@ -116,7 +120,7 @@ public class VulkanRenderer : IRenderer<IVulkanLayer> {
             throw new APIBackendException("Vulkan", "Not Supported");
         }
 
-        Logger.LogDebug("Starting Vulkan.");
+        Logger.LogDebug("Initializing Vulkan");
 
         instance = new Instance(this, ref appInfo);
         surface = new Surface(this, globals.windowManager);
@@ -152,9 +156,10 @@ public class VulkanRenderer : IRenderer<IVulkanLayer> {
         // TODO: Add layers to render pass?
         // TODO: RenderFinished semaphores 
 
-        // TODO: Optimization: dont re-record every frame.
+        // TODO: Optimization: Don't re-record every frame.
         Commands.BeginRecord(this, ref Swapchain.frameBuffers![imageIndex]);
         
+        {
             //   <<< LAYER SPECIFICS >>>
 
             foreach (IVulkanLayer backendLayer in settings.Layers) {
@@ -162,6 +167,7 @@ public class VulkanRenderer : IRenderer<IVulkanLayer> {
             }
 
             // <<< END LAYER SPECIFICS >>>
+        }
         
         Commands.EndRecord(this);
         
@@ -184,20 +190,11 @@ public class VulkanRenderer : IRenderer<IVulkanLayer> {
         device.shouldRecreateSwapchain = true;
     }
     /// <inheritdoc/>
-    public IRasterizationLayer? CreateRasterizationLayer(ref RasterizationLayerSettings settings) {
+    public IRasterizationLayer? CreateRasterizationLayer(RasterizationLayerSettings settings) {
         try {
-            return new VulkanRasterizationLayer(this, 0, ref settings);
+            return new VulkanRasterizationLayer(this, 0, settings);
         } catch (APIBackendException) {
             Logger.LogError("Failed to create rasterization layer.");
-            return default;
-        }
-    }
-    /// <inheritdoc/>
-    public IShader? CreateShader(byte[] vertexShader, byte[]? fragmentShader = null, byte[]? geometryShader = null) {
-        try {
-            return Shader.CreateShader(this, vertexShader, fragmentShader, geometryShader);
-        } catch (APIBackendException) {
-            Logger.LogError("Failed to create shader.");
             return default;
         }
     }

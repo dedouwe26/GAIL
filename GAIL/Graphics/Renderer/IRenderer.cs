@@ -28,15 +28,5 @@ public interface IRenderer<TBackendLayer> : IDisposable where TBackendLayer : IB
     /// True, if it could create a back-end layer.
     /// </returns>
     /// <param name="settings">The initial settings values of the back-end rasterization layer settings</param>
-    public IRasterizationLayer? CreateRasterizationLayer(ref RasterizationLayerSettings settings);
-    /// <summary>
-    /// Creates a new back-end shader from the corresponding shader code.
-    /// </summary>
-    /// <returns>
-    /// The created back-end shader if it was successful.
-    /// </returns>
-    /// <param name="vertexShader">The per-vertex shader (in SPIR-V compiled).</param>
-    /// <param name="fragmentShader">The per-pixel shader (in SPIR-V compiled).</param>
-    /// <param name="geometryShader">The geometry shader (in SPIR-V compiled).</param>
-    public IShader? CreateShader(byte[] vertexShader, byte[]? fragmentShader = null, byte[]? geometryShader = null);
+    public IRasterizationLayer? CreateRasterizationLayer(RasterizationLayerSettings settings);
 }

@@ -83,16 +83,18 @@ namespace GAIL
             IsDisposed = true;
             
             globals = new() {
-                logger = logger ?? new Logger(name:"GAIL", severity:severity, targets:new(){[typeof(TerminalTarget)] = new TerminalTarget()})
+                logger = logger ?? new Logger(name:"GAIL", severity:severity, targets:[new TerminalTarget()])
             };
             
-            if (globals.logger.HasTarget<TerminalTarget>()) {
-                globals.logger.GetTarget<TerminalTarget>().Format = "<{0}>: ("+Color.DarkBlue.ToForegroundANSI()+"{2}"+ANSI.Styles.ResetAll+")[{5}"+ANSI.Styles.Bold+"{3}"+ANSI.Styles.ResetAll+"] : {5}{4}"+ANSI.Styles.ResetAll;
-                globals.logger.GetTarget<TerminalTarget>().NameFormat =  "{0} - {1}";
+            int index = Logger.GetTargetIndex<TerminalTarget>();
+            if (index > -1) {
+                Logger.GetTarget<TerminalTarget>(index)!.Format = "<{0}>: ("+Color.DarkBlue.ToForegroundANSI()+"{2}"+ANSI.Styles.ResetAll+")[{5}"+ANSI.Styles.Bold+"{3}"+ANSI.Styles.ResetAll+"] : {5}{4}"+ANSI.Styles.ResetAll;
+                Logger.GetTarget<TerminalTarget>(index)!.NameFormat =  "{0} - {1}";
             }
-            if (globals.logger.HasTarget<FileTarget>()) {
-                globals.logger.GetTarget<FileTarget>().Format = "<{0}>: ({2})[{3}] : {4}";
-                globals.logger.GetTarget<FileTarget>().NameFormat =  "{0} - {1}";
+            index = Logger.GetTargetIndex<FileTarget>();
+            if (index > -1) {
+                Logger.GetTarget<FileTarget>(index)!.Format = "<{0}>: ({2})[{3}] : {4}";
+                Logger.GetTarget<FileTarget>(index)!.NameFormat =  "{0} - {1}";
             }
 
             globals.logger.LogDebug("Initializing all managers.");

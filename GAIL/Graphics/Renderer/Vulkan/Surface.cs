@@ -1,5 +1,6 @@
 using GAIL.Core;
 using GAIL.Window;
+using OxDED.Terminal.Logging;
 using Silk.NET.Core.Native;
 using Silk.NET.GLFW;
 using Silk.NET.Vulkan;
@@ -12,23 +13,28 @@ namespace GAIL.Graphics.Renderer.Vulkan
         /// If this class is already disposed.
         /// </summary>
         public bool IsDisposed { get; private set; }
-        public readonly KhrSurface surfaceExtension;
+        private KhrSurface? extension;
+        public KhrSurface Extension { get {
+            if (extension == null) {
+                    if (!API.Vk.TryGetInstanceExtension(instance, out extension)) {
+                    Logger.LogFatal("Vulkan: Failed at getting Surface extension!");
+                    throw new APIBackendException("Vulkan", "Failed at getting VK_KHR_surface extension.");
+                }
+            }
+        } }
         public readonly SurfaceKHR surface;
         private readonly Instance instance;
+        private readonly Logger Logger;
         public Surface(VulkanRenderer renderer, WindowManager window) {
+            Logger = renderer.Logger;
             renderer.Logger.LogDebug("Creating Surface.");
 
             instance = renderer.instance;
 
-            if (!API.Vk.TryGetInstanceExtension(instance, out surfaceExtension)) {
-                renderer.Logger.LogFatal("Vulkan: Failed at getting Surface extension!");
-                throw new APIBackendException("Vulkan", "Failed at getting VK_KHR_surface extension.");
-            }
-
             unsafe {
                 VkNonDispatchableHandle* surfacePtr = stackalloc VkNonDispatchableHandle[1];
 
-                _ = Utils.Check((Result)API.Glfw.CreateWindowSurface(((Silk.NET.Vulkan.Instance)instance).ToHandle(), window.Window, Allocator.allocatorPtr, surfacePtr), renderer.Logger, "Failed to create window surface", true);
+                _ = Utils.Check((Result)API.Glfw.CreateWindowSurface(((Silk.NET.Vulkan.Instance)instance).ToHandle(), window.Window, Allocator.allocatorPtr, surfacePtr), Logger, "Failed to create window surface", true);
                 
                 Glfw.ThrowExceptions();
                 
@@ -42,9 +48,9 @@ namespace GAIL.Graphics.Renderer.Vulkan
             if (IsDisposed) { return; }
             
             unsafe {
-                surfaceExtension.DestroySurface(instance, surface, Allocator.allocatorPtr);
+                Extension.DestroySurface(instance, surface, Allocator.allocatorPtr);
             }
-            surfaceExtension.Dispose();
+            extension?.Dispose();
             
             IsDisposed = true;
             GC.SuppressFinalize(this);

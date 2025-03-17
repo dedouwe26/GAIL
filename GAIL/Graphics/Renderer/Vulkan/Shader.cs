@@ -11,7 +11,10 @@ namespace GAIL.Graphics.Renderer.Vulkan;
 /// Represents all the programmable shader stages in a default graphics pipeline.
 /// </summary>
 public class Shader : IShader {
-    public static Shader? CreateShader(VulkanRenderer renderer, ReadOnlyCollection<AttributeType> requiredAttributes, ReadOnlyCollection<AttributeType> requiredUniforms, byte[] vertex, byte[]? fragment = null, byte[]? geometry = null) {
+    public static Shader? CreateShader(VulkanRenderer renderer,
+        ReadOnlyCollection<AttributeType> requiredAttributes, ReadOnlyCollection<AttributeType> requiredUniforms,
+        byte[] vertex, byte[]? fragment = null, byte[]? geometry = null
+    ) {
         Shader shader = new(renderer, requiredAttributes, requiredUniforms, 1 + (fragment!=null?1:0) + (geometry!=null?1:0));
 
         {
@@ -19,34 +22,35 @@ public class Shader : IShader {
             if ((module=shader.CreateShaderModule(vertex))==null) {
                 return null;
             }
-            shader.vertexModule = module.Value;
+            shader.VertexModule = module.Value;
         }
 
         shader.IsDisposed = false;
 
-        shader.stages[0] = shader.CreateShaderStage(shader.vertexModule, ShaderStageFlags.VertexBit);
+        int index = 0;
+        shader.stages[index++] = shader.CreateShaderStage(shader.VertexModule, ShaderStageFlags.VertexBit);
 
         if (fragment!=null) {
-            if ((shader.fragmentModule=shader.CreateShaderModule(fragment))==null) {
+            if ((shader.FragmentModule=shader.CreateShaderModule(fragment))==null) {
                 return null;
             }
-            shader.stages[1] = shader.CreateShaderStage(shader.fragmentModule.Value, ShaderStageFlags.FragmentBit);
+            shader.stages[index++] = shader.CreateShaderStage(shader.FragmentModule.Value, ShaderStageFlags.FragmentBit);
         }
 
         if (geometry!=null) {
-            if ((shader.geometryModule=shader.CreateShaderModule(geometry))==null) {
+            if ((shader.GeometryModule=shader.CreateShaderModule(geometry))==null) {
                 return null;
             }
-            shader.stages[1+(fragment!=null?1:0)] = shader.CreateShaderStage(shader.geometryModule.Value, ShaderStageFlags.GeometryBit);
+            shader.stages[index++] = shader.CreateShaderStage(shader.GeometryModule.Value, ShaderStageFlags.GeometryBit);
         }
         // TODO: Create tesselation (control shader, evaluation shader).
 
         return shader;
     }
     public PipelineShaderStageCreateInfo[] stages;
-    public ShaderModule vertexModule { get; private set; }
-    public ShaderModule? fragmentModule { get; private set; }
-    public ShaderModule? geometryModule { get; private set; }
+    public ShaderModule VertexModule { get; private set; }
+    public ShaderModule? FragmentModule { get; private set; }
+    public ShaderModule? GeometryModule { get; private set; }
     
     /// <summary>
     /// If this class is already disposed.
@@ -97,7 +101,7 @@ public class Shader : IShader {
         unsafe {
             createInfo.PCode = Pointer<byte>.FromArray(ref byteCode).Cast<uint>();
 
-            if (!Utils.Check(API.Vk.CreateShaderModule(Device.logicalDevice, createInfo, Allocator.allocatorPtr, out shaderModule), Logger, "Failed to create shader module")) {
+            if (!Utils.Check(API.Vk.CreateShaderModule(Device.logicalDevice, in createInfo, Allocator.allocatorPtr, out shaderModule), Logger, "Failed to create shader module")) {
                 return null;
             }
         }
@@ -125,9 +129,9 @@ public class Shader : IShader {
         if (IsDisposed) { return; }
 
         unsafe {
-            API.Vk.DestroyShaderModule(Device.logicalDevice, vertexModule, Allocator.allocatorPtr);
-            if (fragmentModule!=null) API.Vk.DestroyShaderModule(Device.logicalDevice, fragmentModule.Value, Allocator.allocatorPtr);
-            if (geometryModule!=null) API.Vk.DestroyShaderModule(Device.logicalDevice, geometryModule.Value, Allocator.allocatorPtr);
+            API.Vk.DestroyShaderModule(Device.logicalDevice, VertexModule, Allocator.allocatorPtr);
+            if (FragmentModule!=null) API.Vk.DestroyShaderModule(Device.logicalDevice, FragmentModule.Value, Allocator.allocatorPtr);
+            if (GeometryModule!=null) API.Vk.DestroyShaderModule(Device.logicalDevice, GeometryModule.Value, Allocator.allocatorPtr);
 
             foreach (PipelineShaderStageCreateInfo createInfo in stages) {
                 SilkMarshal.Free((nint)createInfo.PName);

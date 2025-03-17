@@ -12,7 +12,7 @@ public class VulkanRasterizationLayerSettings : RasterizationLayerSettings<Vulka
     /// </summary>
     /// <param name="layer">The vulkan implementation of the rasterization layer.</param>
     /// <param name="values">The initial values of these settings.</param>
-    public VulkanRasterizationLayerSettings(VulkanRasterizationLayer layer, ref RasterizationLayerSettings values) : base(layer, ref values) { }
+    public VulkanRasterizationLayerSettings(VulkanRasterizationLayer layer, RasterizationLayerSettings values) : base(layer, values) { }
     
     /// <inheritdoc/>
     public override CullMode CullMode { get => base.CullMode; set {
@@ -44,11 +44,11 @@ public class VulkanRasterizationLayerSettings : RasterizationLayerSettings<Vulka
 /// The Vulkan implementation of the back-end rasterization layer.
 /// </summary>
 public class VulkanRasterizationLayer : IVulkanLayer, IRasterizationLayer {
-    internal VulkanRasterizationLayer(VulkanRenderer renderer, uint index, ref RasterizationLayerSettings settings) {
+    internal VulkanRasterizationLayer(VulkanRenderer renderer, uint index, RasterizationLayerSettings settings) {
         Logger = renderer.Logger;
         Renderer = renderer;
         Index = index;
-        this.settings = new(this, ref settings);
+        this.settings = new(this, settings);
 
         Logger.LogDebug("Creating a Vulkan rasterization back-end layer.");
 
