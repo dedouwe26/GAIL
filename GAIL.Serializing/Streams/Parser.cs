@@ -96,6 +96,8 @@ public class Parser : IDisposable {
         }
         throw new InvalidCastException("The serializable is not of type T");
     }
+
+    public virtual ISerializer ReadSerializer
     /// <summary>
     /// Reads an unsigned integer from the stream.
     /// </summary>
