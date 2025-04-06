@@ -25,7 +25,7 @@ public interface ISerializable {
             PropertyInfo[] infos = serializable.GetType().GetProperties(BindingFlags.Static | BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
 
             foreach (PropertyInfo info in infos) {
-                if (info.GetCustomAttribute<SerializableInfoAttribute>() is not null) {
+                if (info.GetCustomAttribute<SerializingInfoAttribute>() is not null) {
                     if (info.GetValue(serializable) is SerializableInfo s) {
                         return s;
                     } else {

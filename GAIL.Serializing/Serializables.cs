@@ -11,7 +11,7 @@ public class BoolSerializable : ISerializable {
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
-    [SerializableInfo]
+    [SerializingInfo]
     public static SerializableInfo Info { get {
         if (info == null) {
             info = ISerializable.CreateInfo(() => {return new BoolSerializable();});
@@ -100,7 +100,7 @@ public class FloatSerializable : ISerializable<float> {
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
-    [SerializableInfo]
+    [SerializingInfo]
     public static SerializableInfo Info { get {
         if (info == null) {
             info = ISerializable.CreateInfo(() => {return new FloatSerializable(default);});
@@ -139,7 +139,7 @@ public class DoubleSerializable : ISerializable<double> {
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
-    [SerializableInfo]
+    [SerializingInfo]
     public static SerializableInfo Info { get {
         if (info == null) {
             info = ISerializable.CreateInfo(() => {return new DoubleSerializable(default);});
@@ -177,7 +177,7 @@ public class ByteSerializable : ISerializable<byte> {
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
-    [SerializableInfo]
+    [SerializingInfo]
     public static SerializableInfo Info { get {
         if (info == null) {
             info = ISerializable.CreateInfo(() => {return new ByteSerializable(default);});
@@ -215,7 +215,7 @@ public class ShortSerializable : ISerializable<short> {
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
-    [SerializableInfo]
+    [SerializingInfo]
     public static SerializableInfo Info { get {
         if (info == null) {
             info = ISerializable.CreateInfo(() => {return new ShortSerializable(default);});
@@ -252,7 +252,7 @@ public class IntSerializable : ISerializable<int> {
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
-    [SerializableInfo]
+    [SerializingInfo]
     public static SerializableInfo Info { get {
         if (info == null) {
             info = ISerializable.CreateInfo(() => {return new IntSerializable(default);});
@@ -289,7 +289,7 @@ public class LongSerializable : ISerializable<long> {
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
-    [SerializableInfo]
+    [SerializingInfo]
     public static SerializableInfo Info { get {
         if (info == null) {
             info = ISerializable.CreateInfo(() => {return new LongSerializable(default);});
@@ -326,7 +326,7 @@ public class SByteSerializable : ISerializable<sbyte> {
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
-    [SerializableInfo]
+    [SerializingInfo]
     public static SerializableInfo Info { get {
         if (info == null) {
             info = ISerializable.CreateInfo(() => {return new SByteSerializable(default);});
@@ -363,7 +363,7 @@ public class UShortSerializable : ISerializable<ushort> {
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
-    [SerializableInfo]
+    [SerializingInfo]
     public static SerializableInfo Info { get {
         if (info == null) {
             info = ISerializable.CreateInfo(() => {return new UShortSerializable(default);});
@@ -400,7 +400,7 @@ public class UIntSerializable : ISerializable<uint> {
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
-    [SerializableInfo]
+    [SerializingInfo]
     public static SerializableInfo Info { get {
         if (info == null) {
             info = ISerializable.CreateInfo(() => {return new UIntSerializable(default);});
@@ -438,7 +438,7 @@ public class ULongSerializable : ISerializable<ulong> {
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
-    [SerializableInfo]
+    [SerializingInfo]
     public static SerializableInfo Info { get {
         if (info == null) {
             info = ISerializable.CreateInfo(() => {return new ULongSerializable(default);});
@@ -475,7 +475,7 @@ public class BytesSerializable : ISerializable<byte[]> {
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
-    [SerializableInfo]
+    [SerializingInfo]
     public static SerializableInfo Info { get {
         if (info == null) {
             info = ISerializable.CreateInfo(() => {return new BytesSerializable([]);});
@@ -514,7 +514,7 @@ public class StringSerializable : ISerializable<string> {
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
-    [SerializableInfo]
+    [SerializingInfo]
     public static SerializableInfo Info { get {
         if (info == null) {
             info = ISerializable.CreateInfo(() => {return new StringSerializable("");});
@@ -563,7 +563,7 @@ public class ListSerializable<T> : ISerializable<List<T>> where T : ISerializabl
     }
     private SerializableInfo? info;
     /// <inheritdoc/>
-    [SerializableInfo]
+    [SerializingInfo]
     public SerializableInfo Info { get {
         if (info == null) {
             info = CreateInfo(ValueInfo);
@@ -631,7 +631,7 @@ public class DictionarySerializable<TKey, TValue> : ISerializable<Dictionary<TKe
     private SerializableInfo? info;
 
     /// <inheritdoc/>
-    [SerializableInfo]
+    [SerializingInfo]
     public SerializableInfo Info { get {
         if (info == null) {
             info = CreateInfo(KeyInfo, ValueInfo);

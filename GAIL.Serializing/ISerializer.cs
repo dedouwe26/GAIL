@@ -4,13 +4,20 @@ using GAIL.Serializing.Streams;
 
 namespace GAIL.Serializing;
 
+/// <summary>
+/// Represents info for a serializer.
+/// </summary>
+/// <param name="FixedSize">The fixed size of the serializer.</param>
+/// <param name="Creator">The instance creator of the serializer.</param>
+public record SerializerInfo (uint? FixedSize, Func<byte[], ISerializer> Creator);
+
 public interface ISerializer {
-    public static SerializableInfo? TryGetInfo(ISerializer serializable) {
+    public static SerializerInfo? TryGetInfo(ISerializer serializable) {
         try {
             PropertyInfo[] infos = serializable.GetType().GetProperties(BindingFlags.Static | BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
 
             foreach (PropertyInfo info in infos) {
-                if (info.GetCustomAttribute<SerializableInfoAttribute>() is not null) {
+                if (info.GetCustomAttribute<SerializingInfoAttribute>() is not null) {
                     if (info.GetValue(serializable) is SerializableInfo s) {
                         return s;
                     } else {
@@ -23,10 +30,10 @@ public interface ISerializer {
         }
         return null;
     }
-    public static SerializableInfo? TryGetInfo<T>() where T : ISerializer, new() {
+    public static SerializerInfo? TryGetInfo<T>() where T : ISerializer, new() {
         return TryGetInfo(new T());
     }
-    public static SerializableInfo CreateInfo(Func<ISerializer> creator) {
+    public static SerializerInfo CreateInfo(Func<ISerializer> creator) {
         SerializableInfo[] format = creator().Format;
         uint? fixedSize = 0;
         foreach (SerializableInfo info in format) {
@@ -38,16 +45,18 @@ public interface ISerializer {
             }
         }
         return new (fixedSize, raw => {
-            ISerializer inst = creator();
-            foreach (SerializableInfo info in format) {
-                Parser parser = new(raw);
-                parser.ReadSerializable()
-                ISerializable serializable = info.Creator();
-                serializable.Parse(raw);
+            Parser parser = new(raw);
+            
+            ISerializable[] serializables = new ISerializable[format.Length];
+            for (int i = 0; i < format.Length; i++) {
+                serializables[i] = parser.ReadSerializable(format[i]);
             }
+            ISerializer inst = creator();
+            inst.Parse(serializables);
+            return inst;
         });
     }
-    public static SerializableInfo CreateInfo<T>() where T : ISerializer, new() {
+    public static SerializerInfo CreateInfo<T>() where T : ISerializer, new() {
         return CreateInfo(() => new T());
     }
     
