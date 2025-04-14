@@ -20,7 +20,7 @@ public class Serializer : IDisposable {
         ShouldCloseStream = shouldCloseStream;
     }
     /// <summary>
-    /// Creates a new serializer.
+    /// Creates a new serializer with a memory stream.
     /// </summary>
     /// <param name="shouldCloseStream">If the the stream should be closed when disposing.</param>
     public Serializer(bool shouldCloseStream = true) : this(new MemoryStream(), shouldCloseStream) { }
@@ -63,6 +63,17 @@ public class Serializer : IDisposable {
         }
         Write(raw, formatter);
     }
+    /// <summary>
+    /// Writes a reducer to the stream.
+    /// </summary>
+    /// <param name="reducer">The reducer to write to the stream.</param>
+    /// <param name="formatter">The formatter used to encode the raw data.</param>
+    public virtual void WriteReducer(IReducer reducer, IFormatter? formatter = null) {
+        foreach (ISerializable serializable in reducer.Serialize()) {
+            WriteSerializable(serializable, formatter);
+        }
+    }
+
     /// <summary>
     /// Writes a unsigned integer to the stream.
     /// </summary>

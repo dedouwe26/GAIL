@@ -46,6 +46,7 @@ public interface ISerializable {
     public static SerializableInfo? TryGetInfo<T>() where T : ISerializable, new() {
         return TryGetInfo(new T());
     }
+    
     /// <summary>
     /// Creates a serializable info.
     /// </summary>

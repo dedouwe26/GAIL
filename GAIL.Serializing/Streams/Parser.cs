@@ -97,7 +97,34 @@ public class Parser : IDisposable {
         throw new InvalidCastException("The serializable is not of type T");
     }
 
-    public virtual ISerializer ReadSerializer
+    /// <summary>
+    /// Reads a reducer from the stream.
+    /// </summary>
+    /// <param name="info">The info of the reducer on how to create and read the reducer.</param>
+    /// <param name="formatter">The formatter used to decode the raw data.</param>
+    /// <returns>The reducer serializable.</returns>
+    public virtual IReducer ReadReducer(ReducerInfo info, IFormatter? formatter = null) {
+        ISerializable[] serializables = new ISerializable[info.Format.Length];
+        for (int i = 0; i < info.Format.Length; i++) {
+            serializables[i] = ReadSerializable(info.Format[i], formatter);
+        }
+        return info.Creator(serializables);
+    }
+    /// <summary>
+    /// Reads a reducer from the stream.
+    /// </summary>
+    /// <typeparam name="T">The type of the reducer.</typeparam>
+    /// <param name="info">The info of the reducer on how to create and read the reducer.</param>
+    /// <param name="formatter">The formatter used to decode the raw data.</param>
+    /// <returns>The parsed reducer.</returns>
+    /// <exception cref="InvalidCastException">The reducer is not of type T.</exception>
+    public virtual T ReadReducer<T>(ReducerInfo info, IFormatter? formatter = null) where T : IReducer {
+        if (ReadReducer(info, formatter) is T reducer) {
+            return reducer;
+        }
+        throw new InvalidCastException("The reducer is not of type T");
+    }
+
     /// <summary>
     /// Reads an unsigned integer from the stream.
     /// </summary>
