@@ -53,6 +53,12 @@
 			"args": ["pack", "${workspaceFolder}/GAIL.Storage.csproj"]
 		},
 		{
+			"label": "GAIL Serializing: Test",
+			"group": "test",
+			"command": "dotnet",
+			"args": ["test", "${workspaceFolder}/Tests/GAIL.Serializing.Tests.csproj"]
+		},
+		{
 			"label": "GAIL Storage: Test",
 			"group": "test",
 			"command": "dotnet",

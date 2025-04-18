@@ -69,7 +69,9 @@ public class BoolSerializable : ISerializable {
     /// <param name="b6">The sixth boolean.</param>
     /// <param name="b7">The seventh boolean.</param>
     /// <param name="b8">The eighth boolean (lsb).</param>
-    public BoolSerializable(bool b1, bool b2=false, bool b3=false, bool b4=false, bool b5=false, bool b6=false, bool b7=false, bool b8=false) {
+    public BoolSerializable(bool b1,
+        bool b2=default, bool b3=default, bool b4=default, bool b5=default, bool b6=default, bool b7=default, bool b8=default)
+    {
         B1 = b1;
         B2 = b2;
         B3 = b3;

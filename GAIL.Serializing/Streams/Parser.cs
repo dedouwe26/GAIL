@@ -67,7 +67,7 @@ public class Parser : IDisposable {
     /// <returns>The raw bytes that have been read.</returns>
     /// <exception cref="EndOfStreamException">Could not read all bytes.</exception>
     public virtual byte[] Read(uint? size, IFormatter? formatter = null) {
-        size ??= ReadUInt(formatter);
+        size ??= ReadUInt(null); // NOTE: no formatter, see reason in Serializer.
         return formatter!=null ? formatter.Decode(Read(size.Value)) : Read(size.Value);
     }
 
@@ -132,7 +132,7 @@ public class Parser : IDisposable {
     /// <returns>The parsed unsigned integer.</returns>
     /// <exception cref="InvalidCastException">The serializable is not an unsigned integer.</exception>
     public virtual uint ReadUInt(IFormatter? formatter = null) {
-        return ReadSerializable<UIntSerializable>(UIntSerializable.Info).Value;
+        return ReadSerializable<UIntSerializable>(UIntSerializable.Info, formatter).Value;
     }
     /// <summary>
     /// Reads an integer from the stream.
@@ -141,7 +141,7 @@ public class Parser : IDisposable {
     /// <returns>The parsed integer.</returns>
     /// <exception cref="InvalidCastException">The serializable is not an integer.</exception>
     public virtual int ReadInt(IFormatter? formatter = null) {
-        return ReadSerializable<IntSerializable>(IntSerializable.Info).Value;
+        return ReadSerializable<IntSerializable>(IntSerializable.Info, formatter).Value;
     }
     /// <summary>
     /// Reads a byte from the stream.
@@ -150,7 +150,7 @@ public class Parser : IDisposable {
     /// <returns>The parsed byte.</returns>
     /// <exception cref="InvalidCastException">The serializable is not a byte.</exception>
     public virtual byte ReadByte(IFormatter? formatter = null) {
-        return ReadSerializable<ByteSerializable>(ByteSerializable.Info).Value;
+        return ReadSerializable<ByteSerializable>(ByteSerializable.Info, formatter).Value;
     }
     /// <summary>
     /// Reads an UTF-8 string from the stream.
@@ -159,7 +159,7 @@ public class Parser : IDisposable {
     /// <returns>The parsed string.</returns> 
     /// <exception cref="InvalidCastException">The serializable is not a string.</exception>
     public virtual string ReadString(IFormatter? formatter = null) {
-        return ReadSerializable<StringSerializable>(StringSerializable.Info).Value;
+        return ReadSerializable<StringSerializable>(StringSerializable.Info, formatter).Value;
     }
 
     /// <inheritdoc/>

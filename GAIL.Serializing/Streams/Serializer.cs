@@ -55,13 +55,18 @@ public class Serializer : IDisposable {
     /// <param name="formatter">The formatter used to encode the raw data.</param>
     /// <exception cref="InvalidOperationException">Fixed size doesn't match the actual size.</exception>
     public virtual void WriteSerializable(ISerializable serializable, IFormatter? formatter = null) {
-        byte[] raw = serializable.Serialize();
+        byte[] raw;
+        if (formatter == null) {
+            raw = serializable.Serialize();
+        } else {
+            raw = formatter.Encode(serializable.Serialize());
+        }
         if (serializable.FixedSize == null) {
-            WriteUInt(Convert.ToUInt32(raw.Length), formatter);
+            WriteUInt(Convert.ToUInt32(raw.Length), null); // NOTE: No formatter, because that could make it longer than 4 bytes.
         } else if (raw.Length != serializable.FixedSize) {
             throw new InvalidOperationException("Fixed size doesn't match the actual size");
         }
-        Write(raw, formatter);
+        Write(raw);
     }
     /// <summary>
     /// Writes a reducer to the stream.
@@ -80,7 +85,7 @@ public class Serializer : IDisposable {
     /// <param name="value">The unsigned integer to write.</param>
     /// <param name="formatter">The formatter used to encode the raw data.</param>
     public virtual void WriteUInt(uint value, IFormatter? formatter = null) {
-        WriteSerializable(new UIntSerializable(value));
+        WriteSerializable(new UIntSerializable(value), formatter);
     }
     /// <summary>
     /// Writes a byte to the stream.

@@ -58,7 +58,7 @@ public class NetworkTarget : FormattedTarget {
     }
 
     /// <inheritdoc/>
-    public override void Write<T>(Severity severity, DateTime time, Logger logger, T? text) where T : default {
+    public override void Write(Severity severity, DateTime time, Logger logger, object? text) {
         sendMethod.Invoke(new LogPacket(severity, time, logger.ID ?? "", GetName(logger), text?.ToString() ?? ""));
     }
     /// <inheritdoc/>
