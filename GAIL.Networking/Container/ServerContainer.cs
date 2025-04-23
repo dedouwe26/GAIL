@@ -49,7 +49,7 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
     /// <summary>
     /// The formatter used to encode / decode all packets.
     /// </summary>
-    public IFormatter GlobalFormatter = new DefaultFormatter();
+    public IFormatter? GlobalFormatter = null; // TODO: ?? Move to connections (per-client) ??
 
     /// <summary>
     /// An event that is called when a packet is received.

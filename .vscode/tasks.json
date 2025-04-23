@@ -5,33 +5,33 @@
 			"label": "GAIL: Build",
 			"group": "build",
 			"command": "dotnet",
-			"args": ["build", "${workspaceFolder}/GAIL.csproj"]
+			"args": ["build", "${workspaceFolder}/GAIL/GAIL.csproj"]
 		},
 		{
 			"label": "GAIL: Package",
 			"dependsOn": "GAIL: Test",
 			"group": "build",
 			"command": "dotnet",
-			"args": ["pack", "${workspaceFolder}/GAIL.csproj"]
+			"args": ["pack", "${workspaceFolder}/GAIL/GAIL.csproj"]
 		},
 		{
 			"label": "GAIL: Test",
 			"group": "test",
 			"command": "dotnet",
-			"args": ["test", "${workspaceFolder}/Tests/GAIL.Tests.csproj"]
+			"args": ["test", "${workspaceFolder}/Tests/GAIL.Tests/GAIL.Tests.csproj"]
 		},
 		{
 			"label": "GAIL Networking: Build",
 			"group": "build",
 			"command": "dotnet",
-			"args": ["build", "${workspaceFolder}/GAIL.Networking.csproj"]
+			"args": ["build", "${workspaceFolder}/GAIL.Networking/GAIL.Networking.csproj"]
 		},
 		{
 			"label": "GAIL Networking: Package",
 			"dependsOn": "GAIL Networking: Test",
 			"group": "build",
 			"command": "dotnet",
-			"args": ["pack", "${workspaceFolder}/GAIL.Networking.csproj"]
+			"args": ["pack", "${workspaceFolder}/GAIL.Networking/GAIL.Networking.csproj"]
 		},
 		{
 			"label": "GAIL Networking: Test",
@@ -43,26 +43,26 @@
 			"label": "GAIL Storage: Build",
 			"group": "build",
 			"command": "dotnet",
-			"args": ["build", "${workspaceFolder}/GAIL.Storage.csproj"]
+			"args": ["build", "${workspaceFolder}/GAIL.Storage/GAIL.Storage.csproj"]
 		},
 		{
 			"label": "GAIL Storage: Package",
 			"dependsOn": "GAIL Storage: Test",
 			"group": "build",
 			"command": "dotnet",
-			"args": ["pack", "${workspaceFolder}/GAIL.Storage.csproj"]
-		},
-		{
-			"label": "GAIL Serializing: Test",
-			"group": "test",
-			"command": "dotnet",
-			"args": ["test", "${workspaceFolder}/Tests/GAIL.Serializing.Tests.csproj"]
+			"args": ["pack", "${workspaceFolder}/GAIL.Storage/GAIL.Storage.csproj"]
 		},
 		{
 			"label": "GAIL Storage: Test",
 			"group": "test",
 			"command": "dotnet",
-			"args": ["test", "${workspaceFolder}/Tests/GAIL.Storage.Tests.csproj"]
+			"args": ["test", "${workspaceFolder}/Tests/GAIL.Storage.Tests/GAIL.Storage.Tests.csproj"]
+		},
+		{
+			"label": "GAIL Serializing: Test",
+			"group": "test",
+			"command": "dotnet",
+			"args": ["test", "${workspaceFolder}/Tests/GAIL.Serializing.Tests/GAIL.Serializing.Tests.csproj"]
 		},
 		{
 			"label": "Build examples.HelloTriangle",

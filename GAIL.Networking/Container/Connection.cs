@@ -1,6 +1,6 @@
 using System.Net;
 using System.Net.Sockets;
-using GAIL.Networking.Parser;
+using GAIL.Networking.Streams;
 
 namespace GAIL.Networking.Server;
 

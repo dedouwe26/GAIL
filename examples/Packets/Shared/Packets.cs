@@ -1,5 +1,4 @@
 using GAIL.Networking;
-using GAIL.Networking.Parser;
 using GAIL.Serializing;
 using GAIL.Serializing.Formatters;
 using OxDED.Terminal.Logging;
@@ -73,18 +72,13 @@ public class RegisterPacket : Packet {
     public RegisterPacket(string name) {
         this.name = name;
     }
-
     // This method is called before the packet is going to be serialized.
-    [PacketSerialize]
-    // The method itself can be called whatever, but it can't have parameters nor a return type.
-    private void Serialize() {
+    protected override void OnSerialize() {
         Packets.Logger.LogMessage("RegisterPacket just got serialized (probably sent to the server)");
     }
 
     // This method is called after the packet has been parsed.
-    [PacketParse]
-    // Here, the same rules apply as with the packet serialize method.
-    private void Parse() {
+    protected override void OnParse() {
         Packets.Logger.LogMessage("RegisterPacket just got parsed (probably received by the server)");
     }
 }

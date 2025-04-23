@@ -67,7 +67,9 @@ public class Parser : IDisposable {
     /// <returns>The raw bytes that have been read.</returns>
     /// <exception cref="EndOfStreamException">Could not read all bytes.</exception>
     public virtual byte[] Read(uint? size, IFormatter? formatter = null) {
-        size ??= ReadUInt(null); // NOTE: no formatter, see reason in Serializer.
+        if (formatter != null || size == null) {
+            size = ReadUInt(null); // NOTE: no formatter, see reason in Serializer.
+        }
         return formatter!=null ? formatter.Decode(Read(size.Value)) : Read(size.Value);
     }
 
@@ -104,10 +106,22 @@ public class Parser : IDisposable {
     /// <param name="formatter">The formatter used to decode the raw data.</param>
     /// <returns>The reducer serializable.</returns>
     public virtual IReducer ReadReducer(ReducerInfo info, IFormatter? formatter = null) {
+        if (info.Format.Length < 1) return info.Creator([]);
+
         ISerializable[] serializables = new ISerializable[info.Format.Length];
-        for (int i = 0; i < info.Format.Length; i++) {
-            serializables[i] = ReadSerializable(info.Format[i], formatter);
+
+        if (formatter != null) {
+            uint size = ReadUInt();
+            using Parser parser = new(formatter.Decode(Read(size)));
+            for (int i = 0; i < info.Format.Length; i++) {
+                serializables[i] = parser.ReadSerializable(info.Format[i], formatter);
+            }
+        } else {
+            for (int i = 0; i < info.Format.Length; i++) {
+                serializables[i] = ReadSerializable(info.Format[i], formatter);
+            }
         }
+
         return info.Creator(serializables);
     }
     /// <summary>

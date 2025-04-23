@@ -2,7 +2,7 @@ using GAIL.Serializing;
 using GAIL.Serializing.Formatters;
 using OxDED.Terminal.Logging;
 
-namespace GAIL.Networking.Parser;
+namespace GAIL.Networking.Streams;
 
 /// <summary>
 /// A parser that can parse the network format (opposite of: <see cref="NetworkSerializer"/>).
@@ -41,67 +41,37 @@ public class NetworkParser : Serializing.Streams.Parser {
     /// <inheritdoc/>
     public NetworkParser(byte[] input, bool shouldCloseStream = false) : base(new MemoryStream(), shouldCloseStream) { InStream = new MemoryStream(input); }
 
-    private ISerializable[] ReadFields(SerializableInfo[] format) {
-        List<ISerializable> fields = [];
-        int formatIndex = 0;
-
-        while (true) {
-            try {
-                fields.Add(ReadSerializable(format[formatIndex]));
-            } catch (EndOfStreamException) {
-                return [.. fields];
-            }
-            
-            if (format.Length <= (++formatIndex)) {
-                return [.. fields];
-            }
-        }
-    }
-
-    /// <summary>
-    /// Applies all the formatters to make it parsable (should call at the beginning).
-    /// </summary>
-    /// <param name="globalFormatter">The formatter used for global purposes (multiple packets).</param>
-    /// <param name="packetFormatter">The formatter getter used for this specific packet ID.</param>
-    /// <returns>
-    /// Returns the ID of the decoded packet.
-    /// </returns>
-    public uint Decode(IFormatter globalFormatter, Func<uint, IFormatter> packetFormatter) {
+    private void Decode(IFormatter? formatter = null) {
         BaseStream.Dispose();
 
-        byte[] raw = new byte[4];
-        InStream.Read(raw);
+        byte[] buffer = new byte[4];
+        InStream.Read(buffer);
+        IntSerializable size = (IntSerializable)IntSerializable.Info.Creator(buffer);
 
-        IntSerializable size = new(default);
-        size.Parse(raw);
-        raw = new byte[size.Value];
+        buffer = new byte[size.Value];
+        InStream.Read(buffer);
 
-        InStream.Read(raw);
-        raw = globalFormatter.Decode(raw);
+        if (formatter != null) buffer = formatter.Decode(buffer);
 
-        UIntSerializable id = new(default);
-        id.Parse([.. raw.Take(4)]);
-        raw = packetFormatter.Invoke(id.Value).Decode([.. raw.Skip(4)]);
-
-        BaseStream = new MemoryStream(raw);
-
-        return id.Value;
+        BaseStream = new MemoryStream(buffer);
     }
 
     /// <summary>
     /// Reads a packet from the stream.
     /// </summary>
-    /// <param name="globalFormatter">The global formatter used for decoding.</param>
+    /// <param name="formatter">The global formatter used for decoding.</param>
     /// <returns>The packet parsed from the stream.</returns>
-    public Packet ReadPacket(IFormatter globalFormatter) {
-        uint packetID = Decode(globalFormatter, NetworkRegister.GetPacketFormatter);
+    public Packet ReadPacket(IFormatter? formatter = null) {
+        Decode(formatter);
+        uint packetID = ReadUInt();
         
         SerializableInfo[] format = NetworkRegister.GetPacketFormat(packetID);
-        if (format.Length <= 0) {
-            return NetworkRegister.CreatePacket(packetID, []);
-        }
 
-        return NetworkRegister.CreatePacket(packetID, ReadFields(format));
+        Packet packet = (Packet)ReadReducer(
+            new(format, (fields)=>NetworkRegister.CreatePacket(packetID, fields)),
+            NetworkRegister.GetPacketFormatter(packetID)
+        );
+        return packet;
     }
 
     /// <summary>
@@ -111,7 +81,7 @@ public class NetworkParser : Serializing.Streams.Parser {
     /// <param name="isClosed">If it should stop and return.</param>
     /// <param name="onPacket">The callback for when a packet has been received. Returns true if it should stop.</param>
     /// <returns>True if it was successful, otherwise false.</returns>
-    public bool Parse(IFormatter globalFormatter, Func<bool> isClosed, Func<Packet, bool> onPacket) {
+    public bool Parse(IFormatter? globalFormatter, Func<bool> isClosed, Func<Packet, bool> onPacket) {
         Logger.LogDebug("Starting to parse the stream for packets...");
         while (!isClosed()) {
             try {

@@ -2,7 +2,7 @@ using GAIL.Serializing;
 using GAIL.Serializing.Formatters;
 using GAIL.Serializing.Streams;
 
-namespace GAIL.Networking.Parser;
+namespace GAIL.Networking.Streams;
 
 /// <summary>
 /// A serializer that can serialize the network format (opposite of: <see cref="NetworkParser"/>).
@@ -23,37 +23,26 @@ public class NetworkSerializer : Serializer {
     /// <inheritdoc/>
     public NetworkSerializer(bool shouldCloseStream = false) : base(shouldCloseStream) { OutStream = new MemoryStream(); }
 
-    /// <summary>
-    /// Applies all the formatters (should call at the end).
-    /// </summary>
-    /// <param name="globalFormatter">The formatter used for global purposes (multiple packets).</param>
-    /// <param name="packetID">The ID of the packet (only encoded by the global encoder).</param>
-    /// <param name="packetFormatter">The formatter used for this specific packet.</param>
-    public void Encode(IFormatter globalFormatter, uint packetID, IFormatter packetFormatter) {
-        byte[] result = globalFormatter.Encode([
-            .. new UIntSerializable(packetID).Serialize(),
-            .. packetFormatter.Encode(
-                (BaseStream as MemoryStream)!.ToArray()
-            )
-        ]);
+    private void Encode(IFormatter? formatter = null) {
+        byte[] result = [.. (BaseStream as MemoryStream)!.ToArray()];
+        BaseStream.SetLength(0);
+        if (formatter != null) result = formatter.Encode(result);
         
         OutStream.Write(new IntSerializable(result.Length).Serialize());
         OutStream.Write(result);
-        BaseStream.SetLength(0);
     }
     
     /// <summary>
     /// Serializes a packet into raw data.
     /// </summary>
     /// <param name="packet">The packet to format.</param>
-    /// <param name="globalFormatter">The formatter used for global purposes (multiple packets).</param>
+    /// <param name="formatter">The formatter used globally (multiple packets).</param>
     /// <exception cref="InvalidOperationException"/>
-    public void WritePacket(Packet packet, IFormatter globalFormatter) {
-        foreach (ISerializable field in NetworkRegister.DestructPacket(packet)) {
-            WriteSerializable(field);
-        }
+    public void WritePacket(Packet packet, IFormatter? formatter = null) {
         uint ID = NetworkRegister.GetPacketID(packet) ?? throw new InvalidOperationException($"{packet.GetType().Name} packet is not registered");
-        Encode(globalFormatter, ID, NetworkRegister.GetPacketFormatter(ID));
+        WriteUInt(ID);
+        WriteReducer(packet, NetworkRegister.GetPacketFormatter(ID));
+        Encode(formatter);
     }
     /// <inheritdoc/>
     public override void Dispose() {

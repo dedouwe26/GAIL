@@ -1,12 +1,10 @@
 using System.Net;
 using System.Net.Sockets;
-using System.Runtime.Serialization;
-using GAIL.Networking.Parser;
+using GAIL.Networking.Streams;
 using GAIL.Serializing.Formatters;
 using OxDED.Terminal;
 using OxDED.Terminal.Logging;
 using OxDED.Terminal.Logging.Targets;
-using IFormatter = GAIL.Serializing.Formatters.IFormatter;
 
 namespace GAIL.Networking.Client;
 
@@ -63,7 +61,7 @@ public class ClientContainer : IDisposable {
     /// <summary>
     /// The formatter used to encode / decode all packets.
     /// </summary>
-    public IFormatter GlobalFormatter = new DefaultFormatter();
+    public IFormatter? GlobalFormatter = null;
 
     /// <summary>
     /// An event that is called when a packet is received.

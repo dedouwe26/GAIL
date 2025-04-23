@@ -1,11 +1,9 @@
-using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using GAIL.Serializing;
 using GAIL.Serializing.Formatters;
-using OxDED.Terminal;
 using OxDED.Terminal.Logging;
 
-namespace GAIL.Networking.Parser;
+namespace GAIL.Networking;
 
 /// <summary>
 /// A register that registers and creates packets for the network parser and serializer.
@@ -18,19 +16,13 @@ public static class NetworkRegister {
 
         public readonly PacketFieldInfo[] Fields;
 
-        public readonly MethodInfo? SerializeMethod;
+        public readonly IFormatter? Formatter;
 
-        public readonly MethodInfo? ParseMethod;
-
-        public readonly IFormatter Formatter;
-
-        public PacketInfo(string fullyQualifiedName, ConstructorInfo constructor, PacketFieldInfo[] fields, IFormatter formatter, MethodInfo? serializeMethod, MethodInfo? parseMethod) {
+        public PacketInfo(string fullyQualifiedName, ConstructorInfo constructor, PacketFieldInfo[] fields, IFormatter? formatter) {
             FullyQualifiedName = fullyQualifiedName;
             Constructor = constructor;
             Fields = fields;
             Formatter = formatter;
-            SerializeMethod = serializeMethod;
-            ParseMethod = parseMethod;
         }
 
         private SerializableInfo[]? format;
@@ -93,28 +85,6 @@ public static class NetworkRegister {
         }
         return [.. f];
     }
-    private static MethodInfo? GetSerializeMethod(MethodInfo[] methods) {
-        foreach (MethodInfo method in methods) {
-            if (method.IsDefined(typeof(PacketSerializeAttribute))) {
-                if (method.GetParameters().Length > 0) {
-                    throw new ArgumentException($"Method {method.Name} in {method.ReflectedType?.Name ?? "packet"} cannot have parameters");
-                }
-                return method;
-            }
-        }
-        return null;
-    }
-    private static MethodInfo? GetParseMethod(MethodInfo[] methods) {
-        foreach (MethodInfo method in methods) {
-            if (method.IsDefined(typeof(PacketParseAttribute))) {
-                if (method.GetParameters().Length > 0) {
-                    throw new ArgumentException($"Method {method.Name} in {method.ReflectedType?.Name ?? "packet"} cannot have parameters");
-                }
-                return method;
-            }
-        }
-        return null;
-    }
 
     #endregion Packet Reflection
 
@@ -142,7 +112,6 @@ public static class NetworkRegister {
         string name = type.Name;
 
         PropertyInfo[] properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-        MethodInfo[] methods = type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 
         ConstructorInfo? constructor;
         try {
@@ -166,20 +135,9 @@ public static class NetworkRegister {
             throw new ArgumentException($"Failed at getting the format of packet ({name})", e);
         }
         
-        IFormatter formatter = packet.Formatter;
+        IFormatter? formatter = packet.Formatter;
 
-        MethodInfo? serializeMethod;
-        MethodInfo? parseMethod;
-        try {
-            serializeMethod = GetSerializeMethod(methods);
-            parseMethod = GetParseMethod(methods);
-        } catch (Exception e) {
-            Logger.LogError($"Failed at getting the serialize- and parse-methods of packet ({name}):");
-            Logger.LogException(e);
-            throw new ArgumentException($"Failed at getting the serialize and parse methods of packet ({name})", e);
-        }
-
-        PacketInfo packetData = new(type.AssemblyQualifiedName!, constructor, fields, formatter, serializeMethod, parseMethod);
+        PacketInfo packetData = new(type.AssemblyQualifiedName!, constructor, fields, formatter);
 
         foreach (PacketInfo p in Packets) {
             if (p.Equals(packetData)) {
@@ -220,7 +178,14 @@ public static class NetworkRegister {
         if (info.Constructor.Invoke(null) is not Packet packet) {
             throw new InvalidOperationException($"Failed at creating packet ({info.FullyQualifiedName})");
         }
-        
+
+        packet.Parse(fields);
+
+        return packet;
+    }
+    internal static void SetFields(Packet packet, ISerializable[] fields) {
+        PacketInfo info = Packets[(int)GetPacketID(packet)!];
+
         for (int i = 0; i < fields.Length; i++) {
             PacketFieldInfo field = info.Fields[i];
             try {
@@ -231,10 +196,6 @@ public static class NetworkRegister {
                 throw new InvalidOperationException($"Failed at setting field {field.Property.Name} in packet ({info.FullyQualifiedName})", e);
             }
         }
-
-        info.ParseMethod?.Invoke(packet, null);
-
-        return packet;
     }
 
     /// <summary>
@@ -248,8 +209,6 @@ public static class NetworkRegister {
             throw new InvalidOperationException($"Invalid packet ID: {packet.ID} of packet {packet.GetType().Name}");
         }
         PacketInfo info = Packets[(int)packet.ID];
-
-        info.SerializeMethod?.Invoke(packet, null);
 
         List<ISerializable> result = [];
         
@@ -291,7 +250,7 @@ public static class NetworkRegister {
     /// <param name="packetID">The ID of the packet.</param>
     /// <returns>The formatter of the packet.</returns>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
-    public static IFormatter GetPacketFormatter(uint packetID) {
+    public static IFormatter? GetPacketFormatter(uint packetID) {
         if (Packets.Count <= packetID) {
             Logger.LogError($"Invalid packet ID: {packetID}, is it registered?");
             throw new ArgumentOutOfRangeException(nameof(packetID), $"Invalid packet ID: {packetID}, is it registered?");

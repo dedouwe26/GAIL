@@ -1,4 +1,3 @@
-using GAIL.Networking.Parser;
 using GAIL.Serializing;
 using OxDED.Terminal.Logging;
 
@@ -19,7 +18,7 @@ public class DisconnectPacket : Packet {
     /// Creates an empty disconnect packet.
     /// </summary>
     [PacketConstructor]
-    public DisconnectPacket() { this.additionalData = []; }
+    public DisconnectPacket() { additionalData = []; }
     /// <summary>
     /// Creates a disconnect packet with additional data.
     /// </summary>
