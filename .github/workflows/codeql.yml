@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   analyze:
-    name: Analyze CodeQL with Manual Build
+    name: Analyze
     runs-on: ubuntu-latest
 
     steps:
