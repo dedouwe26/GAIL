@@ -34,7 +34,7 @@ public static class NetworkRegister {
     /// <summary>
     /// The ID of the network register logger.
     /// </summary>
-    public const string LoggerID = "GAIL.Networking.Parser.NetworkRegister";
+    public const string LoggerID = "GAIL.Networking.NetworkRegister";
     private static Logger? logger;
     /// <summary>
     /// The logger for the network register.
@@ -111,11 +111,16 @@ public static class NetworkRegister {
         Type type = packet.GetType();
         string name = type.Name;
 
-        PropertyInfo[] properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        if (IsPacketRegistered(type)) {
+            Logger.LogError("Packet ({name}) is already registered.");
+            throw new InvalidOperationException("Packet is already registered");
+        }
 
         ConstructorInfo? constructor;
         try {
-            constructor = GetConstructor(type.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic));
+            constructor = GetConstructor(
+                type.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
+            ));
         } catch (Exception e) {
             Logger.LogError($"Failed at getting the constructor of packet ({name}):");
             Logger.LogException(e);
@@ -128,7 +133,10 @@ public static class NetworkRegister {
 
         PacketFieldInfo[] fields;
         try {
-            fields = GetFields(properties, packet);
+            fields = GetFields(
+                type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic),
+                packet
+            );
         } catch (Exception e) {
             Logger.LogError($"Failed at getting the format of packet ({name}):");
             Logger.LogException(e);
@@ -139,14 +147,27 @@ public static class NetworkRegister {
 
         PacketInfo packetData = new(type.AssemblyQualifiedName!, constructor, fields, formatter);
 
-        foreach (PacketInfo p in Packets) {
-            if (p.Equals(packetData)) {
-                throw new InvalidOperationException("Packet is already registered");
-            }
-        }
         Packets.Add(packetData);
         return (uint)(Packets.Count - 1);
     }
+
+    /// <summary>
+    /// Checks if a packet is registered.
+    /// </summary>
+    /// <param name="packetType">The type of the packet.</param>
+    /// <returns>True if the packet is registered.</returns>
+    public static bool IsPacketRegistered(Type packetType) {
+        return Packets.Any((packet) => packet.FullyQualifiedName == packetType.AssemblyQualifiedName);
+    }
+    /// <summary>
+    /// Checks if a packet is registered.
+    /// </summary>
+    /// <typeparam name="T">The type of the packet.</typeparam>
+    /// <returns>True if the packet is registered.</returns>
+    public static bool IsPacketRegistered<T>() where T : Packet {
+        return IsPacketRegistered(typeof(T));
+    }
+
     /// <summary>
     /// Gets the ID of the packet.
     /// </summary>

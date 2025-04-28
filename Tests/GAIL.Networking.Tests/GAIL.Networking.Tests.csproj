@@ -20,4 +20,8 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\GAIL.Networking\GAIL.Networking.csproj" />
+  </ItemGroup>
+
 </Project>

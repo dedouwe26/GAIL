@@ -33,6 +33,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{F476D1EC
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GAIL.Serializing.Tests", "Tests\GAIL.Serializing.Tests\GAIL.Serializing.Tests.csproj", "{E77FBF34-D184-4106-90D3-B7AC3E843121}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GAIL.Networking.Tests", "Tests\GAIL.Networking.Tests\GAIL.Networking.Tests.csproj", "{20F88AE7-4591-4CCC-A647-8E62198E7002}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -87,6 +89,10 @@ Global
 		{E77FBF34-D184-4106-90D3-B7AC3E843121}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E77FBF34-D184-4106-90D3-B7AC3E843121}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E77FBF34-D184-4106-90D3-B7AC3E843121}.Release|Any CPU.Build.0 = Release|Any CPU
+		{20F88AE7-4591-4CCC-A647-8E62198E7002}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{20F88AE7-4591-4CCC-A647-8E62198E7002}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{20F88AE7-4591-4CCC-A647-8E62198E7002}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{20F88AE7-4591-4CCC-A647-8E62198E7002}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -104,5 +110,6 @@ Global
 		{5EDCD214-85FD-418D-95C3-E33FD643C2B9} = {92870267-D590-494F-A694-BED0964DA721}
 		{6761242D-119E-4426-95B3-73CD4EE5470C} = {C6AB5ECD-BADA-482A-B644-FC6728F4B458}
 		{E77FBF34-D184-4106-90D3-B7AC3E843121} = {F476D1EC-A485-4E75-87E0-DD75D2D5E139}
+		{20F88AE7-4591-4CCC-A647-8E62198E7002} = {F476D1EC-A485-4E75-87E0-DD75D2D5E139}
 	EndGlobalSection
 EndGlobal
