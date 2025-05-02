@@ -111,9 +111,9 @@ public static class NetworkRegister {
         Type type = packet.GetType();
         string name = type.Name;
 
-        if (IsPacketRegistered(type)) {
-            Logger.LogError("Packet ({name}) is already registered.");
-            throw new InvalidOperationException("Packet is already registered");
+        uint? id;
+        if ((id = GetPacketID(packet)) != null) {
+            return id.Value;
         }
 
         ConstructorInfo? constructor;

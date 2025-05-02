@@ -1,5 +1,4 @@
 using GAIL.Core.File;
-using OxDED.Terminal.Logging;
 using Silk.NET.GLFW;
 
 namespace GAIL.Core

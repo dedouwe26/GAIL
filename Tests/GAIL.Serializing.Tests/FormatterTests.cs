@@ -40,9 +40,9 @@ public class FormatterTests {
 
         string gotten = parser.ReadString(new GZipFormatter());
 
-        Assert.Equal(actual, gotten);
-
         parser.Dispose();
         serializer.Dispose();
+
+        Assert.Equal(actual, gotten);
     }
 }

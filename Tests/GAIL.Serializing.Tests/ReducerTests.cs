@@ -56,7 +56,7 @@ public class ReducerTests {
         TestReducer reducer2 = new("admin", 6, true);
         Serializer serializer2 = new();
 
-        serializer2.WriteReducer(reducer);
+        serializer2.WriteReducer(reducer2);
 
         byte[] gotten2 = (serializer.BaseStream as MemoryStream)!.ToArray();
 
@@ -74,9 +74,9 @@ public class ReducerTests {
         serializer.BaseStream.Position = 0;
         TestReducer reducer2 = parser.ReadReducer<TestReducer>(TestReducer.Info);
 
-        Assert.True(reducer.Equals(reducer2));
-
         parser.Dispose();
         serializer.Dispose();
+
+        Assert.True(reducer.Equals(reducer2));
     }
 }

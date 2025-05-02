@@ -25,12 +25,12 @@ public class StreamTests {
         uint b2 = parser.ReadUInt();
         BoolSerializable b3 = parser.ReadSerializable<BoolSerializable>(BoolSerializable.Info);
 
+        parser.Dispose();
+        serializer.Dispose();
+
         Assert.Equal(a1, b1);
         Assert.Equal(a2, b2);
         Assert.Equal(a3, b3.B1);
         Assert.Equal(a4, b3.B2);
-
-        parser.Dispose();
-        serializer.Dispose();
     }
 }
