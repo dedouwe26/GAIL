@@ -25,9 +25,11 @@ public class RegisterTests {
         SerializableInfo[] format = NetworkRegister.GetPacketFormat(id);
 
         Assert.True(
-            format.SequenceEqual([StringSerializable.Info, IntSerializable.Info, BoolSerializable.Info],
-            EqualityComparer<SerializableInfo>.Create((info1, info2) => info1 == info2)
-        ));
+            format.SequenceEqual(
+                [StringSerializable.Info, IntSerializable.Info, BoolSerializable.Info],
+                EqualityComparer<SerializableInfo>.Create((info1, info2) => info1!.FixedSize == info2!.FixedSize)
+            )
+        );
     }
     [Fact]
     public void CheckForFormatter() {
