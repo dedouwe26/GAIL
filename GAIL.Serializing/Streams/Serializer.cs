@@ -78,10 +78,8 @@ public class Serializer : IDisposable {
 
         if (formatter != null) {
             using Serializer serializer = new();
-            foreach (ISerializable serializable in reducer.Serialize()) {
-                serializer.WriteSerializable(serializable);
-            }
-            byte[] raw = (serializer.BaseStream as MemoryStream)!.ToArray();
+            serializer.WriteReducer(reducer, null);
+            byte[] raw = formatter.Encode((serializer.BaseStream as MemoryStream)!.ToArray());
             WriteUInt((uint)raw.Length);
             Write(raw);
         } else {

@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Sockets;
 using GAIL.Networking.Streams;
+using GAIL.Serializing.Formatters;
 
 namespace GAIL.Networking.Server;
 
@@ -37,10 +38,16 @@ public class Connection : IDisposable {
     /// The user-set data.
     /// </summary>
     public object? data = null;
+    
+    /// <summary>
+    /// The formatter used to encode / decode all packets.
+    /// </summary>
+    public IFormatter? Formatter = null;
+
     /// <summary>
     /// True if this connection is closed.
     /// </summary>
-    public bool Closed { get; private set;}
+    public bool Closed { get; private set; }
     private NetworkSerializer? serializer;
     internal NetworkSerializer Serializer {
         get {

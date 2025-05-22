@@ -47,11 +47,6 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
     public TcpListener tcpListener;
 
     /// <summary>
-    /// The formatter used to encode / decode all packets.
-    /// </summary>
-    public IFormatter? GlobalFormatter = null; // TODO: ?? Move to connections (per-client) ??
-
-    /// <summary>
     /// An event that is called when a packet is received.
     /// </summary>
     public event PacketCallback? OnPacket;
@@ -159,7 +154,7 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
     public bool SendPacket(Packet packet, Connection connection) {
         if (Closed) { return false; }
         try {
-            connection.Serializer.WritePacket(packet, GlobalFormatter);
+            connection.Serializer.WritePacket(packet, connection.Formatter);
         } catch (IOException e) {
             Logger?.LogError($"Could not send packet (connection ID: {connection.ToConnectionID()}):");
             Logger?.LogException(e, Severity.Error);
@@ -214,7 +209,7 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
     public async ValueTask<bool> SendPacketAsync(Packet packet, Connection connection) {
         if (Closed) { return false; }
         try {
-            connection.Serializer.WritePacket(packet, GlobalFormatter); // TODO?: this isnt really async.
+            connection.Serializer.WritePacket(packet, connection.Formatter); // TODO?: this isnt really async.
         } catch (IOException e) {
             Logger?.LogError($"Could not send packet (connection ID: {connection.ToConnectionID()}):");
             Logger?.LogException(e, Severity.Error);
@@ -371,7 +366,7 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
         connections.Add(connection.ID, connection);
         OnConnect?.Invoke(this, connection);
         try {
-            if (!connection.Parser.Parse(GlobalFormatter, () => Closed || connection.Closed, p => {
+            if (!connection.Parser.Parse(connection.Formatter, () => Closed || connection.Closed, p => {
                 OnPacket?.Invoke(this, connection, p);
                 if (p is DisconnectPacket) {
                     connections.Remove(connection.ID);

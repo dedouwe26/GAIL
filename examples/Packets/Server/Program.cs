@@ -9,7 +9,7 @@ namespace examples.Packets.Server;
 
 class Program {
     private static readonly string serverName = new StyleBuilder().Foreground(Color.Blue).Text("System").ResetForeground().ToString();
-    public static void Main(string[] args) {
+    public static void Main() {
         // Registers all three packets.
         Shared.Packets.RegisterPackets();
 
@@ -29,7 +29,6 @@ class Program {
         // Stop when key pressed.
         Terminal.OnKeyPress+=async (key, ch, alt, shift, control) => {
             await server.StopAsync();
-            
         };
 
         // Don't forget to start the server.

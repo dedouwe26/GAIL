@@ -108,21 +108,17 @@ public class Parser : IDisposable {
     public virtual IReducer ReadReducer(ReducerInfo info, IFormatter? formatter = null) {
         if (info.Format.Length < 1) return info.Creator([]);
 
-        ISerializable[] serializables = new ISerializable[info.Format.Length];
-
         if (formatter != null) {
             uint size = ReadUInt();
             using Parser parser = new(formatter.Decode(Read(size)));
-            for (int i = 0; i < info.Format.Length; i++) {
-                serializables[i] = parser.ReadSerializable(info.Format[i], formatter);
-            }
+            return parser.ReadReducer(info, null);
         } else {
+            ISerializable[] serializables = new ISerializable[info.Format.Length];
             for (int i = 0; i < info.Format.Length; i++) {
                 serializables[i] = ReadSerializable(info.Format[i], formatter);
             }
+            return info.Creator(serializables);
         }
-
-        return info.Creator(serializables);
     }
     /// <summary>
     /// Reads a reducer from the stream.
