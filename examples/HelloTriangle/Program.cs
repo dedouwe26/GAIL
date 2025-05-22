@@ -1,8 +1,6 @@
-﻿using System.Diagnostics;
-using GAIL.Input;
-using OxDED.Terminal;
-using OxDED.Terminal.Logging;
-using Silk.NET.Vulkan;
+﻿using GAIL.Input;
+using LambdaKit.Logging;
+using LambdaKit.Logging.Targets;
 
 namespace examples.HelloTriangle
 {
@@ -12,16 +10,14 @@ namespace examples.HelloTriangle
             "examples.HelloTriangle",
             "Hello Triangle",
             Severity.Trace,
-            new(){
-                [typeof(TerminalTarget)] = new TerminalTarget()
-            }
+            [ new TerminalTarget() ]
         );
 
-        public static void Main(string[] args) {
+        public static void Main() {
             Logger.LogDebug("Creating Application instance.");
 
             // Initializes the application.
-            app = new GAIL.Application("Hello Triangle", severity:Severity.Debug);
+            app = new GAIL.Application(severity:Severity.Debug);
 
             Logger.LogDebug("Applying listeners.");
 
@@ -42,14 +38,14 @@ namespace examples.HelloTriangle
             Logger.LogInfo("Loading...");
 
             // Listens for a key press event.
-            app.InputManager.OnKeyDown+=(Key key)=>{
+            app.InputManager.OnKeyDown+=key => {
                 if (key == Key.Escape) {
                     app.Stop();
                 }
             };
 
             // Add listeners for graphics settings.
-            app.InputManager.OnKeyDown += (Key key) => {
+            app.InputManager.OnKeyDown += key => {
                 if (key == Key.Equals) {
                     app.GraphicsManager.Settings.MaxFramesInFlight++;
 

@@ -1,6 +1,6 @@
 using System.Numerics;
 using GAIL.Core;
-using OxDED.Terminal.Logging;
+using LambdaKit.Logging;
 using Silk.NET.OpenAL;
 
 namespace GAIL.Audio

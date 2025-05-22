@@ -1,5 +1,3 @@
-using GAIL.Serializing.Streams;
-using GAIL.Storage.Members;
 using GAIL.Storage.Parser;
 using GAIL.Serializing.Formatters;
 
@@ -12,13 +10,13 @@ public sealed class Storage : ParentNode {
     /// <summary>
     /// This is the formatter used for this storage file (default: DefaultFormatter).
     /// </summary>
-    public IFormatter Formatter { get; set; }
+    public IFormatter? Formatter { get; set; }
 
     /// <summary>
     /// Creates a new storage.
     /// </summary>
     /// <param name="formatter">The formatter to use for encoding and decoding (default: DefaultFormatter).</param>
-    public Storage(IFormatter? formatter = null) { Formatter = formatter??new DefaultFormatter(); }
+    public Storage(IFormatter? formatter = null) { Formatter = formatter; }
 
     /// <summary>
     /// Loads the storage from a stream.

@@ -3,8 +3,8 @@ using GAIL.Graphics;
 using GAIL.Input;
 using GAIL.Window;
 using OxDED.Terminal;
-using OxDED.Terminal.Logging;
-using OxDED.Terminal.Logging.Targets;
+using LambdaKit.Logging;
+using LambdaKit.Logging.Targets;
 
 namespace GAIL
 {

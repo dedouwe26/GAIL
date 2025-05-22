@@ -1,5 +1,5 @@
 using GAIL.Serializing;
-using OxDED.Terminal.Logging;
+using LambdaKit.Logging;
 
 namespace GAIL.Networking;
 

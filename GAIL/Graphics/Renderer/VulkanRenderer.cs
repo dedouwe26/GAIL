@@ -3,7 +3,7 @@ using GAIL.Graphics.Material;
 using GAIL.Graphics.Renderer.Layer;
 using GAIL.Graphics.Renderer.Vulkan;
 using GAIL.Graphics.Renderer.Vulkan.Layer;
-using OxDED.Terminal.Logging;
+using LambdaKit.Logging;
 
 namespace GAIL.Graphics.Renderer;
 

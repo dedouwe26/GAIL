@@ -1,7 +1,7 @@
 using GAIL.Networking.Client;
 using GAIL.Networking.Server;
-using OxDED.Terminal.Logging;
-using OxDED.Terminal.Logging.Targets;
+using LambdaKit.Logging;
+using LambdaKit.Logging.Targets;
 
 namespace GAIL.Networking;
 

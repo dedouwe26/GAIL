@@ -1,7 +1,7 @@
 using System.Collections.ObjectModel;
 using GAIL.Core;
 using GAIL.Graphics.Material;
-using OxDED.Terminal.Logging;
+using LambdaKit.Logging;
 using Silk.NET.Core.Native;
 using Silk.NET.Vulkan;
 

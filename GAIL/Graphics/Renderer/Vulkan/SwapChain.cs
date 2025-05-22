@@ -1,6 +1,6 @@
 using GAIL.Core;
 using GAIL.Window;
-using OxDED.Terminal.Logging;
+using LambdaKit.Logging;
 using Silk.NET.Vulkan;
 using Silk.NET.Vulkan.Extensions.KHR;
 

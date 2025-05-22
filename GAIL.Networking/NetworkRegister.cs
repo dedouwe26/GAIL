@@ -1,7 +1,7 @@
 using System.Reflection;
 using GAIL.Serializing;
 using GAIL.Serializing.Formatters;
-using OxDED.Terminal.Logging;
+using LambdaKit.Logging;
 
 namespace GAIL.Networking;
 

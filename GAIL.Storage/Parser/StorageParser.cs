@@ -106,21 +106,26 @@ public class StorageParser : Serializing.Streams.Parser {
     /// Applies the formatter to make it parsable (should call at the beginning).
     /// </summary>
     /// <param name="formatter">The formatter to use for decoding.</param>
-    public void Decode(IFormatter formatter) {
-        byte[] raw = new byte[4];
-        InStream.Read(raw);
-        IntSerializable @int = new(default);
-        @int.Parse(raw);
-        raw = new byte[@int.Value];
-        InStream.Read(raw);
-        BaseStream = new MemoryStream(formatter.Decode(raw));
+    public void Decode(IFormatter? formatter = null) {
+        BaseStream.Dispose();
+
+        byte[] buffer = new byte[4];
+        InStream.Read(buffer);
+        IntSerializable size = (IntSerializable)IntSerializable.Info.Creator(buffer);
+
+        buffer = new byte[size.Value];
+        InStream.Read(buffer);
+
+        if (formatter != null) buffer = formatter.Decode(buffer);
+
+        BaseStream = new MemoryStream(buffer);
     }
     /// <summary>
     /// Parses the stream.
     /// </summary>
     /// <returns>A dictionary containing the key and child.</returns>
     /// <param name="formatter">The formatter to use for decoding.</param>
-    public Dictionary<string, IMember> Parse(IFormatter formatter) {
+    public Dictionary<string, IMember> Parse(IFormatter? formatter = null) {
         Decode(formatter);
 
         return ReadMembers().ToDictionary(static x => x.Key, static x => x);

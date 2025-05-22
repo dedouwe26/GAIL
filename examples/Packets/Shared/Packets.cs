@@ -1,7 +1,7 @@
 using GAIL.Networking;
 using GAIL.Serializing;
 using GAIL.Serializing.Formatters;
-using OxDED.Terminal.Logging;
+using LambdaKit.Logging;
 
 namespace examples.Packets.Shared;
 

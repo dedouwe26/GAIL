@@ -4,6 +4,10 @@
     <ProjectReference Include="..\..\GAIL.Storage\GAIL.Storage.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="LambdaKit.Terminal" Version="5.0.0" />
+  </ItemGroup>
+
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>

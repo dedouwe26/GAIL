@@ -1,5 +1,5 @@
 using GAIL.Core;
-using OxDED.Terminal.Logging;
+using LambdaKit.Logging;
 using Silk.NET.OpenAL;
 using Silk.NET.OpenAL.Extensions.EXT;
 

@@ -2,7 +2,7 @@
 using GAIL.Serializing.Formatters;
 using GAIL.Storage;
 using GAIL.Storage.Members;
-using OxDED.Terminal;
+using LambdaKit.Terminal;
 
 // Generate a key and IV for AES encryption.
 byte[] key = new byte[32];

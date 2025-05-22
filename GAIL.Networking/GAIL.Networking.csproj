@@ -14,11 +14,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="0xDED.Terminal" Version="4.2.5" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\GAIL.Serializing\GAIL.Serializing.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="LambdaKit.Logging" Version="5.0.0" />
+    <PackageReference Include="LambdaKit.Terminal" Version="5.0.0" />
   </ItemGroup>
 
 </Project>

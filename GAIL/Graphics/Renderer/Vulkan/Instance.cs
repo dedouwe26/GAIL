@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 using GAIL.Core;
-using OxDED.Terminal.Logging;
+using LambdaKit.Logging;
 using Silk.NET.GLFW;
 using Silk.NET.Vulkan;
 

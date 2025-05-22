@@ -92,8 +92,11 @@ public class StorageSerializer : Serializer {
     /// Applies the formatter (should call at the end).
     /// </summary>
     /// <param name="formatter">The formatter to apply.</param>
-    public void Encode(IFormatter formatter) {
-        byte[] result = formatter.Encode((BaseStream as MemoryStream)!.ToArray());
+    public void Encode(IFormatter? formatter = null) {
+        byte[] result = [.. (BaseStream as MemoryStream)!.ToArray()];
+        BaseStream.SetLength(0);
+        if (formatter != null) result = formatter.Encode(result);
+        
         OutStream.Write(new IntSerializable(result.Length).Serialize());
         OutStream.Write(result);
     }
@@ -103,7 +106,7 @@ public class StorageSerializer : Serializer {
     /// </summary>
     /// <param name="children">The children to write to the stream.</param>
     /// <param name="formatter">The formatter to use for encoding.</param>
-    public void Serialize(ReadOnlyDictionary<string, IMember> children, IFormatter formatter) {
+    public void Serialize(ReadOnlyDictionary<string, IMember> children, IFormatter? formatter = null) {
         WriteChildren([.. children.Values]);
         WriteType(MemberType.End);
 

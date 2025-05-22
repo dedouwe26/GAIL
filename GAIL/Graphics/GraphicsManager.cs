@@ -5,7 +5,7 @@ using GAIL.Graphics.Material;
 using GAIL.Graphics.Renderer;
 using GAIL.Graphics.Renderer.Layer;
 using GAIL.Graphics.Renderer.Vulkan;
-using OxDED.Terminal.Logging;
+using LambdaKit.Logging;
 using Silk.NET.GLFW;
 
 namespace GAIL.Graphics

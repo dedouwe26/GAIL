@@ -2,9 +2,9 @@ using System.Net;
 using System.Net.Sockets;
 using GAIL.Networking.Streams;
 using GAIL.Serializing.Formatters;
-using OxDED.Terminal;
-using OxDED.Terminal.Logging;
-using OxDED.Terminal.Logging.Targets;
+using LambdaKit.Logging;
+using LambdaKit.Terminal;
+using LambdaKit.Logging.Targets;
 
 namespace GAIL.Networking.Client;
 
@@ -137,7 +137,11 @@ public class ClientContainer : IDisposable {
         );
         int index = Logger.GetTargetIndex<TerminalTarget>();
         if (index > -1) {
-            Logger.GetTarget<TerminalTarget>(index)!.Format = "<{0}>: ("+Color.DarkBlue.ToForegroundANSI()+"{2}"+ANSI.Styles.ResetAll+")[{5}"+ANSI.Styles.Bold+"{3}"+ANSI.Styles.ResetAll+"] : {5}{4}"+ANSI.Styles.ResetAll;
+            Logger.GetTarget<TerminalTarget>(index)!.Format =
+                new StyleBuilder().Text("<{0}>: (")
+                .Foreground((StandardColor)StandardColor.Colors.Blue).Text("{2}")
+                .Reset().Text(")[{5}").Bold().Text("{3}").Bold(false)
+                .Text("] : {5}{4}").Reset().ToString();
             Logger.GetTarget<TerminalTarget>(index)!.NameFormat =  "{0} - {1}";
         }
         index = Logger.GetTargetIndex<FileTarget>();

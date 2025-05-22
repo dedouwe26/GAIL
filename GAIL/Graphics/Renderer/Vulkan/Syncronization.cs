@@ -1,4 +1,4 @@
-using OxDED.Terminal.Logging;
+using LambdaKit.Logging;
 using Silk.NET.Vulkan;
 
 namespace GAIL.Graphics.Renderer.Vulkan;

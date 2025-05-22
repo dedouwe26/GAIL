@@ -1,5 +1,5 @@
 using GAIL.Graphics.Renderer.Layer;
-using OxDED.Terminal.Logging;
+using LambdaKit.Logging;
 
 namespace GAIL.Graphics.Renderer.Vulkan.Layer;
 
