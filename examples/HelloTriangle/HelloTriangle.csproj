@@ -10,6 +10,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <!-- Build Shaders -->
   <Target Name="BuildVert" BeforeTargets="PreBuildEvent">
     <Exec Command="%VULKAN_SDK%/Bin/glslc -fshader-stage=vertex -o vert.spv vert.glsl" />
   </Target>

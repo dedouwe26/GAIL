@@ -114,10 +114,24 @@ public class Shader : IShader {
         for (uint i = 0; i < requiredAttributes.Count; i++) {
             AttributeType type = requiredAttributes[(int)i];
             descriptions[i] = new VertexInputAttributeDescription() {
-                Binding = 0, // TODO: Change this.
+                Binding = i, // TODO: Change this.
                 Location = i, // TODO: depending on size of attribute.
                 Format = (Format)type,
                 Offset = ... // TODO: depending on size of attribute.
+            };
+        }
+
+        return descriptions;
+    }
+    public VertexInputBindingDescription[] GetBindingsDescription() {
+        VertexInputBindingDescription[] descriptions = new VertexInputBindingDescription[requiredAttributes.Count];
+        // TODO: Stuck: We don't know how we get the vertex data.
+        for (uint i = 0; i < requiredAttributes.Count; i++) {
+            AttributeType type = requiredAttributes[(int)i];
+            descriptions[i] = new VertexInputBindingDescription() {
+                Binding = 0;
+                Stride = ...;
+                InputRate = VertexInputRate.Vertex
             };
         }
 

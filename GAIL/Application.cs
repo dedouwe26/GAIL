@@ -2,9 +2,9 @@ using GAIL.Audio;
 using GAIL.Graphics;
 using GAIL.Input;
 using GAIL.Window;
-using OxDED.Terminal;
 using LambdaKit.Logging;
 using LambdaKit.Logging.Targets;
+using LambdaKit.Terminal;
 
 namespace GAIL
 {
@@ -88,7 +88,11 @@ namespace GAIL
             
             int index = Logger.GetTargetIndex<TerminalTarget>();
             if (index > -1) {
-                Logger.GetTarget<TerminalTarget>(index)!.Format = "<{0}>: ("+Color.DarkBlue.ToForegroundANSI()+"{2}"+ANSI.Styles.ResetAll+")[{5}"+ANSI.Styles.Bold+"{3}"+ANSI.Styles.ResetAll+"] : {5}{4}"+ANSI.Styles.ResetAll;
+                Logger.GetTarget<TerminalTarget>(index)!.Format =
+                    new StyleBuilder().Text("<{0}>: (")
+                    .Foreground((StandardColor)StandardColor.Colors.Blue).Text("{2}")
+                    .Reset().Text(")[{5}").Bold().Text("{3}").Bold(false)
+                    .Text("] : {5}{4}").Reset().ToString();
                 Logger.GetTarget<TerminalTarget>(index)!.NameFormat =  "{0} - {1}";
             }
             index = Logger.GetTargetIndex<FileTarget>();

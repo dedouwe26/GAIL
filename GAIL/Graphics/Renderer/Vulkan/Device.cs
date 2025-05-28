@@ -138,16 +138,16 @@ namespace GAIL.Graphics.Renderer.Vulkan
             var details = new SwapChain.SupportDetails();
 
             unsafe {
-                _ = Utils.Check(surface.surfaceExtension.GetPhysicalDeviceSurfaceCapabilities(device, surface.surface, out details.Capabilities), Logger, "Failed at getting PhysicalDevice surface capabilities", true);
+                _ = Utils.Check(surface.Extension.GetPhysicalDeviceSurfaceCapabilities(device, surface.surface, out details.Capabilities), Logger, "Failed at getting PhysicalDevice surface capabilities", true);
 
                 // Surface formats
                 Utils.GetArray((Pointer<SurfaceFormatKHR> pointer, Pointer<uint> count) => {
-                    return surface.surfaceExtension.GetPhysicalDeviceSurfaceFormats(device, surface.surface, count, pointer);
+                    return surface.Extension.GetPhysicalDeviceSurfaceFormats(device, surface.surface, count, pointer);
                 }, out details.Formats, Logger, "PhysicalDeviceSurfaceFormats", true);
 
                 // Surface present modes
                 Utils.GetArray((Pointer<PresentModeKHR> pointer, Pointer<uint> count) => {
-                    return surface.surfaceExtension.GetPhysicalDeviceSurfacePresentModes(device, surface.surface, count, pointer);
+                    return surface.Extension.GetPhysicalDeviceSurfacePresentModes(device, surface.surface, count, pointer);
                 }, out details.PresentModes, Logger, "PhysicalDeviceSurfacePresentModes", true);
             }
 
@@ -200,7 +200,7 @@ namespace GAIL.Graphics.Renderer.Vulkan
                         indices.GraphicsFamily = i;
                     }
                     
-                    _ = Utils.Check(surface.surfaceExtension.GetPhysicalDeviceSurfaceSupport(device, i, surface.surface, out Bool32 presentSupport), Logger, "Unable get physical device surface support", true);
+                    _ = Utils.Check(surface.Extension.GetPhysicalDeviceSurfaceSupport(device, i, surface.surface, out Bool32 presentSupport), Logger, "Unable get physical device surface support", true);
                     
                     if (presentSupport) {
                         indices.PresentFamily = i;
