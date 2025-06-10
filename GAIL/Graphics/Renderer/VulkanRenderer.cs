@@ -1,4 +1,5 @@
 using GAIL.Core;
+using GAIL.Graphics.Material;
 using GAIL.Graphics.Renderer.Layer;
 using GAIL.Graphics.Renderer.Vulkan;
 using GAIL.Graphics.Renderer.Vulkan.Layer;
@@ -188,6 +189,15 @@ public class VulkanRenderer : IRenderer<IVulkanLayer> {
         }
         device.shouldRecreateSwapchain = true;
     }
+    private void RecreateSwapchain() {
+        device.WaitIdle();
+
+        Swapchain.Dispose();
+
+        Swapchain = new SwapChain(this, globals.windowManager);
+        Swapchain.CreateFramebuffers(RenderPass);
+    }
+
     /// <inheritdoc/>
     public IRasterizationLayer? CreateRasterizationLayer(RasterizationLayerSettings settings) {
         try {
@@ -197,14 +207,10 @@ public class VulkanRenderer : IRenderer<IVulkanLayer> {
             return default;
         }
     }
-    
-    private void RecreateSwapchain() {
-        device.WaitIdle();
+    /// <inheritdoc/>
+    /// <exception cref="APIBackendException"/>
+    public IShader CreateShader(byte[] vertexShader, byte[]? fragmentShader = null, byte[]? geometryShader = null) {
 
-        Swapchain.Dispose();
-
-        Swapchain = new SwapChain(this, globals.windowManager);
-        Swapchain.CreateFramebuffers(RenderPass);
     }
 
     /// <inheritdoc/>

@@ -134,7 +134,7 @@ namespace GAIL
         /// </summary>
         public void Start() {
             if (!IsDisposed) {
-                Logger.LogError("Cannot start the application if it is disposed or initialized.");
+                Logger.LogError("Cannot start the application if it is disposed or not initialized.");
                 return;
             }
 
@@ -211,7 +211,7 @@ namespace GAIL
         /// Stops the application (see: <see cref="Dispose"/>).
         /// </summary>
         public void Stop() {
-            Dispose();
+            Dispose(); // TODO: implement a correct way of stopping.
         }
 
         /// <inheritdoc/>

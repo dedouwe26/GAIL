@@ -8,4 +8,10 @@ public interface IRasterizationLayer : IBackendLayer {
     /// The rasterization layer settings.
     /// </summary>
     public IRasterizationLayerSettings Settings { get; }
+    /// <summary>
+    /// Renders an object.
+    /// </summary>
+    /// <param name="obj">The object to render.</param>
+    /// <returns>Whether it succeeded.</returns>
+    public bool Render(Object obj);
 }

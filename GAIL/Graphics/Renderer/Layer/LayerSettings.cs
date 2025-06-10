@@ -1,3 +1,4 @@
+using GAIL.Graphics.Material;
 using GAIL.Graphics.Renderer.Vulkan;
 using Silk.NET.Vulkan;
 
@@ -115,7 +116,7 @@ public interface IRasterizationLayerSettings {
     /// <summary>
     /// The shader stages to use for this layer.
     /// </summary>
-    public Shader Shader { get; set; }
+    public IShader Shader { get; set; }
 
 }
 /// <summary>
@@ -141,7 +142,7 @@ public class RasterizationLayerSettings {
     /// <summary>
     /// The shader stages to use for this layer.
     /// </summary>
-    public required Shader Shaders;
+    public required IShader Shaders;
 
     /// <summary>
     /// Creates new values of the rasterization layer settings.
@@ -196,11 +197,11 @@ public abstract class RasterizationLayerSettings<TLayer> : IRasterizationLayerSe
     /// </summary>
     protected CullMode cullMode;
     /// <inheritdoc/>
-    public virtual Shader Shader { get => shader; set => throw new NotImplementedException(); }
+    public virtual IShader Shader { get => shader; set => throw new NotImplementedException(); }
     /// <summary>
     /// The shader stages to use for this layer.
     /// </summary>
-    protected Shader shader;
+    protected IShader shader;
 }
 
 // TODO: Raytracing settings

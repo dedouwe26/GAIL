@@ -100,4 +100,10 @@ public class VulkanRasterizationLayer : IVulkanLayer, IRasterizationLayer {
         IsDisposed = true;
         GC.SuppressFinalize(this);
     }
+
+    /// <inheritdoc/>
+    public bool Render(Object obj)
+    {
+        throw new NotImplementedException();
+    }
 }

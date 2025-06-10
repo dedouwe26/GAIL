@@ -1,12 +1,10 @@
-using System.Runtime.InteropServices;
 using GAIL.Core;
-using GAIL.Graphics.Layer;
 using GAIL.Graphics.Material;
 using GAIL.Graphics.Renderer;
 using GAIL.Graphics.Renderer.Layer;
 using GAIL.Graphics.Renderer.Vulkan;
+using LambdaKit.Assertion;
 using LambdaKit.Logging;
-using Silk.NET.GLFW;
 
 namespace GAIL.Graphics
 {
@@ -60,7 +58,7 @@ namespace GAIL.Graphics
 
             IsDisposed = false;
 
-            globals.windowManager.OnFramebufferResize += (int width, int height) => {
+            globals.windowManager.OnFramebufferResize += (width, height) => {
                 Renderer.Resize(width, height);
             };
         }
@@ -70,19 +68,29 @@ namespace GAIL.Graphics
         public void Update() {
             Renderer!.Render();
         }
+
         /// <summary>
         /// Creates a rasterization layer.
         /// </summary>
         /// <param name="settings">The default settings of the layer.</param>
         /// <returns>The created rasterization layer, if it succeeded in creating a rasterization layer.</returns>
-        public IRasterizationLayer? CreateRasterizationLayer(RasterizationLayerSettings settings) {
+        public IRasterizationLayer CreateRasterizationLayer(RasterizationLayerSettings settings) {
+            if (Renderer == null) {
+                Logger.LogError("Renderer is not initialized.");
+                return default;
+            }
+            
+            return Renderer.CreateRasterizationLayer(settings);
+        }
+        public IShader CreateShader(byte[] vertexShader, byte[]? fragmentShader = null, byte[]? geometryShader = null) {
             if (Renderer == null) {
                 Logger.LogError("Renderer is not initialized.");
                 return default;
             }
 
-            return Renderer.CreateRasterizationLayer(settings);
+            Assert.Throws(() => Renderer.CreateShader(vertexShader, fragmentShader, geometryShader))
         }
+
 
         /// <inheritdoc/>
         public void Dispose() {

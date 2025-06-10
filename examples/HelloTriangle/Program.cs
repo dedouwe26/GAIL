@@ -1,4 +1,5 @@
-﻿using GAIL.Input;
+﻿using GAIL.Graphics.Layer;
+using GAIL.Input;
 using LambdaKit.Logging;
 using LambdaKit.Logging.Targets;
 
@@ -6,6 +7,7 @@ namespace examples.HelloTriangle
 {
     public class Program {
         static GAIL.Application? app;
+        static Layer2D? mainLayer;
         static readonly Logger Logger = new(
             "examples.HelloTriangle",
             "Hello Triangle",
@@ -26,6 +28,11 @@ namespace examples.HelloTriangle
             app.OnUpdate+=Update;
             app.OnStop+=Stop;
             app.Initialize(windowSettings:("Hello Triangle", 1000, 600));
+
+            Logger.LogDebug("Creating Layers.");
+            // Creates the main layer.
+            mainLayer = new Layer2D();
+            mainLayer.Initialize(app.GraphicsManager.CreateRasterizationLayer(new())!);
 
             Logger.LogDebug("Starting Application.");
 
@@ -75,6 +82,7 @@ namespace examples.HelloTriangle
                 frameCount = 0;
                 timePassed = 0;
             }
+
         }
         public static void Stop(GAIL.Application app) {
             Logger.LogInfo("Stopping...");

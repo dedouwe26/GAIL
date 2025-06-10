@@ -1,3 +1,4 @@
+using GAIL.Graphics.Material;
 using GAIL.Graphics.Renderer.Layer;
 
 namespace GAIL.Graphics.Layer;
@@ -6,6 +7,10 @@ namespace GAIL.Graphics.Layer;
 /// A layer for 2D graphics.
 /// </summary>
 public class Layer2D : ILayer<IRasterizationLayer> {
+    public static Layer2D Create(GraphicsManager manager, IShader shader) {
+        Layer2D layer = new();
+        manager.CreateRasterizationLayer(new() { Shaders = shader});
+    }
     /// <summary>
     /// If this 2D layer is disposed.
     /// </summary>
@@ -25,8 +30,14 @@ public class Layer2D : ILayer<IRasterizationLayer> {
         this.backendLayer = backendLayer;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="obj"></param>
+    /// <exception cref="NullReferenceException"></exception>
     public void Render(Object obj) {
-
+        if (backendLayer == null) throw new NullReferenceException("Layer is not initialized");
+        backendLayer.Render(obj);
     }
 
     /// <inheritdoc/>
