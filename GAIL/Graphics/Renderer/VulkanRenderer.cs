@@ -201,7 +201,7 @@ public class VulkanRenderer : IRenderer<IVulkanLayer> {
     /// <inheritdoc/>
     public IRasterizationLayer? CreateRasterizationLayer(RasterizationLayerSettings settings) {
         try {
-            return new VulkanRasterizationLayer(this, 0, settings);
+            return new VulkanRasterizationLayer(this, 0, settings); // TODO: Index is not always 0.
         } catch (APIBackendException) {
             Logger.LogError("Failed to create rasterization layer.");
             return default;

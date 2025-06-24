@@ -5,21 +5,21 @@ namespace GAIL.Graphics.Material;
 /// </summary>
 public abstract class Uniform {
     /// <summary>
-    /// The type of this uniform.
+    /// The info about the format of this uniform.
     /// </summary>
-    public AttributeType Type;
+    public FormatInfo info;
     /// <summary>
     /// The value of this uniform.
     /// </summary>
-    public byte[] Value;
+    public byte[] value;
 
     /// <summary>
     /// Creates a new Uniform
     /// </summary>
-    /// <param name="type">The type of this uniform.</param>
+    /// <param name="info">The info about the format of this uniform.</param>
     /// <param name="value">The value of this uniform.</param>
-    public Uniform(AttributeType type, byte[] value) {
-        Type = type;
-        Value = value;
+    public Uniform(FormatInfo info, byte[] value) {
+        this.info = info;
+        this.value = value;
     }
 }

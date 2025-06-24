@@ -6,6 +6,8 @@ using LambdaKit.Logging;
 using LambdaKit.Logging.Targets;
 using LambdaKit.Terminal;
 
+// TODO: Add #if DEBUG when using LogDebug(string).
+
 namespace GAIL
 {
     /// <summary>
@@ -211,7 +213,7 @@ namespace GAIL
         /// Stops the application (see: <see cref="Dispose"/>).
         /// </summary>
         public void Stop() {
-            Dispose(); // TODO: implement a correct way of stopping.
+            Dispose(); // layer.settings: implement a correct way of stopping.
         }
 
         /// <inheritdoc/>

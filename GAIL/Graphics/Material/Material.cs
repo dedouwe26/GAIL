@@ -7,33 +7,26 @@ namespace GAIL.Graphics.Material;
 /// </summary>
 public interface IMaterial {
     /// <summary>
-    /// Which uniforms must be set in order for this shader to work correctly.
+    /// Applies all the uniforms.
     /// </summary>
-    public ReadOnlyCollection<AttributeType> RequiredUniforms { get; }
+    /// <param name="shader">The shader of which to set the uniforms.</param>
+    public abstract void Apply(IShader shader);
 }
 
 /// <summary>
 /// Contains information about how anything is drawn to the window, contains the shader and shader data.
 /// </summary>
 public abstract class Material : IMaterial {
-    // private static IShader CreateShader(GraphicsManager manager, ) {
-    //     
-    // }
-
-    public readonly IShader Shader;
-    
-    /// <inheritdoc/>
-    public virtual ReadOnlyCollection<AttributeType> RequiredUniforms => Shader.RequiredUniforms;
 
     /// <summary>
     /// Creates a new material.
     /// </summary>
-    /// <param name="shader">The shader corresponding to this material.</param> 
-    protected Material(IShader shader) {
-        Shader = shader;
-    }
+    protected Material() { }
 
-    protected bool SetUniform() {
+    // protected bool SetUniform() {
 
-    }
+    // }
+    
+    /// <inheritdoc/>
+    public abstract void Apply(IShader shader);
 }

@@ -1,6 +1,6 @@
 using GAIL.Graphics.Renderer.Layer;
 
-namespace GAIL.Graphics.Renderer.Vulkan;
+namespace GAIL.Graphics.Renderer.Vulkan.Layer;
 
 /// <summary>
 /// Represents a back-end layer specific to Vulkan.

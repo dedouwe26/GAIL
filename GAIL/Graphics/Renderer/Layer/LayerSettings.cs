@@ -117,6 +117,10 @@ public interface IRasterizationLayerSettings {
     /// The shader stages to use for this layer.
     /// </summary>
     public IShader Shader { get; set; }
+    /// <summary>
+    /// The shader stages to use for this layer.
+    /// </summary>
+    public List<Object> RenderList { get; set; }
 
 }
 /// <summary>
@@ -143,6 +147,10 @@ public class RasterizationLayerSettings {
     /// The shader stages to use for this layer.
     /// </summary>
     public required IShader Shaders;
+    /// <summary>
+    /// The shader stages to use for this layer.
+    /// </summary>
+    public required List<Object> RenderList;
 
     /// <summary>
     /// Creates new values of the rasterization layer settings.
@@ -168,7 +176,6 @@ public abstract class RasterizationLayerSettings<TLayer> : IRasterizationLayerSe
         shouldRender = values.ShouldRender;
         fillMode = values.FillMode;
         cullMode = values.CullMode;
-        shader = values.Shaders;
     }
 
     /// <inheritdoc/>
@@ -197,11 +204,13 @@ public abstract class RasterizationLayerSettings<TLayer> : IRasterizationLayerSe
     /// </summary>
     protected CullMode cullMode;
     /// <inheritdoc/>
-    public virtual IShader Shader { get => shader; set => throw new NotImplementedException(); }
+    public virtual IShader Shader { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+    /// <inheritdoc/>
+    public virtual List<Object> RenderList { get => renderList; set => throw new NotImplementedException(); }
     /// <summary>
     /// The shader stages to use for this layer.
     /// </summary>
-    protected IShader shader;
+    protected List<Object> renderList = [];
 }
 
 // TODO: Raytracing settings

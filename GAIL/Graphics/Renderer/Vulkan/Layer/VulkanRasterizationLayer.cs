@@ -1,3 +1,4 @@
+using GAIL.Graphics.Material;
 using GAIL.Graphics.Renderer.Layer;
 using LambdaKit.Logging;
 
@@ -12,7 +13,12 @@ public class VulkanRasterizationLayerSettings : RasterizationLayerSettings<Vulka
     /// </summary>
     /// <param name="layer">The vulkan implementation of the rasterization layer.</param>
     /// <param name="values">The initial values of these settings.</param>
-    public VulkanRasterizationLayerSettings(VulkanRasterizationLayer layer, RasterizationLayerSettings values) : base(layer, values) { }
+    public VulkanRasterizationLayerSettings(VulkanRasterizationLayer layer, RasterizationLayerSettings values) : base(layer, values) {
+        if (values.Shaders is not Shader shader) {
+            throw new InvalidOperationException("The given shader is no Vulkan shader.");
+        }
+        this.shader = shader;
+    }
     
     /// <inheritdoc/>
     public override CullMode CullMode { get => base.CullMode; set {
@@ -33,10 +39,20 @@ public class VulkanRasterizationLayerSettings : RasterizationLayerSettings<Vulka
         layer.Pipeline = new Pipeline(layer);
     } }
     /// <inheritdoc/>
-    public override Shader Shader { get => base.Shader; set {
+    public override IShader Shader { get => shader; set {
         layer.Pipeline.Dispose();
-        shader = value;
+        if (value is not Shader shader) {
+            throw new InvalidOperationException("The given shader is no Vulkan shader.");
+        }
+        this.shader = shader;
         layer.Pipeline = new Pipeline(layer);
+    } }
+    internal Shader shader;
+    /// <inheritdoc/>
+    public override List<Object> RenderList { get => base.RenderList; set {
+        layer.UnloadObjects(); // TODO: FIXME: This is inefficient when a new object is added.
+        renderList = value;
+        layer.LoadObjects(); 
     } }
 }
 
@@ -45,13 +61,13 @@ public class VulkanRasterizationLayerSettings : RasterizationLayerSettings<Vulka
 /// </summary>
 public class VulkanRasterizationLayer : IVulkanLayer, IRasterizationLayer {
     internal VulkanRasterizationLayer(VulkanRenderer renderer, uint index, RasterizationLayerSettings settings) {
-        Logger = renderer.Logger;
+        Logger = renderer.Logger.CreateSubLogger("layer"+index, "Rasterization Layer");
         Renderer = renderer;
         Index = index;
         this.settings = new(this, settings);
-
+#if DEBUG
         Logger.LogDebug("Creating a Vulkan rasterization back-end layer.");
-
+#endif
         Pipeline = new Pipeline(this);
     }
     /// <summary>
@@ -70,7 +86,7 @@ public class VulkanRasterizationLayer : IVulkanLayer, IRasterizationLayer {
     /// The logger of this back-end layer.
     /// </summary>
     public readonly Logger Logger;
-    private readonly VulkanRasterizationLayerSettings settings;
+    internal readonly VulkanRasterizationLayerSettings settings;
     /// <inheritdoc/>
     public IRasterizationLayerSettings Settings => settings;
     internal uint Index;
@@ -81,29 +97,51 @@ public class VulkanRasterizationLayer : IVulkanLayer, IRasterizationLayer {
         Pipeline = new(this);
     } }
 
+    private Renderable[] renderables = [];
+    public void UnloadObjects() {
+        lock (renderables) {
+            foreach (Renderable renderable in renderables) {
+                renderable.Dispose();
+            }
+        }
+    }
+    public void LoadObjects() {
+        lock (renderables) {
+            renderables = new Renderable[settings.RenderList.Count];
+            for (int i = 0; i < settings.RenderList.Count; i++) {
+                renderables[i] = new(this, settings.RenderList[i]);
+            }
+        }
+    }
+
     /// <inheritdoc/>
     public void Render(Commands commands) {
         if (!settings.ShouldRender) return;
 
-        commands.BindPipeline(Renderer, Pipeline);
+        RecordCommands(commands);
+    }
+    private void RecordCommands(Commands commands) {
+        commands.BindPipeline(Pipeline);
 
-        // TODO: Temporary
-        commands.Draw(Renderer, vertexCount:3);
+        lock (renderables) {
+            foreach (Renderable obj in renderables) {
+                Render(commands, obj);
+            }
+        }
+    }
+    private void Render(Commands commands, Renderable renderable) {
+        // obj.material.Apply(); // TODO: Uniforms // NOTE: Applying uniforms.
+        commands.BindVertexBuffer(renderable.vertexBuffer); // NOTE: Applying attributes.
+        commands.Draw(vertexCount:3); // TODO: Temporary...
     }
 
     /// <inheritdoc/>
     public void Dispose() {
         if (IsDisposed) return;
-        
+
         Pipeline.Dispose();
 
         IsDisposed = true;
         GC.SuppressFinalize(this);
-    }
-
-    /// <inheritdoc/>
-    public bool Render(Object obj)
-    {
-        throw new NotImplementedException();
     }
 }

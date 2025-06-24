@@ -8,6 +8,7 @@ public class Commands : IDisposable {
     public readonly CommandPool commandPool;
     public CommandBuffer[] commandBuffers;
     private readonly Device device;
+    private CommandBuffer currentCommandBuffer;
     public Commands(VulkanRenderer renderer) {
         device = renderer.device;
 
@@ -59,14 +60,14 @@ public class Commands : IDisposable {
         SubmitInfo submitInfo = new() {
             SType = StructureType.SubmitInfo,
 
-            WaitSemaphoreCount = 1, // NOTE: Define which semaphores to wait on before execution.
+            WaitSemaphoreCount = Convert.ToUInt32(waitSemaphores.LongLength), // NOTE: Define which semaphores to wait on before execution.
             PWaitSemaphores = Pointer<Silk.NET.Vulkan.Semaphore>.FromArray(ref waitSemaphores),
             PWaitDstStageMask = Pointer<PipelineStageFlags>.FromArray(ref waitStages), // NOTE: Only wait with writing colors, not with the pipeline.
         
             CommandBufferCount = 1, // commandbuffers
-            PCommandBuffers = Pointer<CommandBuffer>.From(ref commandBuffers[renderer.CurrentFrame]),
+            PCommandBuffers = Pointer<CommandBuffer>.From(ref currentCommandBuffer),
 
-            SignalSemaphoreCount = 1, // NOTE: The semaphores to signal.
+            SignalSemaphoreCount = Convert.ToUInt32(signalSemaphores.LongLength), // NOTE: The semaphores to signal.
             PSignalSemaphores = Pointer<Silk.NET.Vulkan.Semaphore>.FromArray(ref signalSemaphores)
         };
 
@@ -74,18 +75,25 @@ public class Commands : IDisposable {
     }
     
     public void BeginRecord(VulkanRenderer renderer, ref Framebuffer swapchainImage) {
-        BeginCommandBuffer(renderer, commandBuffers[renderer.CurrentFrame], ref swapchainImage);
+        currentCommandBuffer = commandBuffers[renderer.CurrentFrame];
+        BeginCommandBuffer(renderer, currentCommandBuffer, ref swapchainImage);
     }
 
-    public void BindPipeline(VulkanRenderer renderer, Pipeline pipeline) {
-        API.Vk.CmdBindPipeline(commandBuffers[renderer.CurrentFrame], pipeline.Type, pipeline.graphicsPipeline);
+    public void BindPipeline(Layer.Pipeline pipeline) {
+        API.Vk.CmdBindPipeline(currentCommandBuffer, pipeline.Type, pipeline.graphicsPipeline);
     }
-    public void Draw(VulkanRenderer renderer, uint vertexCount, uint instanceCount = 1, uint firstVertex = 0, uint firstInstance = 0) {
-        API.Vk.CmdDraw(commandBuffers[renderer.CurrentFrame], vertexCount, instanceCount, firstVertex, firstInstance);
+    public unsafe void BindVertexBuffer(VertexBuffer vertexBuffer) {
+        ulong[] offsets = [0];
+        fixed (ulong* offsetsPtr = offsets) {
+            API.Vk.CmdBindVertexBuffers(currentCommandBuffer, 0, 1, in vertexBuffer.buffer, offsetsPtr);
+        }
+    }
+    public void Draw(uint vertexCount, uint instanceCount = 1, uint firstVertex = 0, uint firstInstance = 0) {
+        API.Vk.CmdDraw(currentCommandBuffer, vertexCount, instanceCount, firstVertex, firstInstance);
     }
 
     public void EndRecord(VulkanRenderer renderer) {
-        EndCommandBuffer(renderer, commandBuffers[renderer.CurrentFrame]);
+        EndCommandBuffer(renderer, currentCommandBuffer);
     }
 
     public static void BeginCommandBuffer(VulkanRenderer renderer, CommandBuffer buffer, ref Framebuffer swapchainImage) {
@@ -120,7 +128,6 @@ public class Commands : IDisposable {
             API.Vk.CmdBeginRenderPass(buffer, in renderPassInfo, SubpassContents.Inline);
             // NOTE: Inline: renderpass setup commands will be embedded in the primary command buffer.
         }
-        
         API.Vk.CmdSetViewport(buffer, 0, 1, in renderer.Swapchain.viewport);
     }
 

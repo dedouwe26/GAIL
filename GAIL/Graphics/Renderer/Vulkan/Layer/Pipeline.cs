@@ -1,8 +1,7 @@
 using GAIL.Core;
-using GAIL.Graphics.Renderer.Vulkan.Layer;
 using Silk.NET.Vulkan;
 
-namespace GAIL.Graphics.Renderer.Vulkan;
+namespace GAIL.Graphics.Renderer.Vulkan.Layer;
 
 public class Pipeline : IDisposable {
     public readonly Silk.NET.Vulkan.Pipeline graphicsPipeline;
@@ -18,12 +17,14 @@ public class Pipeline : IDisposable {
         // Fixed function stages.
 
         // Creates vertex / index buffers in pipeline
+        VertexInputAttributeDescription[] attributeDescriptions = layer.settings.shader.GetAttributesDescription();
+        VertexInputBindingDescription bindingDescription = layer.settings.shader.GetBindingDescription();
         PipelineVertexInputStateCreateInfo vertexInputInfo = new (){
             SType = StructureType.PipelineVertexInputStateCreateInfo,
-            VertexAttributeDescriptionCount = 0,
-            VertexBindingDescriptionCount = 0,
-            // PVertexAttributeDescriptions = null (optional)
-            // PVertexBindingDescriptions = null (optional)
+            VertexAttributeDescriptionCount = Convert.ToUInt32(attributeDescriptions.LongLength),
+            VertexBindingDescriptionCount = 1,
+            PVertexAttributeDescriptions = Pointer<VertexInputAttributeDescription>.FromArray(ref attributeDescriptions),
+            PVertexBindingDescriptions = Pointer<VertexInputBindingDescription>.From(ref bindingDescription)
         };
 
         // Input assembler
@@ -58,10 +59,10 @@ public class Pipeline : IDisposable {
             DepthClampEnable = false, // NOTE: Instead of discarding the fragment outside the 
                                       //       near and far planes, it will clamp them.
             RasterizerDiscardEnable = false, // NOTE: Literally disables all rendering (KA-BOOM)!
-            PolygonMode = (PolygonMode)layer.Settings.FillMode, // NOTE: How fragments are generated (like wireframe: Line).
+            PolygonMode = (PolygonMode)layer.settings.FillMode, // NOTE: How fragments are generated (like wireframe: Line).
             LineWidth = 1, // TODO: Make configurable.
-            CullMode = (CullModeFlags)layer.Settings.CullMode, // NOTE: The way of culling. Most applications use backface culling.
-            FrontFace = (FrontFace)layer.Settings.FrontFaceMode, // NOTE: How Vulkan knows what the front and back face is.
+            CullMode = (CullModeFlags)layer.settings.CullMode, // NOTE: The way of culling. Most applications use backface culling.
+            FrontFace = (FrontFace)layer.settings.FrontFaceMode, // NOTE: How Vulkan knows what the front and back face is.
 
             DepthBiasEnable = false // NOTE: This can be used to alter the depth value, with the other parameters.
         };
@@ -144,8 +145,8 @@ public class Pipeline : IDisposable {
         GraphicsPipelineCreateInfo createInfo = new() {
             SType = StructureType.GraphicsPipelineCreateInfo,
 
-            StageCount = Convert.ToUInt32(layer.Settings.Shader.stages.Length),
-            PStages = Pointer<PipelineShaderStageCreateInfo>.FromArray(ref layer.Settings.Shader.stages),
+            StageCount = Convert.ToUInt32(layer.settings.shader.stages.Length),
+            PStages = Pointer<PipelineShaderStageCreateInfo>.FromArray(ref layer.settings.shader.stages),
 
             PVertexInputState = Pointer<PipelineVertexInputStateCreateInfo>.From(ref vertexInputInfo),
             PInputAssemblyState = Pointer<PipelineInputAssemblyStateCreateInfo>.From(ref inputAssemblyInfo),

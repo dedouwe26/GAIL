@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using GAIL.Core;
 using GAIL.Graphics.Material;
@@ -12,7 +13,7 @@ namespace GAIL.Graphics.Renderer.Vulkan;
 /// </summary>
 public class Shader : IShader {
     public static Shader? CreateShader(VulkanRenderer renderer,
-        ReadOnlyCollection<AttributeType> requiredAttributes, ReadOnlyCollection<AttributeType> requiredUniforms,
+        IEnumerable<FormatInfo> requiredAttributes, IEnumerable<FormatInfo> requiredUniforms,
         byte[] vertex, byte[]? fragment = null, byte[]? geometry = null
     ) {
         Shader shader = new(renderer, requiredAttributes, requiredUniforms, 1 + (fragment!=null?1:0) + (geometry!=null?1:0));
@@ -56,21 +57,21 @@ public class Shader : IShader {
     /// If this class is already disposed.
     /// </summary>
     public bool IsDisposed { get; private set; }
-    private readonly ReadOnlyCollection<AttributeType> requiredAttributes;
+    private readonly ImmutableArray<FormatInfo> requiredAttributes;
 
-    private readonly ReadOnlyCollection<AttributeType> requiredUniforms;
-
-    /// <inheritdoc/>
-    public ReadOnlyCollection<AttributeType> RequiredAttributes => requiredAttributes;
+    private readonly ImmutableArray<FormatInfo> requiredUniforms;
 
     /// <inheritdoc/>
-    public ReadOnlyCollection<AttributeType> RequiredUniforms => requiredUniforms;
+    public ImmutableArray<FormatInfo> RequiredAttributes => requiredAttributes;
+
+    /// <inheritdoc/>
+    public ImmutableArray<FormatInfo> RequiredUniforms => requiredUniforms;
 
     private readonly Logger Logger;
     private readonly Device Device;
-    private Shader(VulkanRenderer renderer, ReadOnlyCollection<AttributeType> requiredAttributes, ReadOnlyCollection<AttributeType> requiredUniforms, int stagesLength) {
-        this.requiredAttributes = requiredAttributes;
-        this.requiredUniforms = requiredUniforms;
+    private Shader(VulkanRenderer renderer, IEnumerable<FormatInfo> requiredAttributes, IEnumerable<FormatInfo> requiredUniforms, int stagesLength) {
+        this.requiredAttributes = [.. requiredAttributes];
+        this.requiredUniforms = [.. requiredUniforms];
         IsDisposed = true;
         stages = new PipelineShaderStageCreateInfo[stagesLength];
         Logger = renderer.Logger;
@@ -108,34 +109,46 @@ public class Shader : IShader {
         return shaderModule;
     }
 
-    public VertexInputAttributeDescription[] GetAttributesDescription() {
-        VertexInputAttributeDescription[] descriptions = new VertexInputAttributeDescription[requiredAttributes.Count];
-
-        for (uint i = 0; i < requiredAttributes.Count; i++) {
-            AttributeType type = requiredAttributes[(int)i];
-            descriptions[i] = new VertexInputAttributeDescription() {
-                Binding = i, // TODO: Change this.
-                Location = i, // TODO: depending on size of attribute.
-                Format = (Format)type,
-                Offset = ... // TODO: depending on size of attribute.
-            };
+    private uint? size = null;
+    internal uint GetAttributesSize() {
+        if (size == null) {
+            size = 0;
+            foreach (FormatInfo f in requiredAttributes) {
+                size += f.size;
+            }
         }
+        return size.Value;
+    }
 
+    public VertexInputAttributeDescription[] GetAttributesDescription() {
+        VertexInputAttributeDescription[] descriptions = new VertexInputAttributeDescription[requiredAttributes.Length];
+
+        uint offset = 0;
+        for (uint i = 0; i < requiredAttributes.Length; i++) {
+            FormatInfo info = requiredAttributes[(int)i];
+            // NOTE: Maybe the attribute size has nothing to do with the attribute type?
+            descriptions[i] = new VertexInputAttributeDescription() { 
+                Binding = 0, // NOTE: See reason in GetBindingDescription().
+                Location = i, // TODO: depending on size of attribute ??
+                Format = (Format)info.type,
+                Offset = offset
+            };
+            offset+=info.size;
+        }
         return descriptions;
     }
-    public VertexInputBindingDescription[] GetBindingsDescription() {
-        VertexInputBindingDescription[] descriptions = new VertexInputBindingDescription[requiredAttributes.Count];
-        // TODO: Stuck: We don't know how we get the vertex data.
-        for (uint i = 0; i < requiredAttributes.Count; i++) {
-            AttributeType type = requiredAttributes[(int)i];
-            descriptions[i] = new VertexInputBindingDescription() {
-                Binding = 0;
-                Stride = ...;
-                InputRate = VertexInputRate.Vertex
-            };
-        }
 
-        return descriptions;
+    /// <summary>
+    /// Describes data loading for the vertex input.
+    /// </summary>
+    /// <returns></returns>
+    public VertexInputBindingDescription GetBindingDescription() {
+        VertexInputBindingDescription description = new() {
+            Binding = 0, // NOTE: All the vertex data will be packed in one array, so 1 binding.
+            Stride = GetAttributesSize(),
+            InputRate = VertexInputRate.Vertex
+        };
+        return description;
     }
 
     /// <inheritdoc/>

@@ -7,7 +7,7 @@ namespace GAIL.Graphics.Mesh
     /// A basic position attribute (Float3).
     /// </summary>
     /// <param name="position">The position of this attribute.</param>
-    public class PositionAttribute(Vector3 position) : VertexAttribute(AttributeType.Float3) {
+    public class PositionAttribute(Vector3 position) : VertexAttribute(FormatType.Float3) {
         /// <summary>
         /// The color of this color attribute.
         /// </summary>
@@ -25,7 +25,7 @@ namespace GAIL.Graphics.Mesh
     /// Creates a color attribute (Float4).
     /// </remarks>
     /// <param name="color">The color of this attribute.</param>
-    public class ColorAttribute(Color color) : VertexAttribute(AttributeType.Float4) {
+    public class ColorAttribute(Color color) : VertexAttribute(FormatType.Float4) {
         /// <summary>
         /// The color of this color attribute.
         /// </summary>
@@ -43,7 +43,7 @@ namespace GAIL.Graphics.Mesh
     /// Creates a normal attribute.
     /// </remarks>
     /// <param name="normal">The normal vector of this attribute.</param>
-    public class NormalAttribute(Vector3 normal) : VertexAttribute(AttributeType.Float3) {
+    public class NormalAttribute(Vector3 normal) : VertexAttribute(FormatType.Float3) {
         /// <summary>
         /// The normal vector of this normal attribute.
         /// </summary>
@@ -61,7 +61,7 @@ namespace GAIL.Graphics.Mesh
     /// Creates a uv (texture coordinates) attribute (Float2).
     /// </remarks>
     /// <param name="uv">The uv vector of this attribute.</param>
-    public class UVAttribute(Vector2 uv) : VertexAttribute(AttributeType.Float2) {
+    public class UVAttribute(Vector2 uv) : VertexAttribute(FormatType.Float2) {
         /// <summary>
         /// The uv vector of this uv attribute.
         /// </summary>

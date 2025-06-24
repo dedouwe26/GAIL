@@ -36,11 +36,11 @@ namespace GAIL.Graphics.Mesh
         /// <param name="requiredAttributes">The attribute types that are required by the shader.</param>
         /// <returns>The nessecary vertex attributes.</returns>
         /// <exception cref="NotSupportedException">This exception is fired when this vertex does not supply sufficient attributes.</exception>
-        public VertexAttribute[] Supply(ReadOnlyCollection<AttributeType> requiredAttributes) {
+        public VertexAttribute[] Supply(ReadOnlyCollection<FormatInfo> requiredAttributes) {
             VertexAttribute[] result = new VertexAttribute[requiredAttributes.Count];
             int requiredIndex = 0;
             foreach (VertexAttribute attribute in Attributes) {
-                if (attribute.type == requiredAttributes[requiredIndex]) {
+                if (attribute.info.type == requiredAttributes[requiredIndex].type) {
                     result[requiredIndex] = attribute;
                     requiredIndex++;
                 }

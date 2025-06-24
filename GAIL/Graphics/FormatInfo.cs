@@ -4,7 +4,7 @@ namespace GAIL.Graphics
     /// The type of the attribute. <para/>
     /// 
     /// Long = 64-bit <br/>
-    /// (Default) = 32-bit<br/>
+    /// (Default) / Int = 32-bit<br/>
     /// Short = 16-bit <br/>
     /// Byte = 8-bit <para/>
     /// U- = unsigned (no negatives) <br/>
@@ -12,7 +12,7 @@ namespace GAIL.Graphics
     /// Int (default) = signed, integer <br/>
     /// -(2, 3, 4) = multiple components
     /// </summary>
-    public enum AttributeType {
+    public enum FormatType : int {
         ///
         Byte = Silk.NET.Vulkan.Format.R8Sint,
         ///
@@ -104,6 +104,35 @@ namespace GAIL.Graphics
         ///
         Float4 = Silk.NET.Vulkan.Format.R32G32B32A32Sfloat, 
         ///
-        LongFloat4 = Silk.NET.Vulkan.Format.R64G64B64A64Sfloat, 
+        LongFloat4 = Silk.NET.Vulkan.Format.R64G64B64A64Sfloat,
+    }
+
+    /// <summary>
+    /// Represents a class that describes a format.
+    /// </summary>
+    public class FormatInfo {
+        /// <summary>
+        /// The type of the format (see: <see cref="FormatType"/>).
+        /// </summary>
+        public FormatType type;
+        /// <summary>
+        /// The size of the type.
+        /// </summary>
+        public uint size;
+        /// <summary>
+        /// Creates a new format info.
+        /// </summary>
+        /// <param name="type">The type of the format (see: <see cref="FormatType"/>).</param>
+        /// <param name="size">The size of the type.</param>
+        public FormatInfo(FormatType type, uint size) {
+            this.type = type;
+            this.size = size;
+        }
+        /// <summary>
+        /// Creates a new format info from a Vulkan type.
+        /// </summary>
+        /// <param name="type">The Vulkan type of the format.</param>
+        /// <param name="size">The size of the type.</param>
+        public FormatInfo(Silk.NET.Vulkan.Format type, uint size) : this((FormatType)type, size) { }
     }
 }

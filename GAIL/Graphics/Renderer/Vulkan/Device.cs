@@ -221,10 +221,10 @@ namespace GAIL.Graphics.Renderer.Vulkan
             PresentInfoKHR presentInfo = new() {
                 SType = StructureType.PresentInfoKhr,
 
-                WaitSemaphoreCount = 1,
+                WaitSemaphoreCount = Convert.ToUInt32(signals.LongLength),
                 PWaitSemaphores = Pointer<Silk.NET.Vulkan.Semaphore>.FromArray(ref signals),
 
-                SwapchainCount = 1,
+                SwapchainCount = Convert.ToUInt32(swapchains.LongLength),
                 PSwapchains = Pointer<SwapchainKHR>.FromArray(ref swapchains),
                 PImageIndices = Pointer<uint>.From(ref imageIndex)
             };

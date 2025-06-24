@@ -22,14 +22,15 @@ namespace GAIL.Graphics.Mesh
         public static Mesh FromObj(string path) { return Obj.Parse(path); }
 
         /// <summary>
-        /// (Face0-p1, Face0-p2, Face0-p3, Face1-p1, etc)
-        /// </summary>
-        public List<uint> indexFaces = [];
-
-        /// <summary>
         /// The vertices for the <see cref="indexFaces"/>.
         /// </summary>
-        public List<Vertex> vertices = [];
+        public Vertex[] vertices = [];
+
+        /// <summary>
+        /// (Face0-p1, Face0-p2, Face0-p3, Face1-p1, etc)
+        /// </summary>
+        public uint[] indexFaces = [];
+
 
         /// <summary>
         /// Creates an mesh from faces.
@@ -43,7 +44,7 @@ namespace GAIL.Graphics.Mesh
         /// </summary>
         /// <param name="vertices">The vertices for the indices.</param>
         /// <param name="indexFaces">The face indices.</param>
-        public Mesh(List<Vertex> vertices, List<uint> indexFaces) {
+        public Mesh(Vertex[] vertices, uint[] indexFaces) {
             this.vertices = vertices;
             this.indexFaces = indexFaces;
         }

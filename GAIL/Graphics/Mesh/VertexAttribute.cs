@@ -6,15 +6,15 @@ namespace GAIL.Graphics.Mesh
     /// </summary>
     public abstract class VertexAttribute : IEquatable<VertexAttribute> {
         /// <summary>
-        /// The type of this attribute.
+        /// The info of the format of this attribute.
         /// </summary>
-        public readonly AttributeType type;
+        public readonly FormatInfo info;
 
         /// <summary>
         /// Creates a new vertex attribute.
         /// </summary>
-        /// <param name="type">The type of the attribute.</param>
-        protected VertexAttribute(AttributeType type) { this.type = type; }
+        /// <param name="info">The info of the format of this attribute.</param>
+        protected VertexAttribute(FormatInfo info) { this.info = info; }
 
         /// <summary>
         /// Generates the data for this attribute.
@@ -28,7 +28,7 @@ namespace GAIL.Graphics.Mesh
 
             if (ReferenceEquals(this, other)) return true;
 
-            return type.Equals(other.type);
+            return info.Equals(other.info);
         }
 
         /// <inheritdoc/>
