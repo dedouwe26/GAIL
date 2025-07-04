@@ -21,6 +21,7 @@ namespace GAIL.Graphics.Renderer.Vulkan
                     throw new APIBackendException("Vulkan", "Failed at getting VK_KHR_surface extension.");
                 }
             }
+            return Extension;
         } }
         public readonly SurfaceKHR surface;
         private readonly Instance instance;

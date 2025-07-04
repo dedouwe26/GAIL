@@ -1,6 +1,5 @@
 using System.Collections.ObjectModel;
 using System.Numerics;
-using GAIL.Graphics.Material;
 
 namespace GAIL.Graphics.Mesh
 {
@@ -14,20 +13,27 @@ namespace GAIL.Graphics.Mesh
         /// <remarks>
         /// The index of an attribute is used for the location in the vertex shader.
         /// </remarks>
-        public List<VertexAttribute> Attributes { get; private set; }
+        public VertexAttribute[] attributes;
 
         /// <summary>
-        /// Creates a new vertex with a position of (0, 0, 0).
+        /// Creates an empty vertex.
         /// </summary>
         public Vertex() {
-            Attributes = [];
+            attributes = [];
+        }
+        /// <summary>
+        /// Creates an vertex with the following attributes.
+        /// </summary>
+        /// <param name="attributes">The attributes to add.</param>
+        public Vertex(VertexAttribute[] attributes) {
+            this.attributes = attributes;
         }
         /// <summary>
         /// Creates a new vertex with a <see cref="PositionAttribute"/> at location 0.
         /// </summary>
         /// <param name="position">The position to set.</param>
-        public Vertex(Vector3 position) : this() {
-            Attributes.Add(new PositionAttribute(position));
+        public Vertex(Vector3 position) {
+            attributes = [new PositionAttribute(position)];
         }
 
         /// <summary>
@@ -39,7 +45,7 @@ namespace GAIL.Graphics.Mesh
         public VertexAttribute[] Supply(ReadOnlyCollection<FormatInfo> requiredAttributes) {
             VertexAttribute[] result = new VertexAttribute[requiredAttributes.Count];
             int requiredIndex = 0;
-            foreach (VertexAttribute attribute in Attributes) {
+            foreach (VertexAttribute attribute in attributes) {
                 if (attribute.info.type == requiredAttributes[requiredIndex].type) {
                     result[requiredIndex] = attribute;
                     requiredIndex++;
@@ -59,7 +65,7 @@ namespace GAIL.Graphics.Mesh
 
             if (ReferenceEquals(this, other)) return true;
 
-            return Attributes.Equals(other.Attributes);
+            return attributes.SequenceEqual(other.attributes);
         }
 
         /// <inheritdoc/>
@@ -79,6 +85,6 @@ namespace GAIL.Graphics.Mesh
         }
 
         /// <inheritdoc/>
-        public override int GetHashCode() { return Attributes.GetHashCode(); }
+        public override int GetHashCode() { return attributes.GetHashCode(); }
     }
 }

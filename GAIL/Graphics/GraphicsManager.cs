@@ -2,7 +2,7 @@ using GAIL.Core;
 using GAIL.Graphics.Material;
 using GAIL.Graphics.Renderer;
 using GAIL.Graphics.Renderer.Layer;
-using GAIL.Graphics.Renderer.Vulkan;
+using GAIL.Graphics.Renderer.Vulkan.Layer;
 using LambdaKit.Assertion;
 using LambdaKit.Logging;
 
@@ -49,7 +49,7 @@ namespace GAIL.Graphics
         public void Initialize(Application.Globals globals, ref AppInfo appInfo, uint maxFramesInFlight = 2, Color? clearValue = null) {
             Logger.LogDebug("Initalizing Graphics.");
             
-            RendererSettings<IVulkanLayer> settings = new() {
+            RendererSettings<IVulkanLayer> settings = new() { // TODO: Vulkan-specific
                 MaxFramesInFlight = maxFramesInFlight,
                 ClearValue = clearValue ?? new Color(0, 0, 0, 0)
             };
@@ -74,21 +74,30 @@ namespace GAIL.Graphics
         /// </summary>
         /// <param name="settings">The default settings of the layer.</param>
         /// <returns>The created rasterization layer, if it succeeded in creating a rasterization layer.</returns>
+        /// <exception cref="NullReferenceException"/>
         public IRasterizationLayer CreateRasterizationLayer(RasterizationLayerSettings settings) {
             if (Renderer == null) {
                 Logger.LogError("Renderer is not initialized.");
-                return default;
+                throw new NullReferenceException("Renderer is not initialized.");
             }
             
-            return Renderer.CreateRasterizationLayer(settings);
+            return Renderer.CreateRasterizationLayer(settings) ?? throw new Exception("Failed to make a rasterization layer");
         }
-        public IShader CreateShader(byte[] vertexShader, byte[]? fragmentShader = null, byte[]? geometryShader = null) {
+        /// <summary>
+        /// Creates a shader.
+        /// </summary>
+        /// <param name="vertexShader">The vertex shader in SPIR-V byte code (per-vertex).</param>
+        /// <param name="fragmentShader">The fragment shader in SPIR-V byte code (per-vertex).</param>
+        /// <param name="geometryShader">The geometry shader in SPIR-V byte code.</param>
+        /// <returns>The created shader.</returns>
+        /// <exception cref="NullReferenceException"></exception>
+        public IShader CreateShader(FormatInfo[] requiredAttributes, FormatInfo[] requiredUniforms, byte[] vertexShader, byte[]? fragmentShader = null, byte[]? geometryShader = null) {
             if (Renderer == null) {
                 Logger.LogError("Renderer is not initialized.");
-                return default;
+                throw new NullReferenceException("Renderer is not initialized.");
             }
 
-            Assert.Throws(() => Renderer.CreateShader(vertexShader, fragmentShader, geometryShader))
+            return Renderer.CreateShader(requiredAttributes, requiredUniforms, vertexShader, fragmentShader, geometryShader) ?? throw new Exception("Failed to make a shader");
         }
 
 

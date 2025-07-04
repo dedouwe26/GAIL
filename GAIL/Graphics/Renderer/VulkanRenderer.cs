@@ -209,8 +209,13 @@ public class VulkanRenderer : IRenderer<IVulkanLayer> {
     }
     /// <inheritdoc/>
     /// <exception cref="APIBackendException"/>
-    public IShader CreateShader(byte[] vertexShader, byte[]? fragmentShader = null, byte[]? geometryShader = null) {
-
+    public IShader? CreateShader(FormatInfo[] requiredAttributes, FormatInfo[] requiredUniforms, byte[] vertexShader, byte[]? fragmentShader = null, byte[]? geometryShader = null) {
+        try {
+            return Shader.Create(this, requiredAttributes, requiredUniforms, vertexShader, fragmentShader, geometryShader);
+        } catch (APIBackendException) {
+            Logger.LogError("Failed to create a shader.");
+            return default;
+        }
     }
 
     /// <inheritdoc/>

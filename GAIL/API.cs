@@ -1,3 +1,4 @@
+using Silk.NET.Assimp;
 using Silk.NET.GLFW;
 using Silk.NET.OpenAL;
 using Silk.NET.Vulkan;
@@ -32,27 +33,33 @@ namespace GAIL {
         /// The Vulkan API.
         /// </summary>
         public static Vk Vk {get {return Instance.vk;}}
-        
+        /// <summary>
+        /// The Assimp API.
+        /// </summary>
+        public static Assimp Assimp {get {return Instance.assimp;}}
         private readonly Glfw glfw = Glfw.GetApi();
         private readonly AL al = AL.GetApi();
         private readonly ALContext alc = ALContext.GetApi();
         private readonly Vk vk = Vk.GetApi();
+        private readonly Assimp assimp = Assimp.GetApi();
 
-        /// <summary>Disposes all api's.</summary>
+        /// <summary>Disposes all API's.</summary>
         ~API() {
-            SubDispose();
+            Dispose(true);
         }
 
         /// <inheritdoc/>
         public void Dispose() {
-            SubDispose();
+            Dispose(true);
             GC.SuppressFinalize(this);
         }
-        private void SubDispose() {
-            vk.Dispose();
-            glfw.Dispose();
-            alc.Dispose();
-            al.Dispose();
+        private void Dispose(bool dispose = false) {
+            if (dispose) {
+                vk.Dispose();
+                glfw.Dispose();
+                alc.Dispose();
+                al.Dispose();
+            }
         }
     }
 

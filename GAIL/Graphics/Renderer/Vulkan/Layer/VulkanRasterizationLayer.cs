@@ -51,7 +51,7 @@ public class VulkanRasterizationLayerSettings : RasterizationLayerSettings<Vulka
     /// <inheritdoc/>
     public override List<Object> RenderList { get => base.RenderList; set {
         layer.UnloadObjects(); // TODO: FIXME: This is inefficient when a new object is added.
-        renderList = value;
+        renderList = value;    // NOTE: For the above: maybe use INotifyCollectionChanged.
         layer.LoadObjects(); 
     } }
 }
@@ -97,19 +97,19 @@ public class VulkanRasterizationLayer : IVulkanLayer, IRasterizationLayer {
         Pipeline = new(this);
     } }
 
-    private Renderable[] renderables = [];
+    private RenderSet[] renderSets = [];
     public void UnloadObjects() {
-        lock (renderables) {
-            foreach (Renderable renderable in renderables) {
-                renderable.Dispose();
+        lock (renderSets) {
+            foreach (RenderSet renderSet in renderSets) {
+                renderSet.Dispose();
             }
         }
     }
     public void LoadObjects() {
-        lock (renderables) {
-            renderables = new Renderable[settings.RenderList.Count];
+        lock (renderSets) {
+            renderSets = new RenderSet[settings.RenderList.Count];
             for (int i = 0; i < settings.RenderList.Count; i++) {
-                renderables[i] = new(this, settings.RenderList[i]);
+                renderSets[i] = new(this, settings.RenderList[i]);
             }
         }
     }
@@ -123,15 +123,15 @@ public class VulkanRasterizationLayer : IVulkanLayer, IRasterizationLayer {
     private void RecordCommands(Commands commands) {
         commands.BindPipeline(Pipeline);
 
-        lock (renderables) {
-            foreach (Renderable obj in renderables) {
-                Render(commands, obj);
+        lock (renderSets) {
+            foreach (RenderSet renderSet in renderSets) {
+                Render(commands, renderSet);
             }
         }
     }
-    private void Render(Commands commands, Renderable renderable) {
+    private void Render(Commands commands, RenderSet renderSet) {
         // obj.material.Apply(); // TODO: Uniforms // NOTE: Applying uniforms.
-        commands.BindVertexBuffer(renderable.vertexBuffer); // NOTE: Applying attributes.
+        commands.BindVertexBuffer(renderSet.vertexBuffer); // NOTE: Applying attributes.
         commands.Draw(vertexCount:3); // TODO: Temporary...
     }
 
@@ -139,6 +139,7 @@ public class VulkanRasterizationLayer : IVulkanLayer, IRasterizationLayer {
     public void Dispose() {
         if (IsDisposed) return;
 
+        UnloadObjects();
         Pipeline.Dispose();
 
         IsDisposed = true;

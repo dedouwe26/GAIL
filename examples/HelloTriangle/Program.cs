@@ -1,7 +1,11 @@
-﻿using GAIL.Graphics.Layer;
+﻿using GAIL.Graphics;
+using GAIL.Graphics.Layer;
+using GAIL.Graphics.Material;
+using GAIL.Graphics.Mesh;
 using GAIL.Input;
 using LambdaKit.Logging;
 using LambdaKit.Logging.Targets;
+using Object = GAIL.Graphics.Object;
 
 namespace examples.HelloTriangle
 {
@@ -15,24 +19,39 @@ namespace examples.HelloTriangle
             [ new TerminalTarget() ]
         );
 
-        public static void Main() {
+        public static IShader CreateShader() {
+            Logger.LogDebug("Making Shader.");
+            byte[] vertexByteCode = File.ReadAllBytes("../../../vert.spv");
+            byte[] fragmentByteCode = File.ReadAllBytes("../../../frag.spv");
+            return app!.GraphicsManager.CreateShader([], [], vertexByteCode, fragmentByteCode);
+        }
+        public static Object CreateObject() {
+            Mesh m = new(    // NOTE: TEMP.
+                [new Vertex([new UVAttribute(new(0, -.5f)), new NormalAttribute(new(1, 0, 0))]),
+                new ([new UVAttribute(new(.5f, .5f)), new NormalAttribute(new(0, 1, 0))]),
+                new ([new UVAttribute(new(-.5f, .5f)), new NormalAttribute(new(0, 0, 1))])]
+            );
+            return new Object(m, new EmptyMaterial());
+        }
+
+        public static void Main()
+        {
             Logger.LogDebug("Creating Application instance.");
 
             // Initializes the application.
-            app = new GAIL.Application(severity:Severity.Debug);
+            app = new GAIL.Application(severity: Severity.Debug);
 
             Logger.LogDebug("Applying listeners.");
 
             // Adds listeners to all events.
-            app.OnLoad+=Load;
-            app.OnUpdate+=Update;
-            app.OnStop+=Stop;
-            app.Initialize(windowSettings:("Hello Triangle", 1000, 600));
+            app.OnLoad += Load;
+            app.OnUpdate += Update;
+            app.OnStop += Stop;
+            app.Initialize(windowSettings: ("Hello Triangle", 1000, 600));
 
             Logger.LogDebug("Creating Layers.");
             // Creates the main layer.
-            mainLayer = new Layer2D();
-            mainLayer.Initialize(app.GraphicsManager.CreateRasterizationLayer(new())!);
+            mainLayer = Layer2D.Create(app.GraphicsManager, [CreateObject()], CreateShader());
 
             Logger.LogDebug("Starting Application.");
 

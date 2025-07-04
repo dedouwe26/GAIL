@@ -16,7 +16,7 @@ namespace GAIL.Core.File
         /// <param name="path">The path to the Obj file.</param>
         /// <returns>The parsed mesh.</returns>
         public static Mesh Parse(string path) {
-            throw new NotImplementedException();
+            return new Decoder().Parse(new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.None));
         }
     }
 }

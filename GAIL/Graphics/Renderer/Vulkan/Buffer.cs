@@ -74,11 +74,11 @@ public class Buffer : IDisposable {
     public unsafe void FreeMemory(DeviceMemory memory) {
         API.Vk.FreeMemory(device.logicalDevice, memory, Allocator.allocatorPtr);
     }
-    public unsafe bool MapMemory(DeviceMemory memory, ulong size, ref object[] data, ulong offset = 0, MemoryMapFlags flags = MemoryMapFlags.None) {
+    public unsafe bool MapMemory(DeviceMemory memory, ulong size, ref byte[] data, ulong offset = 0, MemoryMapFlags flags = MemoryMapFlags.None) {
         logger.LogDebug("Mapping memory...");
         void* rawData;
         if (!Utils.Check(API.Vk.MapMemory(device.logicalDevice, memory, offset, size, flags, &rawData), logger, "Failed to map memory")) return false;
-        data.AsSpan().CopyTo(new Span<object>(rawData, data.Length));
+        data.AsSpan().CopyTo(new Span<byte>(rawData, data.Length));
         API.Vk.UnmapMemory(device.logicalDevice, memory);
         return true;
     }

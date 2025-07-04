@@ -1,3 +1,5 @@
+using GAIL.Graphics.Mesh;
+
 namespace GAIL.Graphics;
 
 /// <summary>
@@ -5,7 +7,7 @@ namespace GAIL.Graphics;
 /// </summary>
 public class Object {
     /// <summary>
-    /// The mesh or shape of this object.
+    /// The baked vertices to render.
     /// </summary>
     public Mesh.Mesh mesh;
     /// <summary>

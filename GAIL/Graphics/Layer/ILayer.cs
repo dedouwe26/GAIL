@@ -5,15 +5,9 @@ namespace GAIL.Graphics.Layer;
 /// <summary>
 /// A front-end layer that is used for rendering.
 /// </summary>
-public interface ILayer<TBackend> : IDisposable where TBackend : IBackendLayer  {
-    /// <summary>
-    /// The back-end layer that this uses.
-    /// </summary>
-    public TBackend? BackendLayer { get; }
-    
-    /// <summary>
-    /// Initializes this front-end layer.
-    /// </summary>
-    /// <param name="backendLayer">The initalized back-end layers.</param>
-    public void Initialize(TBackend backendLayer);
+public interface ILayer : IDisposable {
+    // /// <summary>
+    // /// The back-end layer that this uses.
+    // /// </summary>
+    // public TBackend BackendLayer { get; }
 }

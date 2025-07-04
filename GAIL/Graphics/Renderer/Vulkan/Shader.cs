@@ -1,5 +1,4 @@
 using System.Collections.Immutable;
-using System.Collections.ObjectModel;
 using GAIL.Core;
 using GAIL.Graphics.Material;
 using LambdaKit.Logging;
@@ -10,9 +9,11 @@ namespace GAIL.Graphics.Renderer.Vulkan;
 
 /// <summary>
 /// Represents all the programmable shader stages in a default graphics pipeline.
+/// <para/>
+/// This is <b>Vulkan specific</b>, only use this when you are working with Vulkan. Use <see cref="IShader"/> instead.
 /// </summary>
 public class Shader : IShader {
-    public static Shader? CreateShader(VulkanRenderer renderer,
+    public static Shader? Create(VulkanRenderer renderer,
         IEnumerable<FormatInfo> requiredAttributes, IEnumerable<FormatInfo> requiredUniforms,
         byte[] vertex, byte[]? fragment = null, byte[]? geometry = null
     ) {

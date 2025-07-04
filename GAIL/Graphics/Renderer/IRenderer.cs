@@ -38,5 +38,5 @@ public interface IRenderer<TBackendLayer> : IDisposable where TBackendLayer : IB
     /// <param name="fragmentShader">The per-pixel shader (in SPIR-V compiled).</param>
     /// <param name="geometryShader">The geometry shader (in SPIR-V compiled).</param>
     /// <returns>The shader, if it could create a shader.</returns>
-    public IShader? CreateShader(byte[] vertexShader, byte[]? fragmentShader = null, byte[]? geometryShader = null);
+    public IShader? CreateShader(FormatInfo[] requiredAttributes, FormatInfo[] requiredUniforms, byte[] vertexShader, byte[]? fragmentShader = null, byte[]? geometryShader = null);
 }

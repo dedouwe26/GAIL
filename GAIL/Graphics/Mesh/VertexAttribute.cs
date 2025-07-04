@@ -47,6 +47,6 @@ namespace GAIL.Graphics.Mesh
             return !(left == right);
         }
         /// <inheritdoc/>
-        public override int GetHashCode() { return (int)type; }
+        public override int GetHashCode() { return info.GetHashCode(); }
     }
 }

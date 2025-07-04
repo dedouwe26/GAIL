@@ -1,3 +1,4 @@
+using GAIL.Graphics.Mesh;
 using GAIL.Graphics.Renderer.Vulkan.Layer;
 using Silk.NET.Vulkan;
 
@@ -5,8 +6,8 @@ namespace GAIL.Graphics.Renderer.Vulkan;
 
 public class VertexBuffer : Buffer {
     private readonly DeviceMemory memory;
-    public VertexBuffer(VulkanRasterizationLayer layer, Mesh.Mesh mesh) : base(
-        layer.Renderer, layer.settings.shader.GetAttributesSize() * (ulong)mesh.vertices.LongLength,
+    public VertexBuffer(VulkanRasterizationLayer layer, ref byte[] mesh) : base(
+        layer.Renderer, (ulong)mesh.LongLength,
         BufferUsageFlags.VertexBufferBit, SharingMode.Exclusive
     ) {
         DeviceMemory? memory = AllocateMemory();
@@ -15,8 +16,12 @@ public class VertexBuffer : Buffer {
             throw new Exception("Failed to allocate vertex buffer memory");
         }
         this.memory = memory.Value;
+
+        MapMemory(this.memory, (ulong)mesh.LongLength, ref mesh);
     }
-    public override void Dispose() {
+    /// <inheritdoc/>
+    public override void Dispose()
+    {
         if (IsDisposed) return;
         GC.SuppressFinalize(this);
         FreeMemory(memory);
