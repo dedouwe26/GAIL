@@ -3,18 +3,18 @@ using GAIL.Serializing.Streams;
 namespace GAIL.Serializing.Tests;
 
 public class TestReducer : IReducer, IEquatable<TestReducer> {
-    private static ReducerInfo? info;
+    private static IReducer.Info? info;
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
     [SerializingInfo]
-    public static ReducerInfo Info { get {
+    public static IReducer.Info Info { get {
         if (info == null) {
             info = IReducer.CreateInfo(()=>new TestReducer("", default, false));
         }
         return info;
     } }
-    public SerializableInfo[] Format => [StringSerializable.Info, IntSerializable.Info, BoolSerializable.Info];
+    public ISerializable.Info[] Format => [StringSerializable.Info, IntSerializable.Info, BoolSerializable.Info];
 
     public TestReducer(string name, int id, bool isAdmin) {
         this.name = name;

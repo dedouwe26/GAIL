@@ -87,7 +87,22 @@ public class Serializer : IDisposable {
                 WriteSerializable(serializable);
             }
         }
-        
+    }
+    /// <summary>
+    /// Writes a reducer to the stream.
+    /// </summary>
+    /// <param name="reducer">The reducer to write to the stream.</param>
+    /// <param name="formatter">The formatter used to encode the raw data.</param>
+    public virtual void WriteStreamReducer(IStreamReducer reducer, IFormatter? formatter = null) {
+        if (formatter != null) {
+            using Serializer serializer = new();
+            serializer.WriteStreamReducer(reducer, null);
+            byte[] raw = formatter.Encode((serializer.BaseStream as MemoryStream)!.ToArray());
+            WriteUInt((uint)raw.Length);
+            Write(raw);
+        } else {
+            reducer.Serialize(this);
+        }
     }
 
     /// <summary>

@@ -5,31 +5,31 @@ using System.Reflection;
 namespace GAIL.Serializing;
 
 /// <summary>
-/// Represents info for a serializable.
-/// </summary>
-/// <param name="FixedSize">The fixed size of the serializable.</param>
-/// <param name="Creator">The instance creator of the serializable.</param>
-public record SerializableInfo (uint? FixedSize, Func<byte[], ISerializable> Creator);
-
-/// <summary>
 /// Represents a class that can be turned into bytes and can be created from bytes.
 /// </summary>
 public interface ISerializable {
+    /// <summary>
+    /// Represents info for a serializable.
+    /// </summary>
+    /// <param name="FixedSize">The fixed size of the serializable.</param>
+    /// <param name="Creator">The instance creator of the serializable.</param>
+    public record Info (uint? FixedSize, Func<byte[], ISerializable> Creator);
+
     /// <summary>
     /// Tries to get the serializable info of a serializable.
     /// </summary>
     /// <param name="serializable">The serializable of which to get the info from.</param>
     /// <returns>The info, if it is found, of that serializable.</returns>
-    public static SerializableInfo? TryGetInfo(ISerializable serializable) {
+    public static Info? TryGetInfo(ISerializable serializable) {
         try {
             PropertyInfo[] infos = serializable.GetType().GetProperties(BindingFlags.Static | BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
 
             foreach (PropertyInfo info in infos) {
                 if (info.GetCustomAttribute<SerializingInfoAttribute>() is not null) {
-                    if (info.GetValue(serializable) is SerializableInfo s) {
+                    if (info.GetValue(serializable) is Info s) {
                         return s;
                     } else {
-                        throw new InvalidOperationException($"SerializableInfo property {info.Name} did not return a SerializableInfo.");
+                        throw new InvalidOperationException($"ISerializable property {info.Name} did not return a ISerializable.Info.");
                     }
                 }
             }
@@ -43,7 +43,7 @@ public interface ISerializable {
     /// </summary>
     /// <typeparam name="T">The serializable type of which to get the info from.</typeparam>
     /// <returns>The info, if it is found, of that serializable.</returns>
-    public static SerializableInfo? TryGetInfo<T>() where T : ISerializable, new() {
+    public static Info? TryGetInfo<T>() where T : ISerializable, new() {
         return TryGetInfo(new T());
     }
     
@@ -52,7 +52,7 @@ public interface ISerializable {
     /// </summary>
     /// <param name="creator">The creator that creates an empty instance.</param>
     /// <returns>A new serializable info.</returns>
-    public static SerializableInfo CreateInfo(Func<ISerializable> creator) {
+    public static Info CreateInfo(Func<ISerializable> creator) {
         return new (creator().FixedSize, raw => {
             ISerializable inst = creator();
             inst.Parse(raw);
@@ -64,13 +64,13 @@ public interface ISerializable {
     /// </summary>
     /// <typeparam name="T">The type of the serializable.</typeparam>
     /// <returns>A new serializable info.</returns>
-    public static SerializableInfo CreateInfo<T>() where T : ISerializable, new() {
+    public static Info CreateInfo<T>() where T : ISerializable, new() {
         return CreateInfo(() => new T());
     }
     // /// <summary>
     // /// The info of this serializable.
     // /// </summary>
-    // public SerializableInfo Info { get; }
+    // public ISerializable.Info Info { get; }
 
     /// <summary>
     /// Determines whether the return value of <see cref="Serialize"/> has a fixed length and if so what the length is (in bytes). Must always be the same.

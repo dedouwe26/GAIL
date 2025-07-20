@@ -1,4 +1,3 @@
-using System.Diagnostics.Contracts;
 using System.Reflection;
 using GAIL.Serializing.Streams;
 
@@ -6,22 +5,21 @@ namespace GAIL.Serializing;
 
 
 /// <summary>
-/// Represents a class that can be turned into serializables and can be created from serializables.
+/// Represents a class that can be turned into serializables and can be created from serializables using streams.
 /// </summary>
-public interface IReducer {
+public interface IStreamReducer {
     /// <summary>
-    /// Represents info for a reducer.
+    /// Represents info for a stream reducer.
     /// </summary>
-    /// <param name="Format">The format of the reducer.</param>
     /// <param name="Creator">The instance creator of the reducer.</param>
-    public record Info (ISerializable.Info[] Format, Func<ISerializable[], IReducer> Creator);
+    public record Info (Func<Parser, IStreamReducer> Creator);
 
     /// <summary>
     /// Tries to get the reducer info of a reducer.
     /// </summary>
     /// <param name="reducer">The reducer of which to get the info from.</param>
     /// <returns>The info, if it is found, of that reducer.</returns>
-    public static Info? TryGetInfo(IReducer reducer) {
+    public static Info? TryGetInfo(IStreamReducer reducer) {
         try {
             PropertyInfo[] infos = reducer.GetType().GetProperties(BindingFlags.Static | BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
 
@@ -30,7 +28,7 @@ public interface IReducer {
                     if (info.GetValue(reducer) is Info s) {
                         return s;
                     } else {
-                        throw new InvalidOperationException($"IReducer property {info.Name} did not return a IReducer.Info.");
+                        throw new InvalidOperationException($"IStreamReducer property {info.Name} did not return a IStreamReducer.Info.");
                     }
                 }
             }
@@ -44,7 +42,7 @@ public interface IReducer {
     /// </summary>
     /// <typeparam name="T">The reducer type of which to get the info from.</typeparam>
     /// <returns>The info, if it is found, of that reducer.</returns>
-    public static Info? TryGetInfo<T>() where T : IReducer, new() {
+    public static Info? TryGetInfo<T>() where T : IStreamReducer, new() {
         return TryGetInfo(new T());
     }
 
@@ -53,10 +51,10 @@ public interface IReducer {
     /// </summary>
     /// <param name="creator">The creator that creates an empty instance.</param>
     /// <returns>A new reducer info.</returns>
-    public static Info CreateInfo(Func<IReducer> creator) {
-        return new(creator().Format, serializables => {
-            IReducer inst = creator();
-            inst.Parse(serializables);
+    public static Info CreateInfo(Func<IStreamReducer> creator) {
+        return new(parser => {
+            IStreamReducer inst = creator();
+            inst.Parse(parser);
             return inst;
         });
     }
@@ -65,24 +63,18 @@ public interface IReducer {
     /// </summary>
     /// <typeparam name="T">The type of the reducer.</typeparam>
     /// <returns>A new reducer info.</returns>
-    public static Info CreateInfo<T>() where T : IReducer, new() {
+    public static Info CreateInfo<T>() where T : IStreamReducer, new() {
         return CreateInfo(() => new T());
     }
-    
-    
+
     /// <summary>
-    /// The serializables of which this reducer is made of.
+    /// Serializes this reducer into that serializer.
     /// </summary>
-    [Pure]
-    public ISerializable.Info[] Format { get; }
-    /// <summary>
-    /// Serializes this reducer into serializables.
-    /// </summary>
-    /// <returns></returns>
-    public ISerializable[] Serialize();
+    /// <param name="serializer">The serializer to write the data to.</param>
+    public void Serialize(Serializer serializer);
     /// <summary>
     /// Creates this reducer from serializables.
     /// </summary>
-    /// <param name="serializables">The serializables to parse the data from.</param>
-    public void Parse(ISerializable[] serializables);
+    /// <param name="parser">The parser to read the data from.</param>
+    public void Parse(Parser parser);
 }
