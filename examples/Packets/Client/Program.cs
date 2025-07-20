@@ -3,13 +3,12 @@ using examples.Packets.Shared;
 using GAIL.Networking;
 using GAIL.Networking.Client;
 using GAIL.Serializing;
-using LambdaKit.Logging;
 using LambdaKit.Terminal;
 
 namespace examples.Packets.Client;
 
 class Program {
-    public static async Task Main(string[] args) {
+    public static async Task Main() {
         // Registers all three packets.
         Shared.Packets.RegisterPackets();
 

@@ -35,7 +35,7 @@ public static class StorageRegister {
     /// </summary>
     /// <param name="member">The member to check.</param>
     /// <returns>True if the member is registered, otherwise false.</returns>
-    public static bool IsMemberRegistered(IMember member) {
+    public static bool IsMemberRegistered(IChildNode member) {
         if (member is Container) {
             return true;
         } else if (member is List) {

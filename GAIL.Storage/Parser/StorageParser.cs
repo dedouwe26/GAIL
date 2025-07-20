@@ -48,7 +48,7 @@ public class StorageParser : Serializing.Streams.Parser {
     /// <param name="key">The key of the list.</param>
     /// <returns>A new parsed list.</returns>
     protected virtual List ReadList(string key) {
-        List<IMember> children = ReadMembers(false);
+        List<IChildNode> children = ReadMembers(false);
 
         return new List(key, children);
     }
@@ -65,7 +65,7 @@ public class StorageParser : Serializing.Streams.Parser {
     /// </summary>
     /// <param name="hasKey">True if there is a key to read.</param>
     /// <returns>The new parsed member, null if it is an end.</returns>
-    public virtual IMember? ReadMember(bool hasKey = true) {
+    public virtual IChildNode? ReadMember(bool hasKey = true) {
         MemberType type = ReadType();
         if (type == MemberType.End) {
             return null;
@@ -89,8 +89,8 @@ public class StorageParser : Serializing.Streams.Parser {
     /// </summary>
     /// <param name="hasKey">If it should read keys.</param>
     /// <returns>A list of parsed members.</returns>
-    public virtual List<IMember> ReadMembers(bool hasKey = true) {
-        IMember? member;
+    public virtual List<IChildNode> ReadMembers(bool hasKey = true) {
+        IChildNode? member;
         try {
             member = ReadMember(hasKey);
         } catch (EndOfStreamException) {
@@ -125,7 +125,7 @@ public class StorageParser : Serializing.Streams.Parser {
     /// </summary>
     /// <returns>A dictionary containing the key and child.</returns>
     /// <param name="formatter">The formatter to use for decoding.</param>
-    public Dictionary<string, IMember> Parse(IFormatter? formatter = null) {
+    public Dictionary<string, IChildNode> Parse(IFormatter? formatter = null) {
         Decode(formatter);
 
         return ReadMembers().ToDictionary(static x => x.Key, static x => x);

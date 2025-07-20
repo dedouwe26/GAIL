@@ -1,15 +1,11 @@
-namespace GAIL.Storage.Members;
+namespace GAIL.Storage.Hierarchy;
 
 /// <summary>
-/// Represents any member of tree and storage file.
+/// Represents a child of a parent node.
 /// </summary>
-public interface IMember {
+public interface IChildNode {
     /// <summary>
-    /// The type of this member.
-    /// </summary>
-    public MemberType Type { get; }
-    /// <summary>
-    /// The key of this node (cannot contain a dot).
+    /// The key of this node.
     /// </summary>
     public string Key { get; }
     /// <summary>
@@ -18,13 +14,12 @@ public interface IMember {
     public IParentNode? Parent { get; }
 
     /// <summary>
-    /// Creates the total ID from the root (root.childnode.leafnode).
+    /// Gets the total ID from the root (root.childnode.leafnode).
     /// </summary>
-    /// <returns>The ID from the root.</returns>
-    public string GetID();
+    public string ID { get; }
 
     /// <summary>
-    /// Removes the parent.
+    /// Clears the parent of this node.
     /// </summary>
     public void ClearParent();
     /// <summary>

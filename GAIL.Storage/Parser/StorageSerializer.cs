@@ -50,7 +50,7 @@ public class StorageSerializer : Serializer {
     /// </summary>
     /// <param name="list">The list to serialize.</param>
     protected void WriteList(List list) {
-        WriteChildren([.. list.Members.Cast<IMember>()], false);
+        WriteChildren([.. list.Members.Cast<IChildNode>()], false);
         WriteByte((byte)MemberType.End);
     }
     /// <summary>
@@ -59,7 +59,7 @@ public class StorageSerializer : Serializer {
     /// <param name="member">The member to serialize.</param>
     /// <param name="hasKey">If the member has a key (no key in list).</param>
     /// <exception cref="InvalidOperationException">Field is not registered.</exception>
-    public void WriteMember(IMember member, bool hasKey = true) {
+    public void WriteMember(IChildNode member, bool hasKey = true) {
         if (!StorageRegister.IsMemberRegistered(member)) { throw new InvalidOperationException("Field is not registered"); }
 
         WriteType(member.Type);
@@ -80,9 +80,9 @@ public class StorageSerializer : Serializer {
     /// </summary>
     /// <param name="children">The children to write to the stream.</param>
     /// <param name="hasKey">True if it should serialize the keys from the <paramref name="children"/>.</param>
-    public void WriteChildren(List<IMember> children, bool hasKey = true) {
-        foreach (IMember child in children) {
-            if (child is IMember member) {
+    public void WriteChildren(List<IChildNode> children, bool hasKey = true) {
+        foreach (IChildNode child in children) {
+            if (child is IChildNode member) {
                 WriteMember(member, hasKey);
             }
         }
@@ -106,7 +106,7 @@ public class StorageSerializer : Serializer {
     /// </summary>
     /// <param name="children">The children to write to the stream.</param>
     /// <param name="formatter">The formatter to use for encoding.</param>
-    public void Serialize(ReadOnlyDictionary<string, IMember> children, IFormatter? formatter = null) {
+    public void Serialize(ReadOnlyDictionary<string, IChildNode> children, IFormatter? formatter = null) {
         WriteChildren([.. children.Values]);
         WriteType(MemberType.End);
 

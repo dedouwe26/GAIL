@@ -69,7 +69,7 @@ RandomNumberGenerator.Fill(iv);
     Terminal.WriteLine("ID: "+ID);
 
     List numbers = storage.Get<List>("numbers")!;
-    foreach (IMember member in numbers) {
+    foreach (IChildNode member in numbers) {
         Terminal.WriteLine(member.Type);
         if (member is IntField field) {
             Terminal.WriteLine(field.Value);

@@ -13,7 +13,7 @@ public record struct FieldInfo(uint? FixedSize, Func<byte[], string, Field> Crea
 /// <summary>
 /// Represents a field in a storage file.
 /// </summary>
-public abstract class Field : Member, IMember, ISerializable {
+public abstract class Field : Member, IChildNode, ISerializable {
     /// <summary>
     /// Creates a new field info.
     /// </summary>
