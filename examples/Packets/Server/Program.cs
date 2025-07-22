@@ -3,12 +3,12 @@ using examples.Packets.Shared;
 using GAIL.Networking;
 using GAIL.Networking.Server;
 using GAIL.Serializing;
-using OxDED.Terminal;
+using LambdaKit.Terminal;
 
 namespace examples.Packets.Server;
 
 class Program {
-    private static readonly string serverName = new StyleBuilder().Foreground(Color.Blue).Text("System").ResetForeground().ToString();
+    private static readonly string serverName = new StyleBuilder().Foreground((StandardColor)StandardColor.Colors.Blue).Text("System").ResetForeground().ToString();
     public static void Main() {
         // Registers all three packets.
         Shared.Packets.RegisterPackets();
@@ -32,7 +32,7 @@ class Program {
         };
 
         // Don't forget to start the server.
-        Terminal.WriteLine("Started listening...", new Style{ ForegroundColor = Color.Green});
+        Terminal.WriteLine("Started listening...", new Style{ ForegroundColor = (StandardColor)StandardColor.Colors.Green});
 
         // Starts listening (non-thread blocking).
         server.Start();

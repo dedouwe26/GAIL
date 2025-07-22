@@ -3,12 +3,12 @@ using examples.Packets.Shared;
 using GAIL.Networking;
 using GAIL.Networking.Client;
 using GAIL.Serializing;
-using OxDED.Terminal;
+using LambdaKit.Terminal;
 
 namespace examples.Packets.Client;
 
 class Program {
-    public static async Task Main(string[] args) {
+    public static async Task Main() {
         // Registers all three packets.
         Shared.Packets.RegisterPackets();
 
@@ -36,7 +36,7 @@ class Program {
         // Applies a formatter for all packets (note that this must be set on both the client and the server).
         // server.GlobalFormatter = new GZipFormatter();
 
-        // Don't forget to start the client.
+        // Don't forget to start the client!
         await client.StartAsync();
     }
 

@@ -41,7 +41,7 @@ public class NetworkSerializer : Serializer {
     public void WritePacket(Packet packet, IFormatter? formatter = null) {
         uint ID = NetworkRegister.GetPacketID(packet) ?? throw new InvalidOperationException($"{packet.GetType().Name} packet is not registered");
         WriteUInt(ID);
-        WriteReducer(packet, NetworkRegister.GetPacketFormatter(ID));
+        WriteStreamReducer(packet, NetworkRegister.GetPacketFormatter(ID));
         Encode(formatter);
     }
     /// <inheritdoc/>

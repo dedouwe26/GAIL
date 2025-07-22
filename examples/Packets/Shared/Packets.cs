@@ -1,6 +1,7 @@
 using GAIL.Networking;
 using GAIL.Serializing;
 using GAIL.Serializing.Formatters;
+using GAIL.Serializing.Streams;
 using LambdaKit.Logging;
 
 namespace examples.Packets.Shared;
@@ -47,19 +48,28 @@ public class NameMessagePacket : Packet {
 
     public string message = "";
     
-    // Some more fields, nothing special.
-    [PacketField]
-    private StringSerializable MessageField { get => new(message); set => message = value.Value; }
+    // [PacketField] // NOTE: You won't be needing this when you parse and serialize it yourself.
+    // private StringSerializable MessageField { get => new(message); set => message = value.Value; }
 
     public string name = "";
-    [PacketField]
-    private StringSerializable NameField { get => new(name); set => name = value.Value; }
+    // [PacketField]
+    // private StringSerializable NameField { get => new(name); set => name = value.Value; }
 
     [PacketConstructor]
     public NameMessagePacket() { }
     public NameMessagePacket(string name, string message) {
         this.name = name;
         this.message = message;
+    }
+
+    // You can also serialize and parse it yourself (that is why I commented the packet fields):
+    public override void Parse(Parser parser) {
+        message = parser.ReadString();
+        name = parser.ReadString();
+    }
+    public override void Serialize(Serializer serializer) {
+        serializer.WriteString(message);
+        serializer.WriteString(name);
     }
 }
 public class RegisterPacket : Packet {
