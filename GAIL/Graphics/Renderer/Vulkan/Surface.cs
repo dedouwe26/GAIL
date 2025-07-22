@@ -4,6 +4,7 @@ using LambdaKit.Logging;
 using Silk.NET.Core.Native;
 using Silk.NET.GLFW;
 using Silk.NET.Vulkan;
+using Silk.NET.Vulkan.Extensions.EXT;
 using Silk.NET.Vulkan.Extensions.KHR;
 
 namespace GAIL.Graphics.Renderer.Vulkan
@@ -16,12 +17,12 @@ namespace GAIL.Graphics.Renderer.Vulkan
         private KhrSurface? extension;
         public KhrSurface Extension { get {
             if (extension == null) {
-                    if (!API.Vk.TryGetInstanceExtension(instance, out extension)) {
+                if (!API.Vk.TryGetInstanceExtension(instance, out extension) || extension == null) {
                     Logger.LogFatal("Vulkan: Failed at getting Surface extension!");
                     throw new APIBackendException("Vulkan", "Failed at getting VK_KHR_surface extension.");
                 }
             }
-            return Extension;
+            return extension;
         } }
         public readonly SurfaceKHR surface;
         private readonly Instance instance;

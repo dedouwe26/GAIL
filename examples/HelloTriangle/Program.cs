@@ -5,6 +5,7 @@ using GAIL.Graphics.Mesh;
 using GAIL.Input;
 using LambdaKit.Logging;
 using LambdaKit.Logging.Targets;
+using Silk.NET.OpenAL;
 using Object = GAIL.Graphics.Object;
 
 namespace examples.HelloTriangle
@@ -21,9 +22,9 @@ namespace examples.HelloTriangle
 
         public static IShader CreateShader() {
             Logger.LogDebug("Making Shader.");
-            byte[] vertexByteCode = File.ReadAllBytes("../../../vert.spv");
-            byte[] fragmentByteCode = File.ReadAllBytes("../../../frag.spv");
-            return app!.GraphicsManager.CreateShader([], [], vertexByteCode, fragmentByteCode);
+            byte[] vertexByteCode = File.ReadAllBytes("examples/HelloTriangle/vert.spv");
+            byte[] fragmentByteCode = File.ReadAllBytes("examples/HelloTriangle/frag.spv");
+            return app!.GraphicsManager.CreateShader([new(FormatType.Float2, 2*sizeof(float)), new(FormatType.Float3, 3*sizeof(float))], [], vertexByteCode, fragmentByteCode);
         }
         public static Object CreateObject() {
             Mesh m = new(    // NOTE: TEMP.
@@ -34,9 +35,9 @@ namespace examples.HelloTriangle
             return new Object(m, new EmptyMaterial());
         }
 
-        public static void Main()
-        {
+        public static void Main() {
             Logger.LogDebug("Creating Application instance.");
+            Logger.HandleUnhandledExceptions = true;
 
             // Initializes the application.
             app = new GAIL.Application(severity: Severity.Debug);

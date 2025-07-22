@@ -54,7 +54,7 @@ namespace GAIL.Graphics
                 ClearValue = clearValue ?? new Color(0, 0, 0, 0)
             };
 
-            Renderer = new VulkanRenderer(Logger, globals, ref settings, ref appInfo);
+            Renderer = new VulkanRenderer(LoggerFactory.CreateSublogger(Logger, "Renderer", "renderer"), globals, ref settings, ref appInfo);
 
             IsDisposed = false;
 
@@ -86,6 +86,8 @@ namespace GAIL.Graphics
         /// <summary>
         /// Creates a shader.
         /// </summary>
+        /// <param name="requiredAttributes">The attributes required by the following vertex shader.</param>
+        /// <param name="requiredUniforms">The uniforms required by the following shaders.</param>
         /// <param name="vertexShader">The vertex shader in SPIR-V byte code (per-vertex).</param>
         /// <param name="fragmentShader">The fragment shader in SPIR-V byte code (per-vertex).</param>
         /// <param name="geometryShader">The geometry shader in SPIR-V byte code.</param>
@@ -94,7 +96,7 @@ namespace GAIL.Graphics
         public IShader CreateShader(FormatInfo[] requiredAttributes, FormatInfo[] requiredUniforms, byte[] vertexShader, byte[]? fragmentShader = null, byte[]? geometryShader = null) {
             if (Renderer == null) {
                 Logger.LogError("Renderer is not initialized.");
-                throw new NullReferenceException("Renderer is not initialized.");
+                throw new NullReferenceException("Renderer is not initialized");
             }
 
             return Renderer.CreateShader(requiredAttributes, requiredUniforms, vertexShader, fragmentShader, geometryShader) ?? throw new Exception("Failed to make a shader");

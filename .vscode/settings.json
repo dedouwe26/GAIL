@@ -1,7 +1,7 @@
 {
     "files.exclude": {
         "**/*.csproj": false,
-        // "**/bin/": true,
+        "**/bin/": true,
         "**/obj/": true,
         ".github/": true
     },

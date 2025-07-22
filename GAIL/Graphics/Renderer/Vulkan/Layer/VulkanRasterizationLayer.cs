@@ -1,3 +1,4 @@
+using GAIL.Core;
 using GAIL.Graphics.Material;
 using GAIL.Graphics.Renderer.Layer;
 using LambdaKit.Logging;
@@ -61,14 +62,18 @@ public class VulkanRasterizationLayerSettings : RasterizationLayerSettings<Vulka
 /// </summary>
 public class VulkanRasterizationLayer : IVulkanLayer, IRasterizationLayer {
     internal VulkanRasterizationLayer(VulkanRenderer renderer, uint index, RasterizationLayerSettings settings) {
-        Logger = renderer.Logger.CreateSubLogger("layer"+index, "Rasterization Layer");
+        Logger = LoggerFactory.CreateSublogger(renderer.Logger, "Layer "+index, "layer"+index);
         Renderer = renderer;
         Index = index;
         this.settings = new(this, settings);
-#if DEBUG
         Logger.LogDebug("Creating a Vulkan rasterization back-end layer.");
-#endif
-        Pipeline = new Pipeline(this);
+        try {
+            Pipeline = new Pipeline(this);
+        } catch (Exception e) {
+            Logger.LogFatal("Exception occured while initializing Vulkan renderer:");
+            Logger.LogException(e);
+            throw;
+        }
     }
     /// <summary>
     /// If the Vulkan rasterization layer is disposed.

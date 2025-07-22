@@ -1,4 +1,5 @@
 using GAIL.Audio;
+using GAIL.Core;
 using GAIL.Graphics;
 using GAIL.Input;
 using GAIL.Window;
@@ -79,39 +80,24 @@ namespace GAIL
         /// Creates a GAIL application.
         /// </summary>
         /// <param name="logger">The optional logger to use.</param>
-        /// <param name="severity">The severity to use if the logger isn't specified (defaults to Info).</param>
-        public Application(Logger? logger = null, Severity severity = Severity.Info) {  
+        /// <param name="severity">The severity to use if the logger isn't specified (defaults to Info or Trace in on debug compilation).</param>
+        public Application(Logger? logger = null, Severity? severity = null) {
             HasStopped = true;
             IsDisposed = true;
             
             globals = new() {
-                logger = logger ?? new Logger(name:"GAIL", severity:severity, targets:[new TerminalTarget()])
+                logger = logger ?? LoggerFactory.Create("GAIL", logger, severity)
             };
-            
-            int index = Logger.GetTargetIndex<TerminalTarget>();
-            if (index > -1) {
-                Logger.GetTarget<TerminalTarget>(index)!.Format =
-                    new StyleBuilder().Text("<{0}>: (")
-                    .Foreground((StandardColor)StandardColor.Colors.Blue).Text("{2}")
-                    .Reset().Text(")[{5}").Bold().Text("{3}").Bold(false)
-                    .Text("] : {5}{4}").Reset().ToString();
-                Logger.GetTarget<TerminalTarget>(index)!.NameFormat =  "{0} - {1}";
-            }
-            index = Logger.GetTargetIndex<FileTarget>();
-            if (index > -1) {
-                Logger.GetTarget<FileTarget>(index)!.Format = "<{0}>: ({2})[{3}] : {4}";
-                Logger.GetTarget<FileTarget>(index)!.NameFormat =  "{0} - {1}";
-            }
 
             globals.logger.LogDebug("Initializing all managers.");
 
-            globals.windowManager = new WindowManager(globals.logger.CreateSubLogger("Window", "Window", false, globals.logger.logLevel));
+            globals.windowManager = new WindowManager(LoggerFactory.CreateSublogger(Logger, "Window", "window"));
 
-            globals.inputManager = new InputManager(globals, globals.logger.CreateSubLogger("Input", "Input", false, globals.logger.logLevel));
+            globals.inputManager = new InputManager(globals, LoggerFactory.CreateSublogger(Logger, "Input", "input"));
 
-            globals.graphicsManager = new GraphicsManager(globals.logger.CreateSubLogger("Graphics", "Graphics", false, globals.logger.logLevel));
+            globals.graphicsManager = new GraphicsManager(LoggerFactory.CreateSublogger(Logger, "Graphics", "graphics"));
 
-            globals.audioManager = new AudioManager(globals.logger.CreateSubLogger("Audio", "Audio", false, globals.logger.logLevel));
+            globals.audioManager = new AudioManager(LoggerFactory.CreateSublogger(Logger, "Audio", "audio"));
         }
         /// <summary>
         /// Initializes the application after the settings have been applied.
@@ -213,7 +199,8 @@ namespace GAIL
         /// Stops the application (see: <see cref="Dispose"/>).
         /// </summary>
         public void Stop() {
-            Dispose(); // layer.settings: implement a correct way of stopping.
+            Dispose(); // TODO: layer.settings: implement a correct way of stopping.
+            // NOTE: Now it isn't startable.
         }
 
         /// <inheritdoc/>

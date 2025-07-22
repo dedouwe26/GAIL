@@ -16,7 +16,7 @@ namespace GAIL.Graphics.Renderer.Vulkan
         /// If this class is already disposed.
         /// </summary>
         public bool IsDisposed { get; private set; }
-        public bool AreFramebuffersDisposed { get; private set; }
+        public bool AreFramebuffersDisposed { get; private set; } = true;
         private KhrSwapchain? extension;
         public KhrSwapchain Extension { get {
             if (extension == null) {

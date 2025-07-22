@@ -116,23 +116,29 @@ public class VulkanRenderer : IRenderer<IVulkanLayer> {
 
         Logger = logger;
         if (!API.Glfw.VulkanSupported()) {
-            Logger.LogFatal("Vulkan: Not Supported!");
+            Logger.LogError("Vulkan: Not Supported!");
             throw new APIBackendException("Vulkan", "Not Supported");
         }
 
         Logger.LogDebug("Initializing Vulkan");
 
-        instance = new Instance(this, ref appInfo);
-        surface = new Surface(this, globals.windowManager);
-        device = new Device(this);
-        Swapchain = new SwapChain(this, globals.windowManager);
+        try {
+            instance = new Instance(this, ref appInfo);
+            surface = new Surface(this, globals.windowManager);
+            device = new Device(this);
+            Swapchain = new SwapChain(this, globals.windowManager);
 
-        RenderPass = new RenderPass(this);
-        Swapchain.CreateFramebuffers(RenderPass);
-        Commands = new Commands(this);
-        Syncronization = new Syncronization(this);
+            RenderPass = new RenderPass(this);
+            Swapchain.CreateFramebuffers(RenderPass);
+            Commands = new Commands(this);
+            Syncronization = new Syncronization(this);
+        } catch (Exception e) { // TODO: Better exception handling
+            Logger.LogFatal("Exception occured while initializing Vulkan renderer:");
+            Logger.LogException(e);
+            throw;
+        }
 
-        Logger.LogDebug("Done setting up Vulkan.");
+        Logger.LogDebug("Done setting up the Renderer.");
     }
     /// <inheritdoc/>
     public void Render() {

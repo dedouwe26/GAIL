@@ -48,7 +48,7 @@ public class Pipeline : IDisposable {
             ScissorCount = 1,
             PScissors = Pointer<Rect2D>.From(ref scissor),
 
-            ViewportCount = 1,
+            ViewportCount = 0,
             PViewports = Pointer<Viewport>.FromNull()
         };
 
@@ -166,10 +166,10 @@ public class Pipeline : IDisposable {
             BasePipelineIndex = -1 // NOTE: Can make pipeline derive from another, to make creating another one less expensive.
         };
 
-        layer.Renderer.Logger.LogDebug("Creating Graphics Pipeline.");
+        layer.Logger.LogDebug("Creating Graphics Pipeline.");
 
-        unsafe {
-            if (!Utils.Check(API.Vk.CreateGraphicsPipelines(device.logicalDevice, default, 1, in createInfo, Allocator.allocatorPtr, out graphicsPipeline), layer.Renderer.Logger, "Failed to create graphics pipeline", false)) {
+        unsafe { // FIXME: AccessViolationException...
+            if (!Utils.Check(API.Vk.CreateGraphicsPipelines(device.logicalDevice, default, 1, in createInfo, Allocator.allocatorPtr, out graphicsPipeline), layer.Logger, "Failed to create graphics pipeline", false)) {
                 throw new APIBackendException("Vulkan", "Failed to create graphics pipeline");
             }
         }
