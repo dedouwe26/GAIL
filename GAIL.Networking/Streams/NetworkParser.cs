@@ -65,7 +65,7 @@ public class NetworkParser : Serializing.Streams.Parser {
         Decode(formatter);
         uint packetID = ReadUInt();
         
-        ISerializable.Info[] format = NetworkRegister.GetPacketFormat(packetID);
+        IRawSerializable.Info[] format = NetworkRegister.GetPacketFormat(packetID);
 
         Packet packet = (Packet)ReadStreamReducer(
             new((parser)=>NetworkRegister.CreatePacket(packetID, parser)),

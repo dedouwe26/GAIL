@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using GAIL.Serializing;
 using GAIL.Serializing.Formatters;
 using GAIL.Serializing.Streams;
+using GAIL.Storage.Hierarchy;
 using GAIL.Storage.Members;
 
 namespace GAIL.Storage.Parser;
@@ -24,34 +25,25 @@ public class StorageSerializer : Serializer {
     /// </summary>
     public StorageSerializer(bool shouldCloseStream = true) : base(shouldCloseStream) { OutStream = new MemoryStream(); }
     /// <summary>
-    /// Writes a member type to the stream.
-    /// </summary>
-    /// <param name="type">The type to write.</param>
-    protected void WriteType(MemberType type) {
-        WriteByte(StorageRegister.GetTypeID(type));
-    }
-    /// <summary>
     /// Writes a container to the stream.
     /// </summary>
     /// <param name="container">The container to serialize.</param>
-    protected void WriteContainer(Container container) {
+    public void WriteContainer(Container container) {
         WriteChildren([.. container.Children.Values]);
-        WriteByte((byte)MemberType.End);
     }
     /// <summary>
     /// Writes a field to the stream.
     /// </summary>
     /// <param name="field">The field to serialize.</param>
-    protected void WriteField(Field field) {
+    public void WriteField(IField field) {
         WriteSerializable(field);
     }
     /// <summary>
     /// Writes a list to the stream.
     /// </summary>
     /// <param name="list">The list to serialize.</param>
-    protected void WriteList(List list) {
+    public void WriteList(List list) {
         WriteChildren([.. list.Members.Cast<IChildNode>()], false);
-        WriteByte((byte)MemberType.End);
     }
     /// <summary>
     /// Writes a member to the stream.
@@ -60,19 +52,16 @@ public class StorageSerializer : Serializer {
     /// <param name="hasKey">If the member has a key (no key in list).</param>
     /// <exception cref="InvalidOperationException">Field is not registered.</exception>
     public void WriteMember(IChildNode member, bool hasKey = true) {
-        if (!StorageRegister.IsMemberRegistered(member)) { throw new InvalidOperationException("Field is not registered"); }
-
-        WriteType(member.Type);
         if (hasKey) {
             WriteString(member.Key);
         }
 
-        if (member is Field subField) {
-            WriteField(subField);
-        } else if (member is Container subContainer) {
-            WriteContainer(subContainer);
-        } else if (member is List subList) {
-            WriteList(subList);
+        if (member is IField field) {
+            WriteField(field);
+        } else if (member is Container container) {
+            WriteContainer(container);
+        } else if (member is List list) {
+            WriteList(list);
         }
     }
     /// <summary>

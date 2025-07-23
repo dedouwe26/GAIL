@@ -2,19 +2,19 @@ using GAIL.Serializing.Streams;
 
 namespace GAIL.Serializing.Tests;
 
-public class TestReducer : IReducer, IEquatable<TestReducer> {
-    private static IReducer.Info? info;
+public class TestReducer : IRawReducer, IEquatable<TestReducer> {
+    private static IRawReducer.Info? info;
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
     [SerializingInfo]
-    public static IReducer.Info Info { get {
+    public static IRawReducer.Info Info { get {
         if (info == null) {
-            info = IReducer.CreateInfo(()=>new TestReducer("", default, false));
+            info = IRawReducer.CreateInfo(()=>new TestReducer("", default, false));
         }
         return info;
     } }
-    public ISerializable.Info[] Format => [StringSerializable.Info, IntSerializable.Info, BoolSerializable.Info];
+    public IRawSerializable.Info[] Format => [StringSerializable.Info, IntSerializable.Info, BoolSerializable.Info];
 
     public TestReducer(string name, int id, bool isAdmin) {
         this.name = name;
@@ -25,13 +25,13 @@ public class TestReducer : IReducer, IEquatable<TestReducer> {
     public int id;
     public bool isAdmin;
 
-    public void Parse(ISerializable[] serializables) {
+    public void Parse(IRawSerializable[] serializables) {
         name = (serializables[0] as StringSerializable)!.Value;
         id = (serializables[1] as IntSerializable)!.Value;
         isAdmin = (serializables[2] as BoolSerializable)!.B1;
     }
 
-    public ISerializable[] Serialize() {
+    public IRawSerializable[] Serialize() {
         return [new StringSerializable(name), new IntSerializable(id), new BoolSerializable(isAdmin)];
     }
 

@@ -74,18 +74,36 @@ public class Parser : IDisposable {
     }
 
     /// <summary>
+    /// Decodes the data given.
+    /// </summary>
+    /// <param name="consumer">The consumer that reads the data that needs decoding.</param>
+    /// <param name="formatter">The formatter used for decoding.</param>
+    public virtual void Decode(Action<Parser> consumer, IFormatter formatter) {
+        using Parser parser = new(Read(null, formatter));
+        consumer(parser);
+    }
+    
+    /// <summary>
     /// Reads a serializable from the stream.
     /// </summary>
     /// <param name="info">The info of the serializable on how to create and read the serializable.</param>
     /// <param name="formatter">The formatter used to decode the raw data.</param>
     /// <returns>The parsed serializable.</returns>
     public virtual ISerializable ReadSerializable(ISerializable.Info info, IFormatter? formatter = null) {
-        byte[] raw = Read(info.FixedSize, formatter);
-
-        return info.Creator(raw);
+        return info.Creator(this, formatter);
     }
     /// <summary>
     /// Reads a serializable from the stream.
+    /// </summary>
+    /// <typeparam name="T">The type of the serializable to read.</typeparam>
+    /// <param name="info">The info of the serializable on how to create and read the serializable.</param>
+    /// <param name="formatter">The formatter used to decode the raw data.</param>
+    /// <returns>The parsed serializable.</returns>
+    public virtual T ReadSerializable<T>(ISerializable.Info<T> info, IFormatter? formatter = null) where T : ISerializable {
+        return info.TypedCreator(this, formatter);
+    }
+    /// <summary>
+    /// Reads a serializable from the stream and explicitly casts it into <typeparamref name="T"/>.
     /// </summary>
     /// <typeparam name="T">The type of the serializable.</typeparam>
     /// <param name="info">The info of the serializable on how to create and read the serializable.</param>
@@ -100,78 +118,13 @@ public class Parser : IDisposable {
     }
 
     /// <summary>
-    /// Reads a reducer from the stream.
-    /// </summary>
-    /// <param name="info">The info of the reducer on how to create and read the reducer.</param>
-    /// <param name="formatter">The formatter used to decode the raw data.</param>
-    /// <returns>The reducer serializable.</returns>
-    public virtual IReducer ReadReducer(IReducer.Info info, IFormatter? formatter = null) {
-        if (info.Format.Length < 1) return info.Creator([]);
-
-        if (formatter != null) {
-            uint size = ReadUInt();
-            using Parser parser = new(formatter.Decode(Read(size)));
-            return parser.ReadReducer(info, null);
-        } else {
-            ISerializable[] serializables = new ISerializable[info.Format.Length];
-            for (int i = 0; i < info.Format.Length; i++) {
-                serializables[i] = ReadSerializable(info.Format[i], formatter);
-            }
-            return info.Creator(serializables);
-        }
-    }
-    /// <summary>
-    /// Reads a reducer from the stream.
-    /// </summary>
-    /// <typeparam name="T">The type of the reducer.</typeparam>
-    /// <param name="info">The info of the reducer on how to create and read the reducer.</param>
-    /// <param name="formatter">The formatter used to decode the raw data.</param>
-    /// <returns>The parsed reducer.</returns>
-    /// <exception cref="InvalidCastException">The reducer is not of type T.</exception>
-    public virtual T ReadReducer<T>(IReducer.Info info, IFormatter? formatter = null) where T : IReducer {
-        if (ReadReducer(info, formatter) is T reducer) {
-            return reducer;
-        }
-        throw new InvalidCastException("The reducer is not of type T");
-    }
-    /// <summary>
-    /// Reads a reducer from the stream.
-    /// </summary>
-    /// <param name="info">The info of the reducer on how to create and read the reducer.</param>
-    /// <param name="formatter">The formatter used to decode the raw data.</param>
-    /// <returns>The reducer serializable.</returns>
-    public virtual IStreamReducer ReadStreamReducer(IStreamReducer.Info info, IFormatter? formatter = null) {
-        if (formatter != null) {
-            uint size = ReadUInt();
-            using Parser parser = new(formatter.Decode(Read(size)));
-            return parser.ReadStreamReducer(info, null);
-        } else {
-            return info.Creator.Invoke(this);
-        }
-    }
-    /// <summary>
-    /// Reads a reducer from the stream.
-    /// </summary>
-    /// <typeparam name="T">The type of the reducer.</typeparam>
-    /// <param name="info">The info of the reducer on how to create and read the reducer.</param>
-    /// <param name="formatter">The formatter used to decode the raw data.</param>
-    /// <returns>The parsed reducer.</returns>
-    /// <exception cref="InvalidCastException">The reducer is not of type T.</exception>
-    public virtual T ReadStreamReducer<T>(IStreamReducer.Info info, IFormatter? formatter = null) where T : IStreamReducer {
-        if (ReadStreamReducer(info, formatter) is T reducer) {
-            return reducer;
-        }
-        throw new InvalidCastException("The reducer is not of type T");
-    }
-
-    /// <summary>
     /// Reads an unsigned integer from the stream.
     /// </summary>
     /// <param name="formatter">The formatter used to decode the raw data.</param>
     /// <returns>The parsed unsigned integer.</returns>
     /// <exception cref="InvalidCastException">The serializable is not an unsigned integer.</exception>
     public virtual uint ReadUInt(IFormatter? formatter = null) {
-        return ReadSerializable<UIntSerializable>(UIntSerializable.Info, formatter).Value;
+        return ReadSerializable(UIntSerializable.Info, formatter).Value;
     }
     /// <summary>
     /// Reads an integer from the stream.
@@ -180,7 +133,7 @@ public class Parser : IDisposable {
     /// <returns>The parsed integer.</returns>
     /// <exception cref="InvalidCastException">The serializable is not an integer.</exception>
     public virtual int ReadInt(IFormatter? formatter = null) {
-        return ReadSerializable<IntSerializable>(IntSerializable.Info, formatter).Value;
+        return ReadSerializable(IntSerializable.Info, formatter).Value;
     }
     /// <summary>
     /// Reads a byte from the stream.
@@ -189,7 +142,7 @@ public class Parser : IDisposable {
     /// <returns>The parsed byte.</returns>
     /// <exception cref="InvalidCastException">The serializable is not a byte.</exception>
     public virtual byte ReadByte(IFormatter? formatter = null) {
-        return ReadSerializable<ByteSerializable>(ByteSerializable.Info, formatter).Value;
+        return ReadSerializable(ByteSerializable.Info, formatter).Value;
     }
     /// <summary>
     /// Reads an UTF-8 string from the stream.
@@ -198,7 +151,7 @@ public class Parser : IDisposable {
     /// <returns>The parsed string.</returns> 
     /// <exception cref="InvalidCastException">The serializable is not a string.</exception>
     public virtual string ReadString(IFormatter? formatter = null) {
-        return ReadSerializable<StringSerializable>(StringSerializable.Info, formatter).Value;
+        return ReadSerializable(StringSerializable.Info, formatter).Value;
     }
 
     /// <inheritdoc/>

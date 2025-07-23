@@ -8,13 +8,13 @@ namespace GAIL.Networking;
 /// <summary>
 /// Packet is an abstract class for parsing and formatting a packet.
 /// </summary>
-public abstract class Packet : IStreamReducer {
+public abstract class Packet : IReducer {
     /// <summary>
     /// Describes a field in a packet.
     /// </summary>
     /// <param name="Property">The property of the field.</param>
     /// <param name="Info">The serializable info of the field.</param>
-    public record class FieldInfo(PropertyInfo Property, ISerializable.Info Info);
+    public record class FieldInfo(PropertyInfo Property, IRawSerializable.Info Info);
     /// <summary>
     /// Describes a packet.
     /// </summary>
@@ -35,13 +35,13 @@ public abstract class Packet : IStreamReducer {
             foreach (PropertyInfo property in properties) {
                 PacketFieldAttribute? attribute = property.GetCustomAttribute<PacketFieldAttribute>();
                 if (attribute != null) {
-                    if (!typeof(ISerializable).IsAssignableFrom(property.PropertyType)) {
+                    if (!typeof(IRawSerializable).IsAssignableFrom(property.PropertyType)) {
                         throw new ArgumentException($"Property {property.Name} in {property.ReflectedType?.Name ?? "packet"} is not a serializable");
                     }
-                    ISerializable? serializable = property.GetValue(instance) as ISerializable
+                    IRawSerializable? serializable = property.GetValue(instance) as IRawSerializable
                         ?? throw new ArgumentException($"Property {property.Name} in {property.ReflectedType?.Name ?? "packet"} is not a serializable");
 
-                    f.Add(new FieldInfo(property, ISerializable.TryGetInfo(serializable) ?? throw new InvalidOperationException($"Serializable of packet field {property.Name} in {property.ReflectedType?.Name ?? "packet"} does not have a serializable info")));
+                    f.Add(new FieldInfo(property, IRawSerializable.TryGetInfo(serializable) ?? throw new InvalidOperationException($"Serializable of packet field {property.Name} in {property.ReflectedType?.Name ?? "packet"} does not have a serializable info")));
                 }
             }
             return [.. f];
@@ -89,11 +89,11 @@ public abstract class Packet : IStreamReducer {
             fullyQualifiedName = type.AssemblyQualifiedName!;
         }
 
-        private ISerializable.Info[]? format;
+        private IRawSerializable.Info[]? format;
         /// <summary>
         /// The format of this packet.
         /// </summary>
-        public ISerializable.Info[] Format { get {
+        public IRawSerializable.Info[] Format { get {
             format ??= [.. fields.Select(f => f.Info)];
             return format;
         } }
@@ -118,12 +118,12 @@ public abstract class Packet : IStreamReducer {
         packetInfo ??= new(this);
         return packetInfo;
     } }
-    private readonly IStreamReducer.Info reducerInfo;
+    private readonly IReducer.Info reducerInfo;
     /// <summary>
     /// The info of the underlying reducer.
     /// </summary>
     [SerializingInfo]
-    public IStreamReducer.Info ReducerInfo => reducerInfo;
+    public IReducer.Info ReducerInfo => reducerInfo;
 
     /// <summary>
     /// The formatter used for encoding / decoding this packet.
@@ -165,7 +165,7 @@ public abstract class Packet : IStreamReducer {
             } catch (Exception e) {
                 throw new InvalidOperationException($"Failed at getting field {field.Property.Name} in packet ({PacketInfo.fullyQualifiedName})", e);
             }
-            if (gainedValue is not ISerializable serializable) {
+            if (gainedValue is not IRawSerializable serializable) {
                 throw new InvalidOperationException($"Field {field.Property.Name} in {PacketInfo.fullyQualifiedName} is not a serializable");
             }
 

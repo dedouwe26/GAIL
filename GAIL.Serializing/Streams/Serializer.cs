@@ -53,56 +53,24 @@ public class Serializer : IDisposable {
     }
 
     /// <summary>
+    /// Encodes the data given.
+    /// </summary>
+    /// <param name="consumer">The consumer that writes the data that needs encoding.</param>
+    /// <param name="formatter">The formatter used for encoding.</param>
+    public virtual void Encode(Action<Serializer> consumer, IFormatter formatter) {
+        using Serializer serializer = new();
+        consumer(serializer);
+        Write((serializer.BaseStream as MemoryStream)!.ToArray(), formatter);
+    }
+
+    /// <summary>
     /// Writes a serializable to the stream.
     /// </summary>
     /// <param name="serializable">The serializable to write to the stream.</param>
     /// <param name="formatter">The formatter used to encode the raw data.</param>
     /// <exception cref="InvalidOperationException">Fixed size doesn't match the actual size.</exception>
     public virtual void WriteSerializable(ISerializable serializable, IFormatter? formatter = null) {
-        byte[] raw = serializable.Serialize();
-
-        if (serializable.FixedSize == null && formatter == null) {
-            WriteUInt((uint)raw.Length, null); // NOTE: No formatter, because that could make it longer than 4 bytes.
-        } else if (raw.Length != serializable.FixedSize && serializable.FixedSize != null) {
-            throw new InvalidOperationException("Fixed size doesn't match the actual size");
-        }
-        Write(raw, formatter);
-    }
-    /// <summary>
-    /// Writes a reducer to the stream.
-    /// </summary>
-    /// <param name="reducer">The reducer to write to the stream.</param>
-    /// <param name="formatter">The formatter used to encode the raw data.</param>
-    public virtual void WriteReducer(IReducer reducer, IFormatter? formatter = null) {
-        if (reducer.Format.Length < 1) return;
-
-        if (formatter != null) {
-            using Serializer serializer = new();
-            serializer.WriteReducer(reducer, null);
-            byte[] raw = formatter.Encode((serializer.BaseStream as MemoryStream)!.ToArray());
-            WriteUInt((uint)raw.Length);
-            Write(raw);
-        } else {
-            foreach (ISerializable serializable in reducer.Serialize()) {
-                WriteSerializable(serializable);
-            }
-        }
-    }
-    /// <summary>
-    /// Writes a reducer to the stream.
-    /// </summary>
-    /// <param name="reducer">The reducer to write to the stream.</param>
-    /// <param name="formatter">The formatter used to encode the raw data.</param>
-    public virtual void WriteStreamReducer(IStreamReducer reducer, IFormatter? formatter = null) {
-        if (formatter != null) {
-            using Serializer serializer = new();
-            serializer.WriteStreamReducer(reducer, null);
-            byte[] raw = formatter.Encode((serializer.BaseStream as MemoryStream)!.ToArray());
-            WriteUInt((uint)raw.Length);
-            Write(raw);
-        } else {
-            reducer.Serialize(this);
-        }
+        serializable.Serialize(this, formatter);
     }
 
     /// <summary>
@@ -144,13 +112,12 @@ public class Serializer : IDisposable {
     /// </remarks>
     public virtual void Dispose() {
         if (Disposed) { return; }
+        GC.SuppressFinalize(this);
 
         Disposed = true;
 
         if (!ShouldCloseStream) { return; }
 
         BaseStream.Close();
-        
-        GC.SuppressFinalize(this);
     }
 }

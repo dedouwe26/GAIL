@@ -7,45 +7,44 @@ namespace GAIL.Serializing;
 
 
 /// <summary>
-/// Represents a class that can be turned into serializables and can be created from serializables using streams.
+/// Represents a class that can be turned into raw serializables and can be created from serializables.
 /// </summary>
-public interface IReducer : ISerializable {
+public interface IRawReducer : ISerializable {
     /// <summary>
-    /// The serializables of which this reducer is made of.
+    /// The raw serializables of which this raw reducer is made of.
     /// </summary>
     [Pure]
     public Info[] Format { get; }
     /// <summary>
-    /// Serializes this reducer into serializables.
+    /// Serializes this reducer into raw serializables.
     /// </summary>
     /// <returns>The serialized reducer.</returns>
-    public ISerializable[] Serialize();
+    public IRawSerializable[] Serialize();
     /// <summary>
-    /// Creates this reducer from serializables.
+    /// Creates this reducer from raw serializables.
     /// </summary>
-    /// <param name="serializables">The serializables to parse the data from.</param>
-    public void Parse(ISerializable[] serializables);
+    /// <param name="serializables">The raw serializables to parse the data from.</param>
+    public void Parse(IRawSerializable[] serializables);
 }
-
 /// <summary>
-/// A default implementation of a reducer.
+/// A default implementation of a raw reducer.
 /// </summary>
-public abstract class Reducer : IReducer {
+public abstract class RawReducer : IRawReducer {
     /// <summary>
-    /// The serializables of which this reducer is made of.
+    /// The raw serializables of which this raw reducer is made of.
     /// </summary>
     [Pure]
     public abstract ISerializable.Info[] Format { get; }
     /// <summary>
-    /// Serializes this reducer into serializables.
+    /// Serializes this reducer into raw serializables.
     /// </summary>
     /// <returns>The serialized reducer.</returns>
-    public abstract ISerializable[] Serialize();
+    public abstract IRawSerializable[] Serialize();
     /// <summary>
-    /// Creates this reducer from serializables.
+    /// Creates this reducer from raw serializables.
     /// </summary>
-    /// <param name="serializables">The serializables to parse the data from.</param>
-    public abstract void Parse(ISerializable[] serializables);
+    /// <param name="serializables">The raw serializables to parse the data from.</param>
+    public abstract void Parse(IRawSerializable[] serializables);
 
     /// <inheritdoc/>
     public void Serialize(Serializer serializer, IFormatter? formatter = null) {
@@ -56,12 +55,11 @@ public abstract class Reducer : IReducer {
                 Serialize(s, null);
             }, formatter);
         } else {
-            foreach (ISerializable serializable in Serialize()) {
+            foreach (IRawSerializable serializable in Serialize()) {
                 serializer.WriteSerializable(serializable);
             }
         }
     }
-
     /// <inheritdoc/>
     public void Parse(Parser parser, IFormatter? formatter = null) {
         if (Format.Length < 1) {
@@ -74,10 +72,13 @@ public abstract class Reducer : IReducer {
                 Parse(p, null);
             }, formatter);
         } else {
-            ISerializable[] serializables = new ISerializable[Format.Length];
+            IRawSerializable[] serializables = new IRawSerializable[Format.Length];
             for (int i = 0; i < Format.Length; i++) {
-                ISerializable.Info info = Format[i];
-                serializables[i] = parser.ReadSerializable(Format[i]);
+                try {
+                    serializables[i] = parser.ReadSerializable<IRawSerializable>(Format[i], null);
+                } catch (InvalidCastException e) {
+                    throw new InvalidDataException("The format of an raw reducer doesn't only contain raw serializables", e);
+                }
             }
             Parse(serializables);
         }

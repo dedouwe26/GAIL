@@ -1,4 +1,5 @@
 using System.Collections;
+using GAIL.Storage.Hierarchy;
 using GAIL.Storage.Parser;
 
 namespace GAIL.Storage.Members;
@@ -6,7 +7,7 @@ namespace GAIL.Storage.Members;
 /// <summary>
 /// A list can contain more members without keys.
 /// </summary>
-public class List : Member, IChildNode, IList<IChildNode> {
+public class List : IField<IField>, IList<IChildNode> {
     /// <summary>
     /// Creates a new list.
     /// </summary>
@@ -28,8 +29,6 @@ public class List : Member, IChildNode, IList<IChildNode> {
     /// <inheritdoc/>
     public IChildNode this[int index] { get => Members[index]; set => Members[index] = value; }
 
-    /// <inheritdoc/>
-    public override MemberType Type => MemberType.List;
     /// <summary>
     /// The members of this list member.
     /// </summary>
@@ -41,6 +40,16 @@ public class List : Member, IChildNode, IList<IChildNode> {
     /// <inheritdoc/>
     public bool IsReadOnly => false;
 
+    public string Key => throw new NotImplementedException();
+
+    public IParentNode? Parent => throw new NotImplementedException();
+
+    public string ID => throw new NotImplementedException();
+
+    public IField Value { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+    public uint? FixedSize => null;
+
     /// <inheritdoc/>
     public void Add(IChildNode item) {
         Members.Add(item);
@@ -49,6 +58,11 @@ public class List : Member, IChildNode, IList<IChildNode> {
     /// <inheritdoc/>
     public void Clear() {
         Members.Clear();
+    }
+
+    public void ClearParent()
+    {
+        throw new NotImplementedException();
     }
 
     /// <inheritdoc/>
@@ -76,6 +90,11 @@ public class List : Member, IChildNode, IList<IChildNode> {
         Members.Contains(item);
     }
 
+    public void Parse(byte[] data)
+    {
+        throw new NotImplementedException();
+    }
+
     /// <inheritdoc/>
     public bool Remove(IChildNode item) {
         return Members.Remove(item);
@@ -84,6 +103,16 @@ public class List : Member, IChildNode, IList<IChildNode> {
     /// <inheritdoc/>
     public void RemoveAt(int index)  {
         Members.RemoveAt(index);
+    }
+
+    public byte[] Serialize()
+    {
+        throw new NotImplementedException();
+    }
+
+    public void SetParent(IParentNode parent)
+    {
+        throw new NotImplementedException();
     }
 
     IEnumerator IEnumerable.GetEnumerator() {

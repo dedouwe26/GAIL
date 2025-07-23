@@ -113,7 +113,7 @@ public static class NetworkRegister {
     /// <param name="packetID">The ID of the packet.</param>
     /// <returns>The format of the packet.</returns>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
-    public static ISerializable.Info[] GetPacketFormat(uint packetID) {
+    public static IRawSerializable.Info[] GetPacketFormat(uint packetID) {
         return GetPacketInfo(packetID).Format;
     }
     

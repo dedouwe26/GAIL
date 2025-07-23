@@ -1,6 +1,7 @@
 
 using GAIL.Serializing;
 using GAIL.Serializing.Formatters;
+using GAIL.Storage.Hierarchy;
 using GAIL.Storage.Members;
 
 namespace GAIL.Storage.Parser;
@@ -26,19 +27,12 @@ public class StorageParser : Serializing.Streams.Parser {
     public StorageParser(byte[] input, bool shouldCloseStream = true) : base(new MemoryStream(), shouldCloseStream) { InStream = new MemoryStream(input); }
 
     /// <summary>
-    /// Reads a member type from the stream.
-    /// </summary>
-    /// <returns>The read member type.</returns>
-    protected virtual MemberType ReadType() {
-        return StorageRegister.GetType(ReadByte());
-    }
-    /// <summary>
     /// Reads a field from the stream.
     /// </summary>
     /// <param name="key">The key of the field.</param>
     /// <param name="type">The type of the field.</param>
     /// <returns>A new parsed field.</returns>
-    protected virtual Field ReadField(string key, MemberType type) {
+    protected virtual Field ReadField(string key) {
         byte[] raw = Read(StorageRegister.GetFixedSize(type));
         return StorageRegister.CreateField(key, type, raw);
     }
