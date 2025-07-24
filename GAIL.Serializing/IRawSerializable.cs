@@ -21,7 +21,7 @@ public interface IRawSerializable : ISerializable {
     /// <summary>
     /// Creates this class from bytes.
     /// </summary>
-    /// <param name="data">The serialized bytes (from <see cref="Serialize"/> ).</param>
+    /// <param name="data">The serialized bytes (from <see cref="Serialize"/>).</param>
     public void Parse(byte[] data);
 }
 /// <summary>
