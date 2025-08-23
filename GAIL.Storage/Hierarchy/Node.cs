@@ -13,7 +13,7 @@ public class Node : IParentNode, IChildNode {
         if (key.Contains('.')) {
             throw new InvalidOperationException("Invalid key, cannot contain dots");
         }
-        Key = key;
+        this.key = key;
     }
     /// <summary>
     /// Create a node with a key, value and a parent.
@@ -32,8 +32,12 @@ public class Node : IParentNode, IChildNode {
     /// </summary>
     protected Dictionary<string, IChildNode> children = [];
 
+    /// <summary>
+    /// The key of this node.
+    /// </summary>
+    protected string key;
     /// <inheritdoc/>
-    public string Key { get; private set; }
+    public string Key { get => key; }
 
     /// <inheritdoc/>
     public IParentNode? Parent { get; private set; }

@@ -1,38 +1,34 @@
 
 using GAIL.Serializing;
 using GAIL.Serializing.Formatters;
+using GAIL.Serializing.Streams;
 using GAIL.Storage.Hierarchy;
 using GAIL.Storage.Members;
 
-namespace GAIL.Storage.Parser;
+namespace GAIL.Storage.Streams;
 
 /// <summary>
 /// A parser that can parse the storage format (opposite of <see cref="StorageSerializer"/>).
 /// </summary>
-public class StorageParser : Serializing.Streams.Parser {
-    /// <summary>
-    /// The stream to read from while formatting.
-    /// </summary>
-    public Stream InStream { get; private set; }
+public class StorageParser : Parser {
 
     /// <summary>
     /// Creates a new storage parser.
     /// </summary>
     /// <inheritdoc/>
-    public StorageParser(Stream input, bool shouldCloseStream = true) : base(new MemoryStream(), shouldCloseStream) { InStream = input; }
+    public StorageParser(Stream input, bool shouldCloseStream = true) : base(input, shouldCloseStream) { }
     /// <summary>
     /// Creates a new storage parser.
     /// </summary>
     /// <inheritdoc/>
-    public StorageParser(byte[] input, bool shouldCloseStream = true) : base(new MemoryStream(), shouldCloseStream) { InStream = new MemoryStream(input); }
+    public StorageParser(byte[] input, bool shouldCloseStream = true) : base(input, shouldCloseStream) { }
 
     /// <summary>
     /// Reads a field from the stream.
     /// </summary>
-    /// <param name="key">The key of the field.</param>
     /// <param name="type">The type of the field.</param>
     /// <returns>A new parsed field.</returns>
-    protected virtual Field ReadField(string key) {
+    protected virtual SerializableField ReadField(ISerializable.Info<SerializableField> info) {
         byte[] raw = Read(StorageRegister.GetFixedSize(type));
         return StorageRegister.CreateField(key, type, raw);
     }
@@ -41,10 +37,10 @@ public class StorageParser : Serializing.Streams.Parser {
     /// </summary>
     /// <param name="key">The key of the list.</param>
     /// <returns>A new parsed list.</returns>
-    protected virtual List ReadList(string key) {
+    protected virtual ListField ReadList(string key) {
         List<IChildNode> children = ReadMembers(false);
 
-        return new List(key, children);
+        return new ListField(key, children);
     }
     /// <summary>
     /// Reads a container from the stream.

@@ -35,13 +35,13 @@ public abstract class Packet : ISerializable {
             foreach (PropertyInfo property in properties) {
                 PacketFieldAttribute? attribute = property.GetCustomAttribute<PacketFieldAttribute>();
                 if (attribute != null) {
-                    if (!typeof(IRawSerializable).IsAssignableFrom(property.PropertyType)) {
+                    if (!typeof(ISerializable).IsAssignableFrom(property.PropertyType)) {
                         throw new ArgumentException($"Property {property.Name} in {property.ReflectedType?.Name ?? "packet"} is not a serializable");
                     }
-                    IRawSerializable? serializable = property.GetValue(instance) as IRawSerializable
+                    ISerializable? serializable = property.GetValue(instance) as ISerializable
                         ?? throw new ArgumentException($"Property {property.Name} in {property.ReflectedType?.Name ?? "packet"} is not a serializable");
 
-                    f.Add(new FieldInfo(property, IRawSerializable.TryGetInfo(serializable) ?? throw new InvalidOperationException($"Serializable of packet field {property.Name} in {property.ReflectedType?.Name ?? "packet"} does not have a serializable info")));
+                    f.Add(new FieldInfo(property, ISerializable.TryGetInfo(serializable) ?? throw new InvalidOperationException($"Serializable of packet field {property.Name} in {property.ReflectedType?.Name ?? "packet"} does not have a serializable info")));
                 }
             }
             return [.. f];

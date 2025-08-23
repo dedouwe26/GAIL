@@ -48,7 +48,7 @@ public class Pipeline : IDisposable {
             ScissorCount = 1,
             PScissors = Pointer<Rect2D>.From(ref scissor),
 
-            ViewportCount = 0,
+            ViewportCount = 1,
             PViewports = Pointer<Viewport>.FromNull()
         };
 
@@ -168,7 +168,7 @@ public class Pipeline : IDisposable {
 
         layer.Logger.LogDebug("Creating Graphics Pipeline.");
 
-        unsafe { // FIXME: AccessViolationException...
+        unsafe { // FIXME: AccessViolationException... // NOTE: Subpass index wrong, fix: initialize the renderpass with the pipeline to create both at once.
             if (!Utils.Check(API.Vk.CreateGraphicsPipelines(device.logicalDevice, default, 1, in createInfo, Allocator.allocatorPtr, out graphicsPipeline), layer.Logger, "Failed to create graphics pipeline", false)) {
                 throw new APIBackendException("Vulkan", "Failed to create graphics pipeline");
             }

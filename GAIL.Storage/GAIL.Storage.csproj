@@ -19,4 +19,9 @@
   <ItemGroup>
     <ProjectReference Include="..\GAIL.Serializing\GAIL.Serializing.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="LambdaKit.Logging" Version="5.0.0" />
+    <PackageReference Include="LambdaKit.Terminal" Version="5.0.1" />
+  </ItemGroup>
 </Project>

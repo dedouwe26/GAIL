@@ -5,7 +5,7 @@ using GAIL.Serializing.Streams;
 using GAIL.Storage.Hierarchy;
 using GAIL.Storage.Members;
 
-namespace GAIL.Storage.Parser;
+namespace GAIL.Storage.Streams;
 
 /// <summary>
 /// A serializer that can serialize the storage format (opposite of <see cref="StorageParser"/>).
@@ -95,9 +95,8 @@ public class StorageSerializer : Serializer {
     /// </summary>
     /// <param name="children">The children to write to the stream.</param>
     /// <param name="formatter">The formatter to use for encoding.</param>
-    public void Serialize(ReadOnlyDictionary<string, IChildNode> children, IFormatter? formatter = null) {
+    public void Serialize(Dictionary<string, IChildNode> children, IFormatter? formatter = null) {
         WriteChildren([.. children.Values]);
-        WriteType(MemberType.End);
 
         Encode(formatter);
     }

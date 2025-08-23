@@ -1,4 +1,6 @@
 using GAIL.Serializing;
+using GAIL.Serializing.Formatters;
+using GAIL.Serializing.Streams;
 using GAIL.Storage.Hierarchy;
 
 namespace GAIL.Storage.Members;
@@ -7,30 +9,26 @@ namespace GAIL.Storage.Members;
 /// <summary>
 /// Represents a node in a storage file with actual data.
 /// </summary>
-public interface IField : IChildNode, IRawSerializable {
+public interface IField : IChildNode, ISerializable {
     /// <summary>
-    /// Contains information about fields.
+    /// Creates this class from bytes.
     /// </summary>
-    /// <param name="FixedSize">The fixed size of the field.</param>
-    /// <param name="Creator">Can create a field from the raw bytes and from a key.</param>
-    public new record Info (uint? FixedSize, Func<byte[], string, IField> Creator);
+    /// <param name="parser">The parser to read from.</param>
+    /// <param name="readKey">Whether the key of the field should be read.</param>
+    /// <param name="formatter">The formatter to use.</param>
+    public void Parse(Parser parser, bool readKey = true, IFormatter? formatter = null);
     /// <summary>
-    /// Creates a new field info.
+    /// Turns this class into bytes.
     /// </summary>
-    /// <param name="creator">The field creator that creates a field from a key.</param>
-    /// <returns>A new field info.</returns>
-    public static Info CreateInfo(Func<string, IField> creator) {
-        return new(creator("").FixedSize, (raw, key) => {
-            IField field = creator(key);
-            field.Parse(raw);
-            return field;
-        });
-    }
+    /// <param name="serializer">The serializer to write to.</param>
+    /// <param name="writeKey">Whether the key of the field should be written.</param>
+    /// <param name="formatter">The formatter to use.</param>
+    public void Serialize(Serializer serializer, bool writeKey = true, IFormatter? formatter = null);
 }
 /// <summary>
 /// Represents a node in a storage file with an actual value.
 /// </summary>
-public interface IField<T> : IChildNode, IRawSerializable<T> { }
+public interface IField<T> : IField, IChildNode, ISerializable<T> { }
 
 /// <summary>
 /// Represents a basic field implementation using a serializable.
@@ -39,14 +37,14 @@ public class SerializableField : Node, IField {
     /// <summary>
     /// The underlying serializable.
     /// </summary>
-    public readonly IRawSerializable serializable;
+    public readonly ISerializable serializable;
 
     /// <summary>
     /// Creates a new serializable field.
     /// </summary>
     /// <param name="key">The key of this field.</param>
     /// <param name="baseSerializable">The underlying serializable.</param>
-    public SerializableField(string key, IRawSerializable baseSerializable) : base(key) {
+    public SerializableField(string key, ISerializable baseSerializable) : base(key) {
         serializable = baseSerializable;
     }
     /// <summary>
@@ -55,62 +53,70 @@ public class SerializableField : Node, IField {
     /// <param name="key">The key of this field.</param>
     /// <param name="baseSerializable">The underlying serializable.</param>
     /// <param name="parent">The parent of this node.</param>
-    public SerializableField(string key, IRawSerializable baseSerializable, IParentNode parent) : base(key, parent) {
+    public SerializableField(string key, ISerializable baseSerializable, IParentNode parent) : base(key, parent) {
         serializable = baseSerializable;
     }
-    /// <inheritdoc/>
-    public uint? FixedSize => serializable.FixedSize;
 
     /// <inheritdoc/>
-    public void Parse(byte[] data) {
-        serializable.Parse(data);
+    public void Parse(Parser parser, IFormatter? formatter = null) {
+        Parse(parser, readKey:true, formatter);
     }
 
     /// <inheritdoc/>
-    public byte[] Serialize() {
-        return serializable.Serialize();
+    public void Parse(Parser parser, bool readKey = true, IFormatter? formatter = null) {
+        if (formatter != null) {
+            parser.Decode((p) => {
+                Parse(p, readKey, null);
+            }, formatter);
+        } else {
+            if (readKey) key = parser.ReadString();
+            serializable.Parse(parser, null);
+        }
+    }
+
+    /// <inheritdoc/>
+    public void Serialize(Serializer serializer, IFormatter? formatter = null) {
+        Serialize(serializer, writeKey:true, formatter);
+    }
+
+    /// <inheritdoc/>
+    public void Serialize(Serializer serializer, bool writeKey = true, IFormatter? formatter = null) {
+        if (formatter != null) {
+            serializer.Encode((s) => {
+                Serialize(s, writeKey, null);
+            }, formatter);
+        } else {
+            if (writeKey) serializer.WriteString(key);
+            serializable.Serialize(serializer, null);
+        }
     }
 }
 /// <summary>
 /// Represents a basic field implementation using a serializable with a value.
 /// </summary>
-public class SerializableField<T> : Node, IField<T> {
+public class SerializableField<T> : SerializableField, IField<T> {
+    private ISerializable<T>? castedSerializable;
     /// <summary>
     /// The underlying serializable.
     /// </summary>
-    public readonly IRawSerializable<T> serializable;
-
+    public ISerializable<T> Serializable { get {
+        castedSerializable ??= (ISerializable<T>)serializable;
+        return castedSerializable;
+    } }
     /// <summary>
     /// Creates a new serializable field.
     /// </summary>
     /// <param name="key">The key of this field.</param>
     /// <param name="baseSerializable">The underlying serializable.</param>
-    public SerializableField(string key, IRawSerializable<T> baseSerializable) : base(key) {
-        serializable = baseSerializable;
-    }
+    public SerializableField(string key, ISerializable<T> baseSerializable) : base(key, baseSerializable) { }
     /// <summary>
     /// Creates a new serializable field.
     /// </summary>
     /// <param name="key">The key of this field.</param>
     /// <param name="baseSerializable">The underlying serializable.</param>
     /// <param name="parent">The parent of this node.</param>
-    public SerializableField(string key, IRawSerializable<T> baseSerializable, IParentNode parent) : base(key, parent) {
-        serializable = baseSerializable;
-    }
+    public SerializableField(string key, ISerializable<T> baseSerializable, IParentNode parent) : base(key, baseSerializable, parent) { }
 
     /// <inheritdoc/>
-    public uint? FixedSize => serializable.FixedSize;
-
-    /// <inheritdoc/>
-    public T Value { get => serializable.Value; set => serializable.Value = value; }
-
-    /// <inheritdoc/>
-    public void Parse(byte[] data) {
-        serializable.Parse(data);
-    }
-
-    /// <inheritdoc/>
-    public byte[] Serialize() {
-        return serializable.Serialize();
-    }
+    public T Value { get => Serializable.Value; set => Serializable.Value = value; }
 }
