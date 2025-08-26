@@ -27,7 +27,7 @@ namespace GAIL.Graphics.Renderer.Vulkan
         public readonly SurfaceKHR surface;
         private readonly Instance instance;
         private readonly Logger Logger;
-        public Surface(VulkanRenderer renderer, WindowManager window) {
+        public Surface(Renderer renderer, WindowManager window) {
             Logger = renderer.Logger;
             renderer.Logger.LogDebug("Creating Surface.");
 

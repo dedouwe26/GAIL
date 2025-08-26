@@ -9,7 +9,7 @@ public class Commands : IDisposable {
     public CommandBuffer[] commandBuffers;
     private readonly Device device;
     private CommandBuffer currentCommandBuffer;
-    public Commands(VulkanRenderer renderer) {
+    public Commands(Renderer renderer) {
         device = renderer.device;
 
         { // Command pool
@@ -51,7 +51,7 @@ public class Commands : IDisposable {
         }
     }
 
-    public void Submit(VulkanRenderer renderer) {
+    public void Submit(Renderer renderer) {
         PipelineStageFlags[] waitStages = [PipelineStageFlags.ColorAttachmentOutputBit];
         Silk.NET.Vulkan.Semaphore[] waitSemaphores = [renderer.Syncronization.imageAvailable[renderer.CurrentFrame]];
         
@@ -74,9 +74,9 @@ public class Commands : IDisposable {
         _ = Utils.Check(API.Vk.QueueSubmit(renderer.device.graphicsQueue, [submitInfo], renderer.Syncronization.inFlight[renderer.CurrentFrame]), renderer.Logger, "Failed to submit draw command buffer", true);
     }
     
-    public void BeginRecord(VulkanRenderer renderer, ref Framebuffer swapchainImage) {
+    public void BeginRecord(Renderer renderer, ref Framebuffer swapchainImage) {
         currentCommandBuffer = commandBuffers[renderer.CurrentFrame];
-        BeginCommandBuffer(renderer, currentCommandBuffer, ref swapchainImage);
+        BeginCommandBuffer(renderer, ref currentCommandBuffer, ref swapchainImage);
     }
 
     public void BindPipeline(Layer.Pipeline pipeline) {
@@ -92,11 +92,11 @@ public class Commands : IDisposable {
         API.Vk.CmdDraw(currentCommandBuffer, vertexCount, instanceCount, firstVertex, firstInstance);
     }
 
-    public void EndRecord(VulkanRenderer renderer) {
+    public void EndRecord(Renderer renderer) {
         EndCommandBuffer(renderer, currentCommandBuffer);
     }
 
-    public static void BeginCommandBuffer(VulkanRenderer renderer, CommandBuffer buffer, ref Framebuffer swapchainImage) {
+    public static void BeginCommandBuffer(Renderer renderer, ref CommandBuffer buffer, ref Framebuffer swapchainImage) {
         API.Vk.ResetCommandBuffer(buffer, CommandBufferResetFlags.None);
         
         { // Begin CommandBuffer
@@ -131,7 +131,7 @@ public class Commands : IDisposable {
         API.Vk.CmdSetViewport(buffer, 0, 1, in renderer.Swapchain.viewport);
     }
 
-    public static void EndCommandBuffer(VulkanRenderer renderer, CommandBuffer buffer) {
+    public static void EndCommandBuffer(Renderer renderer, CommandBuffer buffer) {
         API.Vk.CmdEndRenderPass(buffer);
 
         _ = Utils.Check(API.Vk.EndCommandBuffer(buffer), renderer.Logger, "Failed to record a command buffer", true);

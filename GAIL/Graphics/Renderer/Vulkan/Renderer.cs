@@ -5,18 +5,18 @@ using GAIL.Graphics.Renderer.Vulkan;
 using GAIL.Graphics.Renderer.Vulkan.Layer;
 using LambdaKit.Logging;
 
-namespace GAIL.Graphics.Renderer;
+namespace GAIL.Graphics.Renderer.Vulkan;
 
 /// <summary>
 /// The settings implementation for Vulkan.
 /// </summary>
-public class VulkanSettings : RendererSettings<VulkanRenderer, IVulkanLayer> {
+public class Settings : RendererSettings<Renderer, IVulkanLayer> {
 	/// <summary>
 	/// Creates new a new Vulkan implementation of the rasterization layer settings.
 	/// </summary>
 	/// <param name="renderer">The vulkan implementation of the renderer settings.</param>
 	/// <param name="values">The initial values of these settings.</param>
-	public VulkanSettings(VulkanRenderer renderer, ref RendererSettings<IVulkanLayer> values) : base(renderer, ref values) { }
+	public Settings(Renderer renderer, ref RendererSettings<IVulkanLayer> values) : base(renderer, ref values) { }
 
 	/// <inheritdoc/>
 	public override uint MaxFramesInFlight { get => base.MaxFramesInFlight; set {
@@ -46,7 +46,7 @@ public class VulkanSettings : RendererSettings<VulkanRenderer, IVulkanLayer> {
 /// <summary>
 /// Represents a renderer that uses the Vulkan Graphics API.
 /// </summary>
-public class VulkanRenderer : IRenderer<IVulkanLayer> {
+public class Renderer : IRenderer<IVulkanLayer> {
 	/// <summary>
 	/// If this class is already disposed.
 	/// </summary>
@@ -99,7 +99,7 @@ public class VulkanRenderer : IRenderer<IVulkanLayer> {
 	# endregion Utilities
 
 	private readonly Application.Globals globals;
-	private readonly VulkanSettings settings;
+	private readonly Settings settings;
 	/// <inheritdoc/>
 	public IRendererSettings<IVulkanLayer> Settings { get => settings; }
 
@@ -110,7 +110,7 @@ public class VulkanRenderer : IRenderer<IVulkanLayer> {
 	/// <param name="globals">The globals of the application.</param>
 	/// <param name="settings">The settings of this renderer.</param>
 	/// <param name="appInfo">The information of the application.</param>
-	public VulkanRenderer(Logger logger, Application.Globals globals, ref RendererSettings<IVulkanLayer> settings, ref AppInfo appInfo) {
+	public Renderer(Logger logger, Application.Globals globals, ref RendererSettings<IVulkanLayer> settings, ref AppInfo appInfo) {
 		this.globals = globals;
 		this.settings = new(this, ref settings);
 

@@ -20,11 +20,11 @@ public class Syncronization : IDisposable {
     /// </summary>
     public readonly Fence[] inFlight;
     public bool IsDisposed { get; private set; }
-    public Syncronization(VulkanRenderer renderer) {
+    public Syncronization(Renderer renderer) {
         device = renderer.device;
         Logger = renderer.Logger;
         
-        renderer.Logger.LogDebug("Creating Sync Objects.");
+        renderer.Logger.LogDebug("Creating Sync-objects.");
         
         renderFinished = CreateSemaphore(renderer.Settings.MaxFramesInFlight);
         imageAvailable = CreateSemaphore(renderer.Settings.MaxFramesInFlight);

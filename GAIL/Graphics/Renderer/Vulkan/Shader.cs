@@ -13,7 +13,7 @@ namespace GAIL.Graphics.Renderer.Vulkan;
 /// This is <b>Vulkan specific</b>, only use this when you are working with Vulkan. Use <see cref="IShader"/> instead.
 /// </summary>
 public class Shader : IShader {
-	public static Shader? Create(VulkanRenderer renderer,
+	public static Shader? Create(Renderer renderer,
 		IEnumerable<FormatInfo> requiredAttributes, IEnumerable<FormatInfo> requiredUniforms,
 		byte[] vertex, byte[]? fragment = null, byte[]? geometry = null
 	) {
@@ -70,7 +70,7 @@ public class Shader : IShader {
 
 	private readonly Logger Logger;
 	private readonly Device Device;
-	private Shader(VulkanRenderer renderer, IEnumerable<FormatInfo> requiredAttributes, IEnumerable<FormatInfo> requiredUniforms, int stagesLength) {
+	private Shader(Renderer renderer, IEnumerable<FormatInfo> requiredAttributes, IEnumerable<FormatInfo> requiredUniforms, int stagesLength) {
 		this.requiredAttributes = [.. requiredAttributes];
 		this.requiredUniforms = [.. requiredUniforms];
 		IsDisposed = true;

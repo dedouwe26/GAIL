@@ -40,7 +40,7 @@ namespace GAIL.Graphics.Renderer.Vulkan
         private readonly Logger Logger;
         private readonly Instance instance;
 
-        public SwapChain(VulkanRenderer renderer, WindowManager windowManager) {
+        public SwapChain(Renderer renderer, WindowManager windowManager) {
             Logger = renderer.Logger;
             instance = renderer.instance;
             surface = renderer.surface;
@@ -52,7 +52,7 @@ namespace GAIL.Graphics.Renderer.Vulkan
             imageViews = CreateImageViews();
         }
 
-        public uint? AcquireNextImage(VulkanRenderer renderer) {
+        public uint? AcquireNextImage(Renderer renderer) {
             uint index = default;
             Result result = Extension.AcquireNextImage(device.logicalDevice, swapchain, ulong.MaxValue, renderer.Syncronization.imageAvailable[renderer.CurrentFrame], default, ref index);
             

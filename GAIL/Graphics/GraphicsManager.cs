@@ -3,8 +3,8 @@ using GAIL.Graphics.Material;
 using GAIL.Graphics.Renderer;
 using GAIL.Graphics.Renderer.Layer;
 using GAIL.Graphics.Renderer.Vulkan.Layer;
-using LambdaKit.Assertion;
 using LambdaKit.Logging;
+using VulkanRenderer = GAIL.Graphics.Renderer.Vulkan.Renderer;
 
 namespace GAIL.Graphics
 {

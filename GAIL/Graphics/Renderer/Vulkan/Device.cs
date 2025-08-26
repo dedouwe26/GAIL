@@ -33,7 +33,7 @@ namespace GAIL.Graphics.Renderer.Vulkan
         private readonly Surface surface;
         private readonly Logger Logger;
 
-        public Device(VulkanRenderer renderer) {
+        public Device(Renderer renderer) {
             Logger = renderer.Logger;
             surface = renderer.surface;
 
@@ -214,7 +214,7 @@ namespace GAIL.Graphics.Renderer.Vulkan
             }
         }
         public bool shouldRecreateSwapchain = false;
-        public bool Present(VulkanRenderer renderer, ref uint imageIndex) {
+        public bool Present(Renderer renderer, ref uint imageIndex) {
             Silk.NET.Vulkan.Semaphore[] signals = [renderer.Syncronization.renderFinished[renderer.CurrentFrame]];
             SwapchainKHR[] swapchains = [renderer.Swapchain.swapchain];
 

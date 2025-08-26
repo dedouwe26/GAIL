@@ -9,7 +9,7 @@ public class Buffer : IDisposable {
     public bool IsDisposed { get; private set; } = false;
     private readonly Logger logger;
     private readonly Device device;
-    public Buffer(VulkanRenderer renderer, ulong size, BufferUsageFlags usage, SharingMode sharingMode, BufferCreateFlags flags = BufferCreateFlags.None, uint[]? queueFamilyIndices = null) {
+    public Buffer(Renderer renderer, ulong size, BufferUsageFlags usage, SharingMode sharingMode, BufferCreateFlags flags = BufferCreateFlags.None, uint[]? queueFamilyIndices = null) {
         logger = renderer.Logger;
         device = renderer.device;
         BufferCreateInfo createInfo = new() {

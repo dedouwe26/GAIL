@@ -61,7 +61,7 @@ public class VulkanRasterizationLayerSettings : RasterizationLayerSettings<Vulka
 /// The Vulkan implementation of the back-end rasterization layer.
 /// </summary>
 public class VulkanRasterizationLayer : IVulkanLayer, IRasterizationLayer {
-    internal VulkanRasterizationLayer(VulkanRenderer renderer, uint index, RasterizationLayerSettings settings) {
+    internal VulkanRasterizationLayer(Renderer renderer, uint index, RasterizationLayerSettings settings) {
         Logger = LoggerFactory.CreateSublogger(renderer.Logger, "Layer "+index, "layer"+index);
         Renderer = renderer;
         Index = index;
@@ -86,7 +86,7 @@ public class VulkanRasterizationLayer : IVulkanLayer, IRasterizationLayer {
     /// <summary>
     /// The renderer corresponding to this back-end layer.
     /// </summary>
-    public readonly VulkanRenderer Renderer;
+    public readonly Renderer Renderer;
     /// <summary>
     /// The logger of this back-end layer.
     /// </summary>

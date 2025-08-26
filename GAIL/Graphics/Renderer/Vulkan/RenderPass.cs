@@ -11,7 +11,7 @@ public class RenderPass : IDisposable {
 	public bool IsDisposed { get; private set; }
 	public readonly Silk.NET.Vulkan.RenderPass renderPass;
 	private readonly Device device;
-	public RenderPass(VulkanRenderer renderer) {
+	public RenderPass(Renderer renderer) {
 		device = renderer.device;
 		
 		// Stuff about framebuffers.
