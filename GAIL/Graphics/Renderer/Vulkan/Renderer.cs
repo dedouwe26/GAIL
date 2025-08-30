@@ -4,6 +4,7 @@ using GAIL.Graphics.Renderer.Layer;
 using GAIL.Graphics.Renderer.Vulkan;
 using GAIL.Graphics.Renderer.Vulkan.Layer;
 using LambdaKit.Logging;
+using Silk.NET.Vulkan;
 
 namespace GAIL.Graphics.Renderer.Vulkan;
 
@@ -11,6 +12,7 @@ namespace GAIL.Graphics.Renderer.Vulkan;
 /// The settings implementation for Vulkan.
 /// </summary>
 public class Settings : RendererSettings<Renderer, IVulkanLayer> {
+	internal IVulkanLayer[] _Layers { set => layers = value; }
 	/// <summary>
 	/// Creates new a new Vulkan implementation of the rasterization layer settings.
 	/// </summary>
@@ -35,11 +37,11 @@ public class Settings : RendererSettings<Renderer, IVulkanLayer> {
 			value[i].Index = i;
 		}
 
-		renderer.RenderPass.Dispose();
-		renderer.Swapchain.DisposeFramebuffers();
+		renderer.RenderPass?.Dispose();
 		layers = value;
+		renderer.layerDescriptions = LayerDescription.From(value);
 		renderer.RenderPass = new(renderer);
-		renderer.Swapchain.CreateFramebuffers(renderer.RenderPass);
+		renderer.RenderPass.CreateFramebuffers();
 	} }
 }
 
@@ -62,6 +64,7 @@ public class Renderer : IRenderer<IVulkanLayer> {
 	/// The image index in the swap chain.
 	/// </summary>
 	public uint ImageIndex { get; private set; }
+	internal LayerDescription[] layerDescriptions;
 	internal Logger Logger;
 
 	# region Utilities
@@ -78,11 +81,11 @@ public class Renderer : IRenderer<IVulkanLayer> {
 	/// <summary>
 	/// The vulkan swapchain utility, for custom usage.
 	/// </summary>
-	public SwapChain Swapchain { get; private set; }
+	public Swapchain Swapchain { get; private set; }
 	/// <summary>
 	/// The vulkan renderpass utility, for custom usage.
 	/// </summary>
-	public RenderPass RenderPass { get; internal set; }
+	public RenderPass? RenderPass { get; internal set; } // TODO: Temp
 	/// <summary>
 	/// The Vulkan syncronization utility, for custom usage.
 	/// </summary>
@@ -110,7 +113,7 @@ public class Renderer : IRenderer<IVulkanLayer> {
 	/// <param name="globals">The globals of the application.</param>
 	/// <param name="settings">The settings of this renderer.</param>
 	/// <param name="appInfo">The information of the application.</param>
-	public Renderer(Logger logger, Application.Globals globals, ref RendererSettings<IVulkanLayer> settings, ref AppInfo appInfo) {
+	public Renderer(Logger logger, Application.Globals globals, ref RendererSettings<IVulkanLayer> settings, AppInfo appInfo) {
 		this.globals = globals;
 		this.settings = new(this, ref settings);
 
@@ -122,17 +125,19 @@ public class Renderer : IRenderer<IVulkanLayer> {
 
 		Logger.LogDebug("Initializing Vulkan");
 
+
+		layerDescriptions = LayerDescription.From(settings.Layers);
 		try {
-			instance = new Instance(this, ref appInfo);
+			instance = new Instance(this, appInfo);
 			surface = new Surface(this, globals.windowManager);
 			device = new Device(this);
-			Swapchain = new SwapChain(this, globals.windowManager);
+			Swapchain = new Swapchain(this, globals.windowManager);
 
-			RenderPass = new RenderPass(this);
-			Swapchain.CreateFramebuffers(RenderPass);
+			// RenderPass = new RenderPass(this); // TODO: Temp
+			// RenderPass.CreateFramebuffers();
 			Commands = new Commands(this);
 			Syncronization = new Syncronization(this);
-		} catch (Exception e) { // TODO: Better exception handling
+		} catch (Exception e) { // TODO: Better exception handling.
 			Logger.LogFatal("Exception occured while initializing Vulkan renderer:");
 			Logger.LogException(e);
 			throw;
@@ -160,26 +165,27 @@ public class Renderer : IRenderer<IVulkanLayer> {
 		Syncronization.Reset(CurrentFrame);
 
 		// TODO: Add layers to render pass?
-		// TODO: RenderFinished semaphores 
+		// TODO: RenderFinished semaphores?
 
-		// TODO: Optimization: Don't re-record every frame.
-		Commands.BeginRecord(this, ref Swapchain.frameBuffers![imageIndex]);
+		if (ShouldRecord() || Commands.IsCommandBufferInitial()) {
+			Commands.BeginRecord(ref RenderPass!.Framebuffers![imageIndex]);
 		
-		{
-			//   <<< LAYER SPECIFICS >>>
+			{
+				//   <<< LAYER SPECIFICS >>>
 
-			foreach (IVulkanLayer backendLayer in settings.Layers) {
-				backendLayer.Render(Commands);
+				foreach (IVulkanLayer backendLayer in settings.Layers) {
+					backendLayer.Render(Commands);
+				}
+
+				// <<< END LAYER SPECIFICS >>>
 			}
-
-			// <<< END LAYER SPECIFICS >>>
+			
+			Commands.EndRecord();
 		}
 		
-		Commands.EndRecord(this);
-		
-		Commands.Submit(this);
+		Commands.Submit();
 
-		if (!device.Present(this, ref imageIndex)) {
+		if (!device.Present(ref imageIndex)) {
 			RecreateSwapchain();
 		}
 
@@ -195,19 +201,57 @@ public class Renderer : IRenderer<IVulkanLayer> {
 		}
 		device.shouldRecreateSwapchain = true;
 	}
+	private bool ShouldRecord() {
+		foreach (IVulkanLayer backendLayer in settings.Layers) {
+			if (backendLayer.ShouldRecord) {
+				return true;
+			}
+		}
+		return false;
+	}
 	private void RecreateSwapchain() {
 		device.WaitIdle();
 
+		RenderPass?.DisposeFramebuffers();
 		Swapchain.Dispose();
 
-		Swapchain = new SwapChain(this, globals.windowManager);
-		Swapchain.CreateFramebuffers(RenderPass);
+		Swapchain = new Swapchain(this, globals.windowManager);
+		RenderPass!.CreateFramebuffers();
 	}
+	/// <inheritdoc/>
+	public void Dispose() {
+		if (IsDisposed) { return; }
+
+		device.WaitIdle();
+
+		Commands.Dispose();
+
+		Logger.LogDebug("Terminating Vulkan.");
+		foreach (IVulkanLayer backendLayer in Settings.Layers) {
+			backendLayer.Dispose();
+		}
+		
+		RenderPass?.Dispose();
+		Swapchain.Dispose();
+		device.Dispose();
+		surface.Dispose();
+		instance.Dispose();
+		
+		GC.SuppressFinalize(this);
+	}
+
+	#region API
 
 	/// <inheritdoc/>
 	public IRasterizationLayer? CreateRasterizationLayer(RasterizationLayerSettings settings) {
+		RenderPass?.Dispose();
+		layerDescriptions = [.. layerDescriptions, new() { type = PipelineBindPoint.Graphics }];
+		RenderPass = new(this);
+		RenderPass.CreateFramebuffers();
+		VulkanRasterizationLayer layer = new(this, (uint)this.settings.Layers.Length, settings);
+		this.settings._Layers = [.. this.settings.Layers, layer];
 		try {
-			return new VulkanRasterizationLayer(this, 0, settings); // TODO: Index is not always 0.
+			return layer;
 		} catch (APIBackendException) {
 			Logger.LogError("Failed to create rasterization layer.");
 			return default;
@@ -224,25 +268,5 @@ public class Renderer : IRenderer<IVulkanLayer> {
 		}
 	}
 
-	/// <inheritdoc/>
-	public void Dispose() {
-		if (IsDisposed) { return; }
-
-		device.WaitIdle();
-
-		Commands.Dispose();
-
-		Logger.LogDebug("Terminating Vulkan.");
-		foreach (IVulkanLayer backendLayer in Settings.Layers) {
-			backendLayer.Dispose();
-		}
-		
-		RenderPass.Dispose();
-		Swapchain.Dispose();
-		device.Dispose();
-		surface.Dispose();
-		instance.Dispose();
-		
-		GC.SuppressFinalize(this);
-	}
+	#endregion API
 }

@@ -1,8 +1,9 @@
 using GAIL.Graphics.Material;
-using GAIL.Graphics.Renderer.Vulkan;
 using Silk.NET.Vulkan;
 
 namespace GAIL.Graphics.Renderer.Layer;
+
+#region Enumerations
 
 /// <summary>
 /// Specifies what part to render.
@@ -93,6 +94,10 @@ public enum MSAA {
     MSAAx64 = SampleCountFlags.Count64Bit,
 }
 
+#endregion Enumerations
+
+#region Rasterization Settings
+
 /// <summary>
 /// Settings for a rasterization layer.
 /// </summary>
@@ -166,51 +171,32 @@ public abstract class RasterizationLayerSettings<TLayer> : IRasterizationLayerSe
     /// </summary>
     protected readonly TLayer layer;
 
-    /// <summary>
-    /// Creates new settings for the back-end rasterization layer.
-    /// </summary>
-    /// <param name="layer">The back-end rasterization layer to use for these settings.</param>
-    /// <param name="values">The initial values of these settings.</param>
-    protected RasterizationLayerSettings(TLayer layer, RasterizationLayerSettings values) {
+	protected RasterizationLayerSettings values;
+	/// <summary>
+	/// Creates new settings for the back-end rasterization layer.
+	/// </summary>
+	/// <param name="layer">The back-end rasterization layer to use for these settings.</param>
+	/// <param name="values">The initial values of these settings.</param>
+	protected RasterizationLayerSettings(TLayer layer, RasterizationLayerSettings values) {
         this.layer = layer;
-        shouldRender = values.ShouldRender;
-        fillMode = values.FillMode;
-        cullMode = values.CullMode;
-    }
+		this.values = values;
+	}
 
     /// <inheritdoc/>
-    public virtual bool ShouldRender { get => shouldRender; set => shouldRender = value; }
-    /// <summary>
-    /// If the renderer should render. Defaults to true.
-    /// </summary>
-    protected bool shouldRender;
+    public virtual bool ShouldRender { get => values.ShouldRender; set => values.ShouldRender = value; }
 
     /// <inheritdoc/>
-    public virtual FillMode FillMode { get => fillMode; set => throw new NotImplementedException(); }
-    /// <summary>
-    /// What part of the triangle to render. Defaults to <see cref="FillMode.Face"/>.
-    /// </summary>
-    protected FillMode fillMode;
+    public virtual FillMode FillMode { get => values.FillMode; set => throw new NotImplementedException(); }
     /// <inheritdoc/>
-    public virtual FrontFaceMode FrontFaceMode { get => frontFaceMode; set => throw new NotImplementedException(); }
-    /// <summary>
-    /// How the front face is determined. Defaults to <see cref="FrontFaceMode.Clockwise"/>.
-    /// </summary>
-    protected FrontFaceMode frontFaceMode = FrontFaceMode.Clockwise;
+    public virtual FrontFaceMode FrontFaceMode { get => values.FrontFaceMode; set => throw new NotImplementedException(); }
     /// <inheritdoc/>
-    public virtual CullMode CullMode { get => cullMode; set => throw new NotImplementedException(); }
-    /// <summary>
-    /// The type of face culling. Defaults to <see cref="CullMode.BackFace"/>.
-    /// </summary>
-    protected CullMode cullMode;
+    public virtual CullMode CullMode { get => values.CullMode; set => throw new NotImplementedException(); }
     /// <inheritdoc/>
     public virtual IShader Shader { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
     /// <inheritdoc/>
-    public virtual List<Object> RenderList { get => renderList; set => throw new NotImplementedException(); }
-    /// <summary>
-    /// The shader stages to use for this layer.
-    /// </summary>
-    protected List<Object> renderList = [];
+    public virtual List<Object> RenderList { get => values.RenderList; set => throw new NotImplementedException(); }
 }
+
+#endregion Rasterization Settings
 
 // TODO: Raytracing settings

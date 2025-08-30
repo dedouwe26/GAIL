@@ -1,5 +1,6 @@
 using GAIL.Core;
 using GAIL.Graphics.Renderer.Layer;
+using GAIL.Graphics.Renderer.Vulkan.Layer;
 
 namespace GAIL.Graphics.Renderer;
 
@@ -43,7 +44,7 @@ public interface IRendererSettings<TBackendLayer> : IRendererSettings where TBac
 /// The values of the settings for a renderer.
 /// </summary>
 /// <typeparam name="TBackendLayer">The type of back-end layer the renderer uses.</typeparam>
-public struct RendererSettings<TBackendLayer> where TBackendLayer : IBackendLayer {
+public class RendererSettings<TBackendLayer> where TBackendLayer : IBackendLayer {
     /// <summary>
     /// If the renderer should render. Defaults to true.
     /// </summary>

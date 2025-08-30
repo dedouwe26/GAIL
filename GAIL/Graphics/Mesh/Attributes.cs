@@ -16,8 +16,8 @@ namespace GAIL.Graphics.Mesh
 
         /// <inheritdoc/>
         public override byte[] Use() {
-            throw new NotImplementedException();
-        }
+			return [.. BitConverter.GetBytes(position.X), .. BitConverter.GetBytes(position.Y), .. BitConverter.GetBytes(position.Z)];
+		}
     }
     /// <summary>
     /// A basic per-vertex color attribute (Float4).
@@ -34,7 +34,7 @@ namespace GAIL.Graphics.Mesh
 
         /// <inheritdoc/>
         public override byte[] Use() {
-            throw new NotImplementedException();
+			return [.. BitConverter.GetBytes(color.R), .. BitConverter.GetBytes(color.G), .. BitConverter.GetBytes(color.B), .. BitConverter.GetBytes(color.A)];
         }
     }
     /// <summary>
@@ -52,7 +52,7 @@ namespace GAIL.Graphics.Mesh
 
         /// <inheritdoc/>
         public override byte[] Use() {
-            throw new NotImplementedException();
+			return [.. BitConverter.GetBytes(normal.X), .. BitConverter.GetBytes(normal.Y), .. BitConverter.GetBytes(normal.Z)];
         }
     }
     /// <summary>
@@ -70,7 +70,7 @@ namespace GAIL.Graphics.Mesh
 
         /// <inheritdoc/>
         public override byte[] Use() {
-            throw new NotImplementedException();
+			return [.. BitConverter.GetBytes(uv.X), .. BitConverter.GetBytes(uv.Y)];
         }
     }
 }

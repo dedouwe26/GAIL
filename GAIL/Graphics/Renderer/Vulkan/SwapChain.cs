@@ -6,7 +6,7 @@ using Silk.NET.Vulkan.Extensions.KHR;
 
 namespace GAIL.Graphics.Renderer.Vulkan
 {
-    public class SwapChain : IDisposable {
+    public class Swapchain : IDisposable {
         public struct SupportDetails {
             public SurfaceCapabilitiesKHR Capabilities;
             public SurfaceFormatKHR[] Formats;
@@ -30,17 +30,16 @@ namespace GAIL.Graphics.Renderer.Vulkan
         public SwapchainKHR swapchain;
         public Image[]? images;
         public ImageView[] imageViews { get; private set; }
-        public Framebuffer[]? frameBuffers { get; private set; }
         public Format imageFormat { get; private set; }
         public Extent2D extent { get; private set; }
         public Viewport viewport;
-        private readonly Surface surface;
+        private readonly Surface surface; // TODO: inefficient, too many refs, use renderer instead.
         private readonly WindowManager window;
         private readonly Device device;
         private readonly Logger Logger;
         private readonly Instance instance;
 
-        public SwapChain(Renderer renderer, WindowManager windowManager) {
+        public Swapchain(Renderer renderer, WindowManager windowManager) {
             Logger = renderer.Logger;
             instance = renderer.instance;
             surface = renderer.surface;
@@ -190,50 +189,10 @@ namespace GAIL.Graphics.Renderer.Vulkan
             }
             return surfaceFormats[0];
         }
-    
-        public void CreateFramebuffers(RenderPass renderPass) {
-            if (!AreFramebuffersDisposed) DisposeFramebuffers();
 
-            frameBuffers = new Framebuffer[imageViews.Length];
-
-            Logger.LogDebug("Creating Framebuffers.");
-
-            for (int i = 0; i < imageViews.Length; i++) {
-                ImageView imageView = imageViews[i];
-                FramebufferCreateInfo createInfo = new() {
-                    SType = StructureType.FramebufferCreateInfo,
-
-                    RenderPass = renderPass.renderPass,
-                    AttachmentCount = 1,
-                    PAttachments = Pointer<ImageView>.From(ref imageView),
-                    Width = extent.Width,
-                    Height = extent.Height,
-                    Layers = 1
-                };
-
-                unsafe {
-                    _ = Utils.Check(API.Vk.CreateFramebuffer(device.logicalDevice, Pointer<FramebufferCreateInfo>.From(ref createInfo), Allocator.allocatorPtr, Pointer<Framebuffer>.From(ref frameBuffers[i])), Logger, "Failed to create framebuffer", true);
-                }
-            }
-
-            AreFramebuffersDisposed = false;
-        }
-        public void DisposeFramebuffers() {
-            if (AreFramebuffersDisposed) { return; }
-
-            foreach (Framebuffer framebuffer in frameBuffers!) {
-                unsafe {
-                    API.Vk.DestroyFramebuffer(device.logicalDevice, framebuffer, Allocator.allocatorPtr);
-                }
-            }
-
-            AreFramebuffersDisposed = true;
-        }
         /// <inheritdoc/>
         public void Dispose() {
             if (IsDisposed) { return; }
-
-            DisposeFramebuffers();
 
             foreach (ImageView imageView in imageViews) {
                 unsafe {

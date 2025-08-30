@@ -14,9 +14,9 @@ namespace GAIL
     /// <summary>
     /// The metadata of the application.
     /// </summary>
-    public struct AppInfo {
+    public class AppInfo {
         /// <summary>
-        /// App name (UTF-8)
+        /// App name (UTF-8).
         /// </summary>
         public string AppName = "App";
         /// <summary>
@@ -24,16 +24,15 @@ namespace GAIL
         /// </summary>
         public uint[] AppVersion = [1, 0, 0];
         /// <summary>
-        /// Engine name (UTF-8)
+        /// Engine name (UTF-8).
         /// </summary>
         public string EngineName = "GAIL";
         /// <summary>
         /// 0: Major  1: Minor  2: Patch.
         /// </summary>
-        ///
         public uint[] EngineVersion = [1, 0, 0];
 
-        /// <summary></summary>
+        ///
         public AppInfo() { }
     }
 
@@ -111,8 +110,7 @@ namespace GAIL
             
             globals.inputManager.Initialize();
 
-            AppInfo appInfoRef = appInfo ?? new AppInfo();
-            globals.graphicsManager.Initialize(globals, ref appInfoRef, graphicsSettings?.maxFramesInFlight ?? 2, graphicsSettings?.clearValue);
+            globals.graphicsManager.Initialize(globals, appInfo ?? new AppInfo(), graphicsSettings?.maxFramesInFlight ?? 2, graphicsSettings?.clearValue);
 
             globals.audioManager.Initialize(audioDevice);
         }

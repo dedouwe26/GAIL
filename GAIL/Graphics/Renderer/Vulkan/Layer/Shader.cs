@@ -5,7 +5,7 @@ using LambdaKit.Logging;
 using Silk.NET.Core.Native;
 using Silk.NET.Vulkan;
 
-namespace GAIL.Graphics.Renderer.Vulkan;
+namespace GAIL.Graphics.Renderer.Vulkan.Layer;
 
 /// <summary>
 /// Represents all the programmable shader stages in a default graphics pipeline.

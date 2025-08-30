@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Numerics;
 
@@ -42,8 +43,8 @@ namespace GAIL.Graphics.Mesh
         /// <param name="requiredAttributes">The attribute types that are required by the shader.</param>
         /// <returns>The nessecary vertex attributes.</returns>
         /// <exception cref="NotSupportedException">This exception is fired when this vertex does not supply sufficient attributes.</exception>
-        public VertexAttribute[] Supply(ReadOnlyCollection<FormatInfo> requiredAttributes) {
-            VertexAttribute[] result = new VertexAttribute[requiredAttributes.Count];
+        public VertexAttribute[] Supply(ImmutableArray<FormatInfo> requiredAttributes) {
+            VertexAttribute[] result = new VertexAttribute[requiredAttributes.Length];
             int requiredIndex = 0;
             foreach (VertexAttribute attribute in attributes) {
                 if (attribute.info.type == requiredAttributes[requiredIndex].type) {
@@ -52,7 +53,7 @@ namespace GAIL.Graphics.Mesh
                 }
             }
 
-            if (requiredIndex < requiredAttributes.Count) {
+            if (requiredIndex < requiredAttributes.Length) {
                 throw new NotSupportedException("This vertex does not supply sufficient attributes.");
             }
 

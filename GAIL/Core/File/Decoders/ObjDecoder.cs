@@ -9,8 +9,8 @@ namespace GAIL.Core.File
             public void Dispose() {
                 GC.SuppressFinalize(this);
             }
-            private List<Vertex> vertices = [];
-            private List<uint> faces = [];
+            private readonly List<Vertex> vertices = [];
+            private readonly List<uint> faces = [];
             /// <summary>
             /// Parses from a stream.
             /// </summary>
@@ -25,7 +25,7 @@ namespace GAIL.Core.File
                 }
                 return new Mesh([.. vertices], [.. faces]);
             }
-            private string[] lineFragments;
+            private string[]? lineFragments;
             private void ParseLine(string line) {
                 if (line[0] == '#') return;
                 lineFragments = line.Split(' ');
