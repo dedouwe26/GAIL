@@ -40,7 +40,7 @@ namespace examples.HelloTriangle
 			Logger.HandleUnhandledExceptions = true;
 
 			// Initializes the application.
-			app = new GAIL.Application(severity: Severity.Debug);
+			app = new GAIL.Application(severity: Severity.Trace);
 
 			Logger.LogDebug("Applying listeners.");
 

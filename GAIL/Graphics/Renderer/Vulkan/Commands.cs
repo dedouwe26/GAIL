@@ -43,7 +43,7 @@ public class Commands : IDisposable {
 
         commandBuffers = new CommandBuffer[renderer.Settings.MaxFramesInFlight];
         isInitial = new bool[renderer.Settings.MaxFramesInFlight];
-		Array.Fill(isInitial, true);
+		MakeInitial();
 		unsafe {
             if (!Utils.Check(API.Vk.AllocateCommandBuffers(renderer.device.logicalDevice, in allocateInfo, Pointer<CommandBuffer>.FromArray(ref commandBuffers)), renderer.Logger, "Failed to allocate command buffer", false)) {
                 throw new APIBackendException("Vulkan", "Failed to allocate command buffer");
@@ -80,9 +80,15 @@ public class Commands : IDisposable {
 		}
 		return false;
 	}
-
-    public void BeginRecord(ref Framebuffer swapchainImage) {
+    internal void MakeInitial() {
+		Array.Fill(isInitial, true);
+	}
+    
+    public void Update() {
         currentCommandBuffer = commandBuffers[renderer.CurrentFrame];
+    }
+
+    public void BeginRecord(Framebuffer swapchainImage) {
         BeginCommandBuffer(renderer, currentCommandBuffer, swapchainImage);
     }
 
@@ -112,7 +118,7 @@ public class Commands : IDisposable {
         { // Begin CommandBuffer
             CommandBufferBeginInfo beginInfo = new() {
                 SType = StructureType.CommandBufferBeginInfo,
-                Flags = CommandBufferUsageFlags.OneTimeSubmitBit,
+                Flags = CommandBufferUsageFlags.None,
                 PInheritanceInfo = Pointer<CommandBufferInheritanceInfo>.FromNull() // NOTE: Only relevant for secondary buffers.
             };
 

@@ -67,7 +67,7 @@ public class VulkanRasterizationLayer : IVulkanLayer, IRasterizationLayer {
         Index = index;
         this.settings = new(this, settings);
         Logger.LogDebug("Creating a Vulkan rasterization back-end layer.");
-        try {
+		try {
             Pipeline = new Pipeline(this);
 
 			LoadObjects();
@@ -76,7 +76,7 @@ public class VulkanRasterizationLayer : IVulkanLayer, IRasterizationLayer {
             Logger.LogException(e);
             throw;
         }
-    }
+	}
     /// <summary>
     /// If the Vulkan rasterization layer is disposed.
     /// </summary>
@@ -127,14 +127,9 @@ public class VulkanRasterizationLayer : IVulkanLayer, IRasterizationLayer {
     }
 
     /// <inheritdoc/>
-    public void Render(Commands commands) {
+    public void Record(Commands commands) {
         if (!settings.ShouldRender) return;
 
-        RecordCommands(commands);
-
-		shouldRecord = false;
-	}
-    private void RecordCommands(Commands commands) {
         commands.BindPipeline(Pipeline);
 		commands.SetViewport(ref Renderer.Swapchain.viewport);
 
@@ -143,13 +138,27 @@ public class VulkanRasterizationLayer : IVulkanLayer, IRasterizationLayer {
 				Render(commands, renderSet);
             }
         }
-    }
+
+		shouldRecord = false;
+	}
     private static void Render(Commands commands, RenderSet renderSet) {
         // obj.material.Apply(); // TODO: Uniforms // NOTE: Applying uniforms.
         commands.BindVertexBuffer(renderSet.vertexBuffer); // NOTE: Applying attributes.
         commands.Draw(vertexCount:3); // TODO: Temporary...
     }
 
+    void IVulkanLayer.Recreate() {
+		Logger.LogDebug("Recreating a Vulkan rasterization back-end layer.");
+		try {
+            Pipeline = new Pipeline(this);
+
+			LoadObjects();
+		} catch (Exception e) {
+            Logger.LogFatal("Exception occured while initializing Vulkan renderer:");
+            Logger.LogException(e);
+            throw;
+        }
+	}
     /// <inheritdoc/>
     public void Dispose() {
         if (IsDisposed) return;

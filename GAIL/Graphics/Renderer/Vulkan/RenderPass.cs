@@ -119,6 +119,8 @@ public class RenderPass : IDisposable {
 		}
 
 		AreFramebuffersDisposed = false;
+
+		renderer.Commands?.MakeInitial();
 	}
 	public void DisposeFramebuffers() {
 		if (AreFramebuffersDisposed) { return; }

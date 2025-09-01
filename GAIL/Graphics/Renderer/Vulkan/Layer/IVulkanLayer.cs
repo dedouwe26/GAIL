@@ -10,12 +10,16 @@ public interface IVulkanLayer : IBackendLayer {
     /// Fills the given command buffer to render.
     /// </summary>
     /// <param name="commands">The given command buffer used to submit render calls.</param>
-    public void Render(Commands commands);
-
+    public void Record(Commands commands);
     /// <summary>
-    /// The vulkan pipeline utility, for custom usage.
+    /// Recreate the layer, recreating with the same settings after disposal.
     /// </summary>
-    public Pipeline Pipeline { get; internal set; }
+	void Recreate();
+
+	/// <summary>
+	/// The vulkan pipeline utility, for custom usage.
+	/// </summary>
+	public Pipeline Pipeline { get; internal set; }
     /// <summary>
     /// Updates the index of the layer in the renderer.
     /// </summary>

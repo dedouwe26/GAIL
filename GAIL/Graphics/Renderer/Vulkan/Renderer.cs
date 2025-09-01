@@ -4,6 +4,7 @@ using GAIL.Graphics.Renderer.Layer;
 using GAIL.Graphics.Renderer.Vulkan;
 using GAIL.Graphics.Renderer.Vulkan.Layer;
 using LambdaKit.Logging;
+using LambdaKit.Terminal;
 using Silk.NET.Vulkan;
 
 namespace GAIL.Graphics.Renderer.Vulkan;
@@ -12,7 +13,7 @@ namespace GAIL.Graphics.Renderer.Vulkan;
 /// The settings implementation for Vulkan.
 /// </summary>
 public class Settings : RendererSettings<Renderer, IVulkanLayer> {
-	internal IVulkanLayer[] _Layers { set => layers = value; }
+	internal IVulkanLayer[] _Layers { set => layers = value; } // TODO: temp
 	/// <summary>
 	/// Creates new a new Vulkan implementation of the rasterization layer settings.
 	/// </summary>
@@ -167,14 +168,16 @@ public class Renderer : IRenderer<IVulkanLayer> {
 		// TODO: Add layers to render pass?
 		// TODO: RenderFinished semaphores?
 
+		Commands.Update();
+
 		if (ShouldRecord() || Commands.IsCommandBufferInitial()) {
-			Commands.BeginRecord(ref RenderPass!.Framebuffers![imageIndex]);
+			Commands.BeginRecord(RenderPass!.Framebuffers![imageIndex]);
 		
 			{
 				//   <<< LAYER SPECIFICS >>>
 
 				foreach (IVulkanLayer backendLayer in settings.Layers) {
-					backendLayer.Render(Commands);
+					backendLayer.Record(Commands);
 				}
 
 				// <<< END LAYER SPECIFICS >>>
@@ -185,7 +188,7 @@ public class Renderer : IRenderer<IVulkanLayer> {
 		
 		Commands.Submit();
 
-		if (!device.Present(ref imageIndex)) {
+		if (!device.Present(imageIndex)) {
 			RecreateSwapchain();
 		}
 
@@ -194,12 +197,12 @@ public class Renderer : IRenderer<IVulkanLayer> {
 
 	/// <inheritdoc/>
 	public void Resize(int width, int height) {
-		if (width == 0 || width == 0) {
+		if (width == 0 || height == 0) {
 			settings.ShouldRender = false;
 		} else if (!settings.ShouldRender) {
 			settings.ShouldRender = true;
 		}
-		device.shouldRecreateSwapchain = true;
+		RecreateSwapchain();
 	}
 	private bool ShouldRecord() {
 		foreach (IVulkanLayer backendLayer in settings.Layers) {
@@ -209,14 +212,22 @@ public class Renderer : IRenderer<IVulkanLayer> {
 		}
 		return false;
 	}
-	private void RecreateSwapchain() {
+	internal void RecreateSwapchain() {
 		device.WaitIdle();
 
 		RenderPass?.DisposeFramebuffers();
+		foreach (IVulkanLayer layer in settings.Layers) {
+			layer.Dispose();
+		}
+		RenderPass?.Dispose();
 		Swapchain.Dispose();
 
 		Swapchain = new Swapchain(this, globals.windowManager);
-		RenderPass!.CreateFramebuffers();
+		if (settings.Layers.Length > 0) RenderPass = new(this);
+		RenderPass?.CreateFramebuffers();
+		foreach (IVulkanLayer layer in settings.Layers) {
+			layer.Recreate();
+		}
 	}
 	/// <inheritdoc/>
 	public void Dispose() {
