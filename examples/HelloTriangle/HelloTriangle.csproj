@@ -1,23 +1,28 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\GAIL\GAIL.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\GAIL\GAIL.csproj" />
+	</ItemGroup>
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <!-- <NativeAOT>true</NativeAOT> -->
-  </PropertyGroup>
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<!-- <NativeAOT>true</NativeAOT> -->
+	</PropertyGroup>
 
-  <!-- Build Shaders -->
-  <Target Name="BuildVert" BeforeTargets="PreBuildEvent">
-    <Exec Command="%VULKAN_SDK%/Bin/glslc -fshader-stage=vertex -o vert.spv vert.glsl" />
-  </Target>
-  <Target Name="BuildFrag" BeforeTargets="PreBuildEvent">
-    <Exec Command="%VULKAN_SDK%/Bin/glslc -fshader-stage=fragment -o frag.spv frag.glsl" />
-  </Target>
+	<!-- Build Shaders -->
+	<PropertyGroup>
+	
+	</PropertyGroup>
+	<Target Name="BuildVert" BeforeTargets="PreBuildEvent">
+		<Exec Condition="$([System.OperatingSystem]::IsWindows())" Command="%VULKAN_SDK%/Bin/glslc -fshader-stage=vertex -o vert.spv vert.glsl" />
+		<Exec Condition="$([System.OperatingSystem]::IsLinux())" Command="/usr/bin/glslc -fshader-stage=vertex -o vert.spv vert.glsl" />
+	</Target>
+	<Target Name="BuildFrag" BeforeTargets="PreBuildEvent">
+		<Exec Condition="$([System.OperatingSystem]::IsWindows())" Command="%VULKAN_SDK%/Bin/glslc -fshader-stage=fragment -o frag.spv frag.glsl" />
+		<Exec Condition="$([System.OperatingSystem]::IsLinux())" Command="/usr/bin/glslc -fshader-stage=fragment -o frag.spv frag.glsl" />
+	</Target>
 
 </Project>
