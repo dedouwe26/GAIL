@@ -1,10 +1,8 @@
 using GAIL.Core;
 using GAIL.Graphics.Material;
 using GAIL.Graphics.Renderer.Layer;
-using GAIL.Graphics.Renderer.Vulkan;
 using GAIL.Graphics.Renderer.Vulkan.Layer;
 using LambdaKit.Logging;
-using LambdaKit.Terminal;
 using Silk.NET.Vulkan;
 
 namespace GAIL.Graphics.Renderer.Vulkan;
