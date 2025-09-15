@@ -21,6 +21,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.NET.ILLink.Tasks" Version="8.0.20" />
   <None Include="GAIL.nuspec" Pack="true" PackagePath="/" />
   <PackageReference Include="LambdaKit.Assertion" Version="5.0.0" />
   <PackageReference Include="LambdaKit.Logging" Version="5.0.0" />
