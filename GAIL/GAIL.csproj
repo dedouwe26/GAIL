@@ -21,7 +21,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+    <PackageReference Include="System.Text.Json" Version="9.0.9" />
   <None Include="GAIL.nuspec" Pack="true" PackagePath="/" />
   <PackageReference Include="LambdaKit.Assertion" Version="5.0.0" />
   <PackageReference Include="LambdaKit.Logging" Version="5.0.0" />
