@@ -34,6 +34,7 @@ public interface IRenderer<TBackendLayer> : IDisposable where TBackendLayer : IB
     /// <summary>
     /// Creates a shader from the following stages.
     /// </summary>
+    /// TODO: Add required stuff
     /// <param name="vertexShader">The per-vertex shader (in SPIR-V compiled).</param>
     /// <param name="fragmentShader">The per-pixel shader (in SPIR-V compiled).</param>
     /// <param name="geometryShader">The geometry shader (in SPIR-V compiled).</param>

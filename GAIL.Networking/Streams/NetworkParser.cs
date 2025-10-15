@@ -1,5 +1,6 @@
 using GAIL.Serializing;
 using GAIL.Serializing.Formatters;
+using GAIL.Serializing.Streams;
 using LambdaKit.Logging;
 
 namespace GAIL.Networking.Streams;
@@ -7,7 +8,7 @@ namespace GAIL.Networking.Streams;
 /// <summary>
 /// A parser that can parse the network format (opposite of: <see cref="NetworkSerializer"/>).
 /// </summary>
-public class NetworkParser : Serializing.Streams.Parser {
+public class NetworkParser : Parser {
     /// <summary>
     /// The ID of the network parser logger.
     /// </summary>
@@ -27,34 +28,15 @@ public class NetworkParser : Serializing.Streams.Parser {
         return logger;
     } }
     /// <summary>
-    /// The stream to read from while formatting.
+    /// Creates a new network parser.
     /// </summary>
-    public Stream InStream { get; private set; }
+    /// <inheritdoc/>
+    public NetworkParser(Stream input, bool shouldCloseStream = false) : base(input, shouldCloseStream) { }
     /// <summary>
     /// Creates a new network parser.
     /// </summary>
     /// <inheritdoc/>
-    public NetworkParser(Stream input, bool shouldCloseStream = false) : base(new MemoryStream(), shouldCloseStream) { InStream = input; }
-    /// <summary>
-    /// Creates a new network parser.
-    /// </summary>
-    /// <inheritdoc/>
-    public NetworkParser(byte[] input, bool shouldCloseStream = false) : base(new MemoryStream(), shouldCloseStream) { InStream = new MemoryStream(input); }
-
-    private void Decode(IFormatter? formatter = null) {
-        BaseStream.Dispose();
-
-        byte[] buffer = new byte[4];
-        InStream.Read(buffer);
-        IntSerializable size = (IntSerializable)IntSerializable.Info.Creator(buffer);
-
-        buffer = new byte[size.Value];
-        InStream.Read(buffer);
-
-        if (formatter != null) buffer = formatter.Decode(buffer);
-
-        BaseStream = new MemoryStream(buffer);
-    }
+    public NetworkParser(byte[] input, bool shouldCloseStream = true) : base(input, shouldCloseStream) { }
 
     /// <summary>
     /// Reads a packet from the stream.
@@ -62,16 +44,17 @@ public class NetworkParser : Serializing.Streams.Parser {
     /// <param name="formatter">The global formatter used for decoding.</param>
     /// <returns>The packet parsed from the stream.</returns>
     public Packet ReadPacket(IFormatter? formatter = null) {
-        Decode(formatter);
-        uint packetID = ReadUInt();
-        
-        ISerializable.Info[] format = NetworkRegister.GetPacketFormat(packetID);
-
-        Packet packet = (Packet)ReadStreamReducer(
-            new((parser)=>NetworkRegister.CreatePacket(packetID, parser)),
-            NetworkRegister.GetPacketFormatter(packetID)
-        );
-        return packet;
+        if (formatter != null) {
+            Packet packet;
+            using (Parser parser = new(Read(null, formatter))) {
+                uint packetID = parser.ReadUInt();
+                packet = NetworkRegister.GetPacketInfo(packetID).Create(parser, null);
+            }
+            return packet;
+        } else {
+            uint packetID = ReadUInt();
+            return NetworkRegister.GetPacketInfo(packetID).Create(this, null);
+        }
     }
 
     /// <summary>

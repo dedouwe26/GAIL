@@ -18,7 +18,7 @@ public class Instance : IDisposable {
     /// Vulkan Instance.
     /// </summary>
     public readonly Silk.NET.Vulkan.Instance instance;
-    public Instance(VulkanRenderer renderer, ref AppInfo appInfo) {
+    public Instance(Renderer renderer, AppInfo appInfo) {
         renderer.Logger.LogDebug("Creating Vulkan Instance.");
         unsafe {
             // Creates application info from AppInfo.
@@ -28,7 +28,7 @@ public class Instance : IDisposable {
                 ApplicationVersion = Vk.MakeVersion(appInfo.AppVersion[0], appInfo.AppVersion[1], appInfo.AppVersion[2]),
                 PEngineName = (byte*)Marshal.StringToHGlobalAnsi(appInfo.EngineName),
                 EngineVersion = Vk.MakeVersion(appInfo.EngineVersion[0], appInfo.EngineVersion[1], appInfo.EngineVersion[2]),
-                ApiVersion = Vk.Version13
+                ApiVersion = Vk.Version10
             };
 
             // Glfw required extensions.

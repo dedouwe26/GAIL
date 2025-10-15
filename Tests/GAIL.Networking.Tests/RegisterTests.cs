@@ -22,12 +22,12 @@ public class RegisterTests {
     public void CheckForFormat() {
         uint id = NetworkRegister.RegisterPacket<TestPacket>();
 
-        ISerializable.Info[] format = NetworkRegister.GetPacketFormat(id);
+        IRawSerializable.Info[] format = NetworkRegister.GetPacketFormat(id);
 
         Assert.True(
             format.SequenceEqual(
                 [StringSerializable.Info, IntSerializable.Info, BoolSerializable.Info],
-                EqualityComparer<ISerializable.Info>.Create((info1, info2) => info1!.FixedSize == info2!.FixedSize)
+                EqualityComparer<IRawSerializable.Info>.Create((info1, info2) => info1!.FixedSize == info2!.FixedSize)
             )
         );
     }

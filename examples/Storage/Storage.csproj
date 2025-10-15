@@ -5,7 +5,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="LambdaKit.Terminal" Version="5.0.0" />
+    <PackageReference Include="LambdaKit.Terminal" Version="5.0.2" />
   </ItemGroup>
 
   <PropertyGroup>

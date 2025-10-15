@@ -9,7 +9,7 @@ public class Buffer : IDisposable {
     public bool IsDisposed { get; private set; } = false;
     private readonly Logger logger;
     private readonly Device device;
-    public Buffer(VulkanRenderer renderer, ulong size, BufferUsageFlags usage, SharingMode sharingMode, BufferCreateFlags flags = BufferCreateFlags.None, uint[]? queueFamilyIndices = null) {
+    public Buffer(Renderer renderer, ulong size, BufferUsageFlags usage, SharingMode sharingMode, BufferCreateFlags flags = BufferCreateFlags.None, uint[]? queueFamilyIndices = null) {
         logger = renderer.Logger;
         device = renderer.device;
         BufferCreateInfo createInfo = new() {
@@ -26,7 +26,7 @@ public class Buffer : IDisposable {
             }
         }
         unsafe {
-            if (Utils.Check(API.Vk.CreateBuffer(device.logicalDevice, in createInfo, Allocator.allocatorPtr, out buffer), renderer.Logger, "Failed to create a buffer")) {
+            if (!Utils.Check(API.Vk.CreateBuffer(device.logicalDevice, in createInfo, Allocator.allocatorPtr, out buffer), renderer.Logger, "Failed to create a buffer")) {
                 throw new APIBackendException("Vulkan", "Failed to create a buffer");
             }
         }

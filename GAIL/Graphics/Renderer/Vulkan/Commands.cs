@@ -7,13 +7,14 @@ public class Commands : IDisposable {
     public bool IsDisposed { get; private set; }
     public readonly CommandPool commandPool;
     public CommandBuffer[] commandBuffers;
-    private readonly Device device;
+    private readonly Renderer renderer;
     private CommandBuffer currentCommandBuffer;
-    public Commands(VulkanRenderer renderer) {
-        device = renderer.device;
+	public bool[] isInitial;
+	public Commands(Renderer renderer) {
+		this.renderer = renderer;
 
-        { // Command pool
-            QueueFamilyIndices queueFamilyIndices = device.FindQueueFamilies(device.physicalDevice);
+		{ // Command pool
+            QueueFamilyIndices queueFamilyIndices = renderer.device.FindQueueFamilies(renderer.device.physicalDevice);
 
             CommandPoolCreateInfo createInfo = new() {
                 SType = StructureType.CommandPoolCreateInfo,
@@ -24,14 +25,11 @@ public class Commands : IDisposable {
 
             renderer.Logger.LogDebug("Creating Command Pool.");
             unsafe {
-                if (!Utils.Check(API.Vk.CreateCommandPool(device.logicalDevice, in createInfo, Allocator.allocatorPtr, out commandPool), renderer.Logger, "Failed to create commandpool", false)) {
+                if (!Utils.Check(API.Vk.CreateCommandPool(renderer.device.logicalDevice, in createInfo, Allocator.allocatorPtr, out commandPool), renderer.Logger, "Failed to create commandpool", false)) {
                     throw new APIBackendException("Vulkan", "Failed to create commandpool");
                 }
             }
         }
-
-        commandBuffers = new CommandBuffer[renderer.Settings.MaxFramesInFlight];
-
         // Command buffers
         CommandBufferAllocateInfo allocateInfo = new() {
             SType = StructureType.CommandBufferAllocateInfo,
@@ -44,14 +42,16 @@ public class Commands : IDisposable {
         renderer.Logger.LogDebug("Allocating Command Buffers.");
 
         commandBuffers = new CommandBuffer[renderer.Settings.MaxFramesInFlight];
-        unsafe {
-            if (!Utils.Check(API.Vk.AllocateCommandBuffers(device.logicalDevice, in allocateInfo, Pointer<CommandBuffer>.FromArray(ref commandBuffers)), renderer.Logger, "Failed to allocate command buffer", false)) {
+        isInitial = new bool[renderer.Settings.MaxFramesInFlight];
+		MakeInitial();
+		unsafe {
+            if (!Utils.Check(API.Vk.AllocateCommandBuffers(renderer.device.logicalDevice, in allocateInfo, Pointer<CommandBuffer>.FromArray(ref commandBuffers)), renderer.Logger, "Failed to allocate command buffer", false)) {
                 throw new APIBackendException("Vulkan", "Failed to allocate command buffer");
             }
         }
     }
 
-    public void Submit(VulkanRenderer renderer) {
+    public void Submit() {
         PipelineStageFlags[] waitStages = [PipelineStageFlags.ColorAttachmentOutputBit];
         Silk.NET.Vulkan.Semaphore[] waitSemaphores = [renderer.Syncronization.imageAvailable[renderer.CurrentFrame]];
         
@@ -73,14 +73,30 @@ public class Commands : IDisposable {
 
         _ = Utils.Check(API.Vk.QueueSubmit(renderer.device.graphicsQueue, [submitInfo], renderer.Syncronization.inFlight[renderer.CurrentFrame]), renderer.Logger, "Failed to submit draw command buffer", true);
     }
+    public bool IsCommandBufferInitial() {
+        if (isInitial[renderer.CurrentFrame]) {
+		    isInitial[renderer.CurrentFrame] = false;
+			return true;
+		}
+		return false;
+	}
+    internal void MakeInitial() {
+		Array.Fill(isInitial, true);
+	}
     
-    public void BeginRecord(VulkanRenderer renderer, ref Framebuffer swapchainImage) {
+    public void Update() {
         currentCommandBuffer = commandBuffers[renderer.CurrentFrame];
-        BeginCommandBuffer(renderer, currentCommandBuffer, ref swapchainImage);
+    }
+
+    public void BeginRecord(Framebuffer swapchainImage) {
+        BeginCommandBuffer(renderer, currentCommandBuffer, swapchainImage);
     }
 
     public void BindPipeline(Layer.Pipeline pipeline) {
         API.Vk.CmdBindPipeline(currentCommandBuffer, pipeline.Type, pipeline.graphicsPipeline);
+    }
+    public void SetViewport(ref Viewport viewport) {
+        API.Vk.CmdSetViewport(currentCommandBuffer, 0, 1, in viewport);
     }
     public unsafe void BindVertexBuffer(VertexBuffer vertexBuffer) {
         ulong[] offsets = [0];
@@ -92,11 +108,11 @@ public class Commands : IDisposable {
         API.Vk.CmdDraw(currentCommandBuffer, vertexCount, instanceCount, firstVertex, firstInstance);
     }
 
-    public void EndRecord(VulkanRenderer renderer) {
+    public void EndRecord() {
         EndCommandBuffer(renderer, currentCommandBuffer);
     }
 
-    public static void BeginCommandBuffer(VulkanRenderer renderer, CommandBuffer buffer, ref Framebuffer swapchainImage) {
+    public static void BeginCommandBuffer(Renderer renderer, CommandBuffer buffer, Framebuffer swapchainImage) {
         API.Vk.ResetCommandBuffer(buffer, CommandBufferResetFlags.None);
         
         { // Begin CommandBuffer
@@ -116,7 +132,7 @@ public class Commands : IDisposable {
             RenderPassBeginInfo renderPassInfo = new() {
                 SType = StructureType.RenderPassBeginInfo,
 
-                RenderPass = renderer.RenderPass.renderPass,
+                RenderPass = renderer.RenderPass!.renderPass,
                 Framebuffer = swapchainImage,
 
                 RenderArea = new(new(0, 0), renderer.Swapchain.extent), // NOTE: Shader loads, stores area
@@ -128,10 +144,9 @@ public class Commands : IDisposable {
             API.Vk.CmdBeginRenderPass(buffer, in renderPassInfo, SubpassContents.Inline);
             // NOTE: Inline: renderpass setup commands will be embedded in the primary command buffer.
         }
-        API.Vk.CmdSetViewport(buffer, 0, 1, in renderer.Swapchain.viewport);
     }
 
-    public static void EndCommandBuffer(VulkanRenderer renderer, CommandBuffer buffer) {
+    public static void EndCommandBuffer(Renderer renderer, CommandBuffer buffer) {
         API.Vk.CmdEndRenderPass(buffer);
 
         _ = Utils.Check(API.Vk.EndCommandBuffer(buffer), renderer.Logger, "Failed to record a command buffer", true);
@@ -142,7 +157,7 @@ public class Commands : IDisposable {
         if (IsDisposed) { return; }
 
         unsafe {
-            API.Vk.DestroyCommandPool(device.logicalDevice, commandPool, Allocator.allocatorPtr);
+            API.Vk.DestroyCommandPool(renderer.device.logicalDevice, commandPool, Allocator.allocatorPtr);
         }
 
         IsDisposed = true;

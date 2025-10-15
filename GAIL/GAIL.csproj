@@ -21,9 +21,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="System.Text.Json" Version="9.0.9" />
   <None Include="GAIL.nuspec" Pack="true" PackagePath="/" />
   <PackageReference Include="LambdaKit.Assertion" Version="5.0.0" />
   <PackageReference Include="LambdaKit.Logging" Version="5.0.0" />
+  <PackageReference Include="LambdaKit.Terminal" Version="5.0.2" />
     <PackageReference Include="Silk.NET" Version="2.22.0" /> <!-- TODO: Subdivide Silk.NET into smaller pieces (also in nuspec). -->
     <PackageReference Include="Silk.NET.Assimp" Version="2.22.0" /> <!-- is this used? -->
     <PackageReference Include="Silk.NET.OpenAL.Extensions.EXT" Version="2.22.0" />

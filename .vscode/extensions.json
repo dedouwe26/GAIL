@@ -1,7 +1,6 @@
 {
     "recommendations": [
-        "ms-dotnettools.csdevkit",
-        "ms-dotnettools.csharp",
+        "muhammad-sammy.csharp",
         "wayou.vscode-todo-highlight",
         "slevesque.shader"
     ]

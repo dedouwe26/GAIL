@@ -1,4 +1,5 @@
 using System.Text;
+using GAIL.Serializing.Formatters;
 using GAIL.Serializing.Streams;
 
 namespace GAIL.Serializing;
@@ -6,22 +7,18 @@ namespace GAIL.Serializing;
 /// <summary>
 /// A bool serializable.
 /// </summary>
-public class BoolSerializable : ISerializable {
-    private static ISerializable.Info? info;
+public class BoolSerializable : ByteSerializable {
+    private static ISerializable.Info<BoolSerializable>? info;
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
     [SerializingInfo]
-    public static ISerializable.Info Info { get {
+    public static new ISerializable.Info<BoolSerializable> Info { get {
         if (info == null) {
-            info = ISerializable.CreateInfo(() => {return new BoolSerializable();});
+            info = ISerializable.CreateInfo<BoolSerializable>();
         }
         return info;
     } }
-    /// <summary>
-    /// The value of this serializable.
-    /// </summary>
-    public byte Value { get; set; }
     /// <summary>
     /// The first boolean (msb).
     /// </summary>
@@ -57,7 +54,7 @@ public class BoolSerializable : ISerializable {
     /// <summary>
     /// Creates an empty serializable.
     /// </summary>
-    public  BoolSerializable() : this(default) { }
+    public BoolSerializable() : this(default) { }
     /// <summary>
     /// Creates a new serializable (stores 8 bools in 1 byte).
     /// </summary>
@@ -70,478 +67,438 @@ public class BoolSerializable : ISerializable {
     /// <param name="b7">The seventh boolean.</param>
     /// <param name="b8">The eighth boolean (lsb).</param>
     public BoolSerializable(bool b1,
-        bool b2=default, bool b3=default, bool b4=default, bool b5=default, bool b6=default, bool b7=default, bool b8=default)
-    {
-        B1 = b1;
-        B2 = b2;
-        B3 = b3;
-        B4 = b4;
-        B5 = b5;
-        B6 = b6;
-        B7 = b7;
-        B8 = b8;
-    }
-    /// <inheritdoc/>
-    public uint? FixedSize => 1;
-
-    /// <inheritdoc/>
-    public byte[] Serialize() {
-        return [Value];
-    }
-
-    /// <inheritdoc/>
-    public void Parse(byte[] data) {
-        Value = data[0];
-    }
+        bool b2=default, bool b3=default, bool b4=default, bool b5=default, bool b6=default, bool b7=default, bool b8=default) : base((byte)(
+            (b1 ? 0x80 : 0x00)|(b2 ? 0x40 : 0x00)|
+            (b3 ? 0x20 : 0x00)|(b4 ? 0x10 : 0x00)|
+            (b5 ? 0x08 : 0x00)|(b6 ? 0x04 : 0x00)|
+            (b7 ? 0x02 : 0x00)|(b8 ? 0x01 : 0x00)
+        )
+    ) { }
 }
 /// <summary>
 /// A float serializable.
 /// </summary>
-public class FloatSerializable : ISerializable<float> {
-    private static ISerializable.Info? info;
+public class FloatSerializable : RawSerializable<float> {
+    private static ISerializable.Info<FloatSerializable>? info;
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
     [SerializingInfo]
-    public static ISerializable.Info Info { get {
+    public static ISerializable.Info<FloatSerializable> Info { get {
         if (info == null) {
-            info = ISerializable.CreateInfo(() => {return new FloatSerializable(default);});
+            info = ISerializable.CreateInfo<FloatSerializable>();
         }
         return info;
     } }
     /// <summary>
-    /// The value of this serializable.
+    /// Creates an empty serializable.
     /// </summary>
-    public float Value { get; set; }
+    public FloatSerializable() : this(default) { }
     /// <summary>
     /// Creates a new serializable.
     /// </summary>
     /// <param name="value">The value of this serializable.</param>
-    public FloatSerializable(float value) {
-        Value = value;
-    }
+    public FloatSerializable(float value) : base(value) { }
 
     /// <inheritdoc/>
-    public uint? FixedSize => 4;
+    public override uint? FixedSize => 4;
 
     /// <inheritdoc/>
-    public byte[] Serialize() {
+    public override byte[] Serialize() {
         return BitConverter.IsLittleEndian ? BitConverter.GetBytes(Value) : BitConverter.GetBytes(Value).Reverse().ToArray();
     }
     /// <inheritdoc/>
-    public void Parse(byte[] data) {
+    public override void Parse(byte[] data) {
         Value = BitConverter.IsLittleEndian ? BitConverter.ToSingle(data) : BitConverter.ToSingle(data.Reverse().ToArray());
     }
 }
 /// <summary>
 /// A double serializable.
 /// </summary>
-public class DoubleSerializable : ISerializable<double> {
-    private static ISerializable.Info? info;
+public class DoubleSerializable : RawSerializable<double> {
+    private static ISerializable.Info<DoubleSerializable>? info;
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
     [SerializingInfo]
-    public static ISerializable.Info Info { get {
+    public static ISerializable.Info<DoubleSerializable> Info { get {
         if (info == null) {
-            info = ISerializable.CreateInfo(() => {return new DoubleSerializable(default);});
+            info = ISerializable.CreateInfo<DoubleSerializable>();
         }
         return info;
     } }
     /// <summary>
-    /// The value of this serializable.
+    /// Creates an empty serializable.
     /// </summary>
-    public double Value { get; set; }
+    public DoubleSerializable() : this(default) { }
     /// <summary>
     /// Creates a new serializable.
     /// </summary>
     /// <param name="value">The value of this serializable.</param>
-    public DoubleSerializable(double value) {
-        Value = value;
-    }
+    public DoubleSerializable(double value) : base(value) { }
     /// <inheritdoc/>
-    public uint? FixedSize => 8;
+    public override uint? FixedSize => 8;
     /// <inheritdoc/>
-    public byte[] Serialize() {
+    public override byte[] Serialize() {
         return BitConverter.IsLittleEndian ? BitConverter.GetBytes(Value) : BitConverter.GetBytes(Value).Reverse().ToArray();
     }
 
     /// <inheritdoc/>
-    public void Parse(byte[] data) {
+    public override void Parse(byte[] data) {
         Value = BitConverter.IsLittleEndian ? BitConverter.ToDouble(data) : BitConverter.ToDouble(data.Reverse().ToArray());
     }
 }
 /// <summary>
 /// A byte serializable.
 /// </summary>
-public class ByteSerializable : ISerializable<byte> {
-    private static ISerializable.Info? info;
+public class ByteSerializable : RawSerializable<byte> {
+    private static ISerializable.Info<ByteSerializable>? info;
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
     [SerializingInfo]
-    public static ISerializable.Info Info { get {
+    public static ISerializable.Info<ByteSerializable> Info { get {
         if (info == null) {
-            info = ISerializable.CreateInfo(() => {return new ByteSerializable(default);});
+            info = ISerializable.CreateInfo<ByteSerializable>();
         }
         return info;
     } }
     /// <summary>
-    /// The value of this serializable.
+    /// Creates an empty serializable.
     /// </summary>
-    public byte Value { get; set; }
+    public ByteSerializable() : this(default) { }
     /// <summary>
     /// Creates a new serializable.
     /// </summary>
     /// <param name="value">The value of this serializable.</param>
-    public ByteSerializable(byte value) {
-        Value = value;
-    }
+    public ByteSerializable(byte value) : base(value) { }
     /// <inheritdoc/>
-    public uint? FixedSize => 1;
+    public override uint? FixedSize => 1;
     /// <inheritdoc/>
-    public byte[] Serialize() {
+    public override byte[] Serialize() {
         return [Value];
     }
 
     /// <inheritdoc/>
-    public void Parse(byte[] data) {
+    public override void Parse(byte[] data) {
         Value = data[0];
     }
 }
 /// <summary>
 /// A short serializable.
 /// </summary>
-public class ShortSerializable : ISerializable<short> {
-    private static ISerializable.Info? info;
+public class ShortSerializable : RawSerializable<short> {
+    private static ISerializable.Info<ShortSerializable>? info;
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
     [SerializingInfo]
-    public static ISerializable.Info Info { get {
+    public static ISerializable.Info<ShortSerializable> Info { get {
         if (info == null) {
-            info = ISerializable.CreateInfo(() => {return new ShortSerializable(default);});
+            info = ISerializable.CreateInfo<ShortSerializable>();
         }
         return info;
     } }
     /// <summary>
-    /// The value of this serializable.
+    /// Creates an empty serializable.
     /// </summary>
-    public short Value { get; set; }
+    public ShortSerializable() : this(default) { }
     /// <summary>
     /// Creates a new serializable.
     /// </summary>
     /// <param name="value">The value of this serializable.</param>
-    public ShortSerializable(short value) {
-        Value = value;
-    }
+    public ShortSerializable(short value) : base(value) { }
     /// <inheritdoc/>
-    public uint? FixedSize => 2;
+    public override uint? FixedSize => 2;
     /// <inheritdoc/>
-    public byte[] Serialize() {
+    public override byte[] Serialize() {
         return BitConverter.IsLittleEndian ? BitConverter.GetBytes(Value) : BitConverter.GetBytes(Value).Reverse().ToArray();
     }
     /// <inheritdoc/>
-    public void Parse(byte[] data) {
+    public override void Parse(byte[] data) {
         Value = BitConverter.IsLittleEndian ? BitConverter.ToInt16(data) : BitConverter.ToInt16(data.Reverse().ToArray());
     }
 }
 /// <summary>
 /// A int serializable.
 /// </summary>
-public class IntSerializable : ISerializable<int> {
-    private static ISerializable.Info? info;
+public class IntSerializable : RawSerializable<int> {
+    private static ISerializable.Info<IntSerializable>? info;
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
     [SerializingInfo]
-    public static ISerializable.Info Info { get {
+    public static ISerializable.Info<IntSerializable> Info { get {
         if (info == null) {
-            info = ISerializable.CreateInfo(() => {return new IntSerializable(default);});
+            info = ISerializable.CreateInfo<IntSerializable>();
         }
         return info;
     } }
     /// <summary>
-    /// The value of this serializable.
+    /// Creates an empty serializable.
     /// </summary>
-    public int Value { get; set; }
+    public IntSerializable() : this(default) { }
     /// <summary>
     /// Creates a new serializable.
     /// </summary>
     /// <param name="value">The value of this serializable.</param>
-    public IntSerializable(int value) {
-        Value = value;
-    }
+    public IntSerializable(int value) : base(value) { }
     /// <inheritdoc/>
-    public uint? FixedSize => 4;
+    public override uint? FixedSize => 4;
     /// <inheritdoc/>
-    public byte[] Serialize() {
+    public override byte[] Serialize() {
         return BitConverter.IsLittleEndian ? BitConverter.GetBytes(Value) : BitConverter.GetBytes(Value).Reverse().ToArray();
     }
     /// <inheritdoc/>
-    public void Parse(byte[] data) {
+    public override void Parse(byte[] data) {
         Value = BitConverter.IsLittleEndian ? BitConverter.ToInt32(data) : BitConverter.ToInt32(data.Reverse().ToArray());
     }
 }
 /// <summary>
 /// A long serializable.
 /// </summary>
-public class LongSerializable : ISerializable<long> {
-    private static ISerializable.Info? info;
+public class LongSerializable : RawSerializable<long> {
+    private static ISerializable.Info<LongSerializable>? info;
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
     [SerializingInfo]
-    public static ISerializable.Info Info { get {
+    public static ISerializable.Info<LongSerializable> Info { get {
         if (info == null) {
-            info = ISerializable.CreateInfo(() => {return new LongSerializable(default);});
+            info = ISerializable.CreateInfo<LongSerializable>();
         }
         return info;
     } }
     /// <summary>
+    /// Creates an empty serializable.
+    /// </summary>
+    public LongSerializable() : this(default) { }
+    /// <summary>
     /// Creates a new serializable.
     /// </summary>
     /// <param name="value">The value of this serializable.</param>
-    public LongSerializable(long value) {
-        Value = value;
-    }
-    /// <summary>
-    /// The value of this serializable.
-    /// </summary>
-    public long Value { get; set; }
+    public LongSerializable(long value) : base(value) { }
     /// <inheritdoc/>
-    public uint? FixedSize => 8;
+    public override uint? FixedSize => 8;
     /// <inheritdoc/>
-    public byte[] Serialize() {
+    public override byte[] Serialize() {
         return BitConverter.IsLittleEndian ? BitConverter.GetBytes(Value) : BitConverter.GetBytes(Value).Reverse().ToArray();
     }
     /// <inheritdoc/>
-    public void Parse(byte[] data) {
+    public override void Parse(byte[] data) {
         Value = BitConverter.IsLittleEndian ? BitConverter.ToInt64(data) : BitConverter.ToInt64(data.Reverse().ToArray());
     }
 }
 /// <summary>
 /// A signed byte serializable.
 /// </summary>
-public class SByteSerializable : ISerializable<sbyte> {
-    private static ISerializable.Info? info;
+public class SByteSerializable : RawSerializable<sbyte> {
+    private static ISerializable.Info<SByteSerializable>? info;
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
     [SerializingInfo]
-    public static ISerializable.Info Info { get {
+    public static ISerializable.Info<SByteSerializable> Info { get {
         if (info == null) {
-            info = ISerializable.CreateInfo(() => {return new SByteSerializable(default);});
+            info = ISerializable.CreateInfo<SByteSerializable>();
         }
         return info;
     } }
     /// <summary>
+    /// Creates an empty serializable.
+    /// </summary>
+    public SByteSerializable() : this(default) { }
+    /// <summary>
     /// Creates a new serializable.
     /// </summary>
     /// <param name="value">The value of this serializable.</param>
-    public SByteSerializable(sbyte value) {
-        Value = value;
-    }
-    /// <summary>
-    /// The value of this serializable.
-    /// </summary>
-    public sbyte Value { get; set; }
+    public SByteSerializable(sbyte value) : base(value) { }
     /// <inheritdoc/>
-    public uint? FixedSize => 1;
+    public override uint? FixedSize => 1;
     /// <inheritdoc/>
-    public byte[] Serialize() {
+    public override byte[] Serialize() {
         return [(byte)Value];
     }
     /// <inheritdoc/>
-    public void Parse(byte[] data) {
+    public override void Parse(byte[] data) {
         Value = (sbyte)data[0];
     }
 }
 /// <summary>
 /// An unsigned short serializable.
 /// </summary>
-public class UShortSerializable : ISerializable<ushort> {
-    private static ISerializable.Info? info;
+public class UShortSerializable : RawSerializable<ushort> {
+    private static ISerializable.Info<UShortSerializable>? info;
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
     [SerializingInfo]
-    public static ISerializable.Info Info { get {
+    public static ISerializable.Info<UShortSerializable> Info { get {
         if (info == null) {
-            info = ISerializable.CreateInfo(() => {return new UShortSerializable(default);});
+            info = ISerializable.CreateInfo<UShortSerializable>();
         }
         return info;
     } }
     /// <summary>
+    /// Creates an empty serializable.
+    /// </summary>
+    public UShortSerializable() : this(default) { }
+    /// <summary>
     /// Creates a new serializable.
     /// </summary>
     /// <param name="value">The value of this serializable.</param>
-    public UShortSerializable(ushort value) {
-        Value = value;
-    }
-    /// <summary>
-    /// The value of this serializable.
-    /// </summary>
-    public ushort Value { get; set; }
+    public UShortSerializable(ushort value) : base(value) { }
     /// <inheritdoc/>
-    public uint? FixedSize => 2;
+    public override uint? FixedSize => 2;
     /// <inheritdoc/>
-    public byte[] Serialize() {
+    public override byte[] Serialize() {
         return BitConverter.IsLittleEndian ? BitConverter.GetBytes(Value) : BitConverter.GetBytes(Value).Reverse().ToArray();
     }
     /// <inheritdoc/>
-    public void Parse(byte[] data) {
+    public override void Parse(byte[] data) {
         Value = BitConverter.IsLittleEndian ? BitConverter.ToUInt16(data) : BitConverter.ToUInt16(data.Reverse().ToArray());
     }
 }
 /// <summary>
 /// An unsigned int serializable.
 /// </summary>
-public class UIntSerializable : ISerializable<uint> {
-    private static ISerializable.Info? info;
+public class UIntSerializable : RawSerializable<uint> {
+    private static ISerializable.Info<UIntSerializable>? info;
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
     [SerializingInfo]
-    public static ISerializable.Info Info { get {
+    public static ISerializable.Info<UIntSerializable> Info { get {
         if (info == null) {
-            info = ISerializable.CreateInfo(() => {return new UIntSerializable(default);});
+            info = ISerializable.CreateInfo<UIntSerializable>();
         }
         return info;
     } }
     /// <summary>
+    /// Creates an empty serializable.
+    /// </summary>
+    public UIntSerializable() : this(default) { }
+    /// <summary>
     /// Creates a new serializable.
     /// </summary>
     /// <param name="value">The value of this serializable.</param>
-    public UIntSerializable(uint value) {
-        Value = value;
-    }
-    /// <summary>
-    /// The value of this serializable.
-    /// </summary>
-    public uint Value { get; set; }
+    public UIntSerializable(uint value) : base(value) { }
     /// <inheritdoc/>
-    public uint? FixedSize => 4;
+    public override uint? FixedSize => 4;
 
     /// <inheritdoc/>
-    public byte[] Serialize() {
+    public override byte[] Serialize() {
         return BitConverter.IsLittleEndian ? BitConverter.GetBytes(Value) : BitConverter.GetBytes(Value).Reverse().ToArray();
     }
     /// <inheritdoc/>
-    public void Parse(byte[] data) {
+    public override void Parse(byte[] data) {
         Value = BitConverter.IsLittleEndian ? BitConverter.ToUInt32(data) : BitConverter.ToUInt32(data.Reverse().ToArray());
     }
 }
 /// <summary>
 /// An unsigned long serializable.
 /// </summary>
-public class ULongSerializable : ISerializable<ulong> {
-    private static ISerializable.Info? info;
+public class ULongSerializable : RawSerializable<ulong> {
+    private static ISerializable.Info<ULongSerializable>? info;
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
     [SerializingInfo]
-    public static ISerializable.Info Info { get {
+    public static ISerializable.Info<ULongSerializable> Info { get {
         if (info == null) {
-            info = ISerializable.CreateInfo(() => {return new ULongSerializable(default);});
+            info = ISerializable.CreateInfo<ULongSerializable>();
         }
         return info;
     } }
     /// <summary>
+    /// Creates an empty serializable.
+    /// </summary>
+    public ULongSerializable() : this(default) { }
+    /// <summary>
     /// Creates a new serializable.
     /// </summary>
     /// <param name="value">The value of this serializable.</param>
-    public ULongSerializable(ulong value) {
-        Value = value;
-    }
-    /// <summary>
-    /// The value of this serializable.
-    /// </summary>
-    public ulong Value { get; set; }
+    public ULongSerializable(ulong value) : base(value) { }
     /// <inheritdoc/>
-    public uint? FixedSize => 8;
+    public override uint? FixedSize => 8;
     /// <inheritdoc/>
-    public byte[] Serialize() {
+    public override byte[] Serialize() {
         return BitConverter.IsLittleEndian ? BitConverter.GetBytes(Value) : BitConverter.GetBytes(Value).Reverse().ToArray();
     }
     /// <inheritdoc/>
-    public void Parse(byte[] data) {
+    public override void Parse(byte[] data) {
         Value = BitConverter.IsLittleEndian ? BitConverter.ToUInt64(data) : BitConverter.ToUInt64(data.Reverse().ToArray());
     }
 }
 /// <summary>
 /// A byte array serializable.
 /// </summary>
-public class BytesSerializable : ISerializable<byte[]> {
-    private static ISerializable.Info? info;
+public class BytesSerializable : RawSerializable<byte[]> {
+    private static ISerializable.Info<BytesSerializable>? info;
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
     [SerializingInfo]
-    public static ISerializable.Info Info { get {
+    public static ISerializable.Info<BytesSerializable> Info { get {
         if (info == null) {
-            info = ISerializable.CreateInfo(() => {return new BytesSerializable([]);});
+            info = ISerializable.CreateInfo<BytesSerializable>();
         }
         return info;
     } }
     /// <summary>
+    /// Creates an empty serializable.
+    /// </summary>
+    public BytesSerializable() : this([]) { }
+    /// <summary>
     /// Creates a new serializable.
     /// </summary>
     /// <param name="value">The value of this serializable.</param>
-    public BytesSerializable(byte[] value) {
-        Value = value;
-    }
-    /// <summary>
-    /// The value of this serializable.
-    /// </summary>
-    public byte[] Value { get; set; }
+    public BytesSerializable(byte[] value) : base(value) { }
 
     /// <inheritdoc/>
-    public uint? FixedSize => null;
+    public override uint? FixedSize => null;
 
     /// <inheritdoc/>
-    public byte[] Serialize() {
+    public override byte[] Serialize() {
         return BitConverter.IsLittleEndian ? Value : [.. Value.Reverse()];
     }
     /// <inheritdoc/>
-    public void Parse(byte[] data) {
+    public override void Parse(byte[] data) {
         Value = BitConverter.IsLittleEndian ? data : [.. data.Reverse()];
     }
 }
 /// <summary>
 /// A string serializable (UTF-8).
 /// </summary>
-public class StringSerializable : ISerializable<string> {
-    private static ISerializable.Info? info;
+public class StringSerializable : RawSerializable<string> {
+    private static ISerializable.Info<StringSerializable>? info;
     /// <summary>
     /// Information on how to read and create this serializable.
     /// </summary>
     [SerializingInfo]
-    public static ISerializable.Info Info { get {
+    public static ISerializable.Info<StringSerializable> Info { get {
         if (info == null) {
-            info = ISerializable.CreateInfo(() => {return new StringSerializable("");});
+            info = ISerializable.CreateInfo<StringSerializable>();
         }
         return info;
     } }
     /// <summary>
+    /// Creates an empty serializable.
+    /// </summary>
+    public StringSerializable() : this("") { }
+    /// <summary>
     /// Creates a new serializable.
     /// </summary>
     /// <param name="value">The value of this serializable.</param>
-    public StringSerializable(string value) {
-        Value = value;
-    }
-    /// <summary>
-    /// The value of this serializable.
-    /// </summary>
-    public string Value { get; set; }
+    public StringSerializable(string value) : base(value) { }
     /// <inheritdoc/>
-    public uint? FixedSize => null;
+    public override uint? FixedSize => null;
     /// <inheritdoc/>
-    public byte[] Serialize() {
+    public override byte[] Serialize() {
         return BitConverter.IsLittleEndian ? Encoding.UTF8.GetBytes(Value) : Encoding.UTF8.GetBytes(Value).Reverse().ToArray();
     }
     /// <inheritdoc/>
-    public void Parse(byte[] data) {
+    public override void Parse(byte[] data) {
         Value = BitConverter.IsLittleEndian ? Encoding.UTF8.GetString(data) : Encoding.UTF8.GetString(data.Reverse().ToArray());
     }
 }
@@ -554,60 +511,101 @@ public class ListSerializable<T> : ISerializable<List<T>> where T : ISerializabl
     /// <summary>
     /// Creates the info for a list.
     /// </summary>
-    /// <param name="info">The info for type <typeparamref name="T"/>.</param>
+    /// <param name="typeInfo">The info for type <typeparamref name="T"/>.</param>
     /// <returns>A new list serializable info.</returns>
-    public static ISerializable.Info CreateInfo(ISerializable.Info info) {
-        return new (null, raw => {
-            ListSerializable<T> list = new([], info);
-            list.Parse(raw);
+    public static ISerializable.Info<ListSerializable<T>> CreateInfo(ISerializable.Info typeInfo) {
+        return new((p, f) => {
+            ListSerializable<T> list = new([], typeInfo);
+            list.Parse(p, f);
             return list;
         });
     }
-    private ISerializable.Info? info;
-    /// <inheritdoc/>
+    private ISerializable.Info<ListSerializable<T>>? info;
+    /// <inheritdoc/> TODO:
     [SerializingInfo]
-    public ISerializable.Info Info { get {
+    public ISerializable.Info<ListSerializable<T>> Info { get {
         if (info == null) {
-            info = CreateInfo(ValueInfo);
+            info = CreateInfo(valueInfo);
         }
         return info;
     } }
+
+    /// <inheritdoc/>
+    public List<T> Value { get; set; }
+
     /// <summary>
     /// Creates a new serializable list.
     /// </summary>
     /// <param name="value">The list of the serializables.</param>
     /// <param name="info">The serializable info for the type of the list.</param>
     public ListSerializable(List<T> value, ISerializable.Info info) {
-        ValueInfo = info;
         Value = value;
+        valueInfo = info;
+    }
+    private readonly ISerializable.Info valueInfo;
+    /// <inheritdoc/>
+    public void Serialize(Serializer serializer, IFormatter? formatter = null) {
+        if (formatter != null) {
+            serializer.Encode((s) => {
+                SerializeWithoutCount(s, null);
+            }, formatter);
+        } else {
+            serializer.WriteUInt((uint)Value.Count);
+            foreach (T item in Value) {
+                serializer.WriteSerializable(item);
+            }
+        }
+        
     }
     /// <summary>
-    /// The list itself.
+    /// Serializes the dictionary without an count.
     /// </summary>
-    public List<T> Value { get; set; }
-    private readonly ISerializable.Info ValueInfo;
-    /// <inheritdoc/>
-    public uint? FixedSize => null;
-    /// <inheritdoc/>
-    public void Parse(byte[] data) {
-        Value.Clear();
-
-        Parser parser = new(data);
-
-        while (parser.BaseStream.Length > parser.BaseStream.Position) {
-            Value.Add(parser.ReadSerializable<T>(Info));
+    /// <param name="serializer">The serializer to write to.</param>
+    /// <param name="formatter">The formatter to use.</param>
+    public void SerializeWithoutCount(Serializer serializer, IFormatter? formatter = null) {
+        if (formatter != null) {
+            serializer.Encode((s) => {
+                SerializeWithoutCount(s, null);
+            }, formatter);
+        } else {
+            foreach (T item in Value) {
+                serializer.WriteSerializable(item);
+            }
         }
+        
+        
     }
 
     /// <inheritdoc/>
-    public byte[] Serialize() {
-        Serializer serializer = new();
-
-        foreach (T serializable in Value) {
-            serializer.WriteSerializable(serializable);
+    public void Parse(Parser parser, IFormatter? formatter = null) {
+        Value.Clear();
+        if (formatter != null) {
+            parser.Decode((p) => {
+                ParseWithoutCount(p, null);
+            }, formatter);
+        } else {
+            uint count = parser.ReadUInt();
+            while (Value.Count < count) {
+                Value.Add(parser.ReadSerializable<T>(valueInfo));
+            }
         }
-
-        return (serializer.BaseStream as MemoryStream)!.ToArray();
+    }
+    /// <summary>
+    /// Parses the whole stream.
+    /// </summary>
+    /// <param name="parser">The parser to read from.</param>
+    /// <param name="formatter">The formatter to use.</param>
+    public void ParseWithoutCount(Parser parser, IFormatter? formatter = null) {
+        Value.Clear();
+        if (formatter != null) {
+            parser.Decode((p) => {
+                ParseWithoutCount(p, null);
+            }, formatter);
+        } else {
+            while (parser.BaseStream.Length > parser.BaseStream.Position) {
+                Value.Add(parser.ReadSerializable<T>(valueInfo));
+            }
+        }
     }
 }
 
@@ -623,23 +621,27 @@ public class DictionarySerializable<TKey, TValue> : ISerializable<Dictionary<TKe
     /// <param name="keyInfo">The info for type <typeparamref name="TKey"/>.</param>
     /// <param name="valueInfo">The info for type <typeparamref name="TValue"/>.</param>
     /// <returns>A new dictionary serializable info.</returns>
-    public static ISerializable.Info CreateInfo(ISerializable.Info keyInfo, ISerializable.Info valueInfo) {
-        return new (null, raw => {
+    public static ISerializable.Info<DictionarySerializable<TKey, TValue>> CreateInfo(ISerializable.Info keyInfo, ISerializable.Info valueInfo) {
+        return new((p, f) => {
             DictionarySerializable<TKey, TValue> dict = new([], keyInfo, valueInfo);
-            dict.Parse(raw);
+            dict.Parse(p, f);
             return dict;
         });
     }
-    private ISerializable.Info? info;
-
+    private ISerializable.Info<DictionarySerializable<TKey, TValue>>? info;
     /// <inheritdoc/>
     [SerializingInfo]
-    public ISerializable.Info Info { get {
+    public ISerializable.Info<DictionarySerializable<TKey, TValue>> Info { get {
         if (info == null) {
             info = CreateInfo(KeyInfo, ValueInfo);
         }
         return info;
     } }
+    /// <inheritdoc/>
+    public Dictionary<TKey, TValue> Value { get; set; }
+
+    private readonly ISerializable.Info KeyInfo;
+    private readonly ISerializable.Info ValueInfo;
     /// <summary>
     /// Creates a new serializable dictionary.
     /// </summary>
@@ -651,40 +653,70 @@ public class DictionarySerializable<TKey, TValue> : ISerializable<Dictionary<TKe
         KeyInfo = keyInfo;
         ValueInfo = valueInfo;
     }
-
-    private readonly ISerializable.Info KeyInfo;
-    private readonly ISerializable.Info ValueInfo;
-
+    /// <inheritdoc/>
+    public void Serialize(Serializer serializer, IFormatter? formatter = null) {
+        if (formatter != null) {
+            serializer.Encode((s) => {
+                SerializeWithoutCount(s, null);
+            }, formatter);
+        } else {
+            serializer.WriteUInt((uint)Value.Count);
+            foreach (KeyValuePair<TKey, TValue> kvp in Value) {
+                serializer.WriteSerializable(kvp.Key);
+                serializer.WriteSerializable(kvp.Value);
+            }
+        }
+        
+    }
     /// <summary>
-    /// The dictionary itself.
+    /// Serializes the dictionary without an count.
     /// </summary>
-    public Dictionary<TKey, TValue> Value { get; set; }
-
-    /// <inheritdoc/>
-    public uint? FixedSize => null;
-
-    /// <inheritdoc/>
-    public byte[] Serialize() {
-        Serializer serializer = new();
-
-        foreach (KeyValuePair<TKey, TValue> kvp in Value) {
-            serializer.WriteSerializable(kvp.Key);
-            serializer.WriteSerializable(kvp.Value);
+    /// <param name="serializer">The serializer to write to.</param>
+    /// <param name="formatter">The formatter to use.</param>
+    public void SerializeWithoutCount(Serializer serializer, IFormatter? formatter = null) {
+        if (formatter != null) {
+            serializer.Encode((s) => {
+                SerializeWithoutCount(s, null);
+            }, formatter);
+        } else {
+            foreach (KeyValuePair<TKey, TValue> kvp in Value) {
+                serializer.WriteSerializable(kvp.Key);
+                serializer.WriteSerializable(kvp.Value);
+            }
         }
-
-        return (serializer.BaseStream as MemoryStream)!.ToArray();
+        
+        
     }
 
     /// <inheritdoc/>
-    public void Parse(byte[] data) {
+    public void Parse(Parser parser, IFormatter? formatter = null) {
         Value.Clear();
-
-        Parser parser = new(data);
-
-        while (parser.BaseStream.Length > parser.BaseStream.Position) {
-            Value.Add(parser.ReadSerializable<TKey>(KeyInfo), parser.ReadSerializable<TValue>(ValueInfo));
+        if (formatter != null) {
+            parser.Decode((p) => {
+                ParseWithoutCount(p, null);
+            }, formatter);
+        } else {
+            uint count = parser.ReadUInt();
+            while (Value.Count < count) {
+                Value.Add(parser.ReadSerializable<TKey>(KeyInfo), parser.ReadSerializable<TValue>(ValueInfo));
+            }
         }
     }
-
-    
+    /// <summary>
+    /// Parses the whole stream.
+    /// </summary>
+    /// <param name="parser">The parser to read from.</param>
+    /// <param name="formatter">The formatter to use.</param>
+    public void ParseWithoutCount(Parser parser, IFormatter? formatter = null) {
+        Value.Clear();
+        if (formatter != null) {
+            parser.Decode((p) => {
+                ParseWithoutCount(p, null);
+            }, formatter);
+        } else {
+            while (parser.BaseStream.Length > parser.BaseStream.Position) {
+                Value.Add(parser.ReadSerializable<TKey>(KeyInfo), parser.ReadSerializable<TValue>(ValueInfo));
+            }
+        }
+    }
 }

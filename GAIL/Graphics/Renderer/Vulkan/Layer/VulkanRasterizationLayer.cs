@@ -24,19 +24,19 @@ public class VulkanRasterizationLayerSettings : RasterizationLayerSettings<Vulka
     /// <inheritdoc/>
     public override CullMode CullMode { get => base.CullMode; set {
         layer.Pipeline.Dispose();
-        cullMode = value;
+        values.CullMode = value;
         layer.Pipeline = new Pipeline(layer);
     } }
     /// <inheritdoc/>
     public override FillMode FillMode { get => base.FillMode; set {
         layer.Pipeline.Dispose();
-        fillMode = value;
+        values.FillMode = value;
         layer.Pipeline = new Pipeline(layer);
     } }
     /// <inheritdoc/>
     public override FrontFaceMode FrontFaceMode { get => base.FrontFaceMode; set {
         layer.Pipeline.Dispose();
-        frontFaceMode = value;
+        values.FrontFaceMode = value;
         layer.Pipeline = new Pipeline(layer);
     } }
     /// <inheritdoc/>
@@ -52,7 +52,7 @@ public class VulkanRasterizationLayerSettings : RasterizationLayerSettings<Vulka
     /// <inheritdoc/>
     public override List<Object> RenderList { get => base.RenderList; set {
         layer.UnloadObjects(); // TODO: FIXME: This is inefficient when a new object is added.
-        renderList = value;    // NOTE: For the above: maybe use INotifyCollectionChanged.
+        values.RenderList = value;    // NOTE: For the above: maybe use INotifyCollectionChanged.
         layer.LoadObjects(); 
     } }
 }
@@ -61,20 +61,22 @@ public class VulkanRasterizationLayerSettings : RasterizationLayerSettings<Vulka
 /// The Vulkan implementation of the back-end rasterization layer.
 /// </summary>
 public class VulkanRasterizationLayer : IVulkanLayer, IRasterizationLayer {
-    internal VulkanRasterizationLayer(VulkanRenderer renderer, uint index, RasterizationLayerSettings settings) {
+    internal VulkanRasterizationLayer(Renderer renderer, uint index, RasterizationLayerSettings settings) {
         Logger = LoggerFactory.CreateSublogger(renderer.Logger, "Layer "+index, "layer"+index);
         Renderer = renderer;
         Index = index;
         this.settings = new(this, settings);
         Logger.LogDebug("Creating a Vulkan rasterization back-end layer.");
-        try {
+		try {
             Pipeline = new Pipeline(this);
-        } catch (Exception e) {
+
+			LoadObjects();
+		} catch (Exception e) {
             Logger.LogFatal("Exception occured while initializing Vulkan renderer:");
             Logger.LogException(e);
             throw;
         }
-    }
+	}
     /// <summary>
     /// If the Vulkan rasterization layer is disposed.
     /// </summary>
@@ -86,7 +88,7 @@ public class VulkanRasterizationLayer : IVulkanLayer, IRasterizationLayer {
     /// <summary>
     /// The renderer corresponding to this back-end layer.
     /// </summary>
-    public readonly VulkanRenderer Renderer;
+    public readonly Renderer Renderer;
     /// <summary>
     /// The logger of this back-end layer.
     /// </summary>
@@ -102,8 +104,12 @@ public class VulkanRasterizationLayer : IVulkanLayer, IRasterizationLayer {
         Pipeline = new(this);
     } }
 
-    private RenderSet[] renderSets = [];
+	private bool shouldRecord;
+	public bool ShouldRecord => shouldRecord;
+
+	private RenderSet[] renderSets = [];
     public void UnloadObjects() {
+		shouldRecord = true;
         lock (renderSets) {
             foreach (RenderSet renderSet in renderSets) {
                 renderSet.Dispose();
@@ -111,7 +117,8 @@ public class VulkanRasterizationLayer : IVulkanLayer, IRasterizationLayer {
         }
     }
     public void LoadObjects() {
-        lock (renderSets) {
+		shouldRecord = true;
+		lock (renderSets) {
             renderSets = new RenderSet[settings.RenderList.Count];
             for (int i = 0; i < settings.RenderList.Count; i++) {
                 renderSets[i] = new(this, settings.RenderList[i]);
@@ -120,26 +127,38 @@ public class VulkanRasterizationLayer : IVulkanLayer, IRasterizationLayer {
     }
 
     /// <inheritdoc/>
-    public void Render(Commands commands) {
+    public void Record(Commands commands) {
         if (!settings.ShouldRender) return;
 
-        RecordCommands(commands);
-    }
-    private void RecordCommands(Commands commands) {
         commands.BindPipeline(Pipeline);
+		commands.SetViewport(ref Renderer.Swapchain.viewport);
 
-        lock (renderSets) {
+		lock (renderSets) {
             foreach (RenderSet renderSet in renderSets) {
-                Render(commands, renderSet);
+				Render(commands, renderSet);
             }
         }
-    }
-    private void Render(Commands commands, RenderSet renderSet) {
+
+		shouldRecord = false;
+	}
+    private static void Render(Commands commands, RenderSet renderSet) {
         // obj.material.Apply(); // TODO: Uniforms // NOTE: Applying uniforms.
         commands.BindVertexBuffer(renderSet.vertexBuffer); // NOTE: Applying attributes.
         commands.Draw(vertexCount:3); // TODO: Temporary...
     }
 
+    void IVulkanLayer.Recreate() {
+		Logger.LogDebug("Recreating a Vulkan rasterization back-end layer.");
+		try {
+            Pipeline = new Pipeline(this);
+
+			LoadObjects();
+		} catch (Exception e) {
+            Logger.LogFatal("Exception occured while initializing Vulkan renderer:");
+            Logger.LogException(e);
+            throw;
+        }
+	}
     /// <inheritdoc/>
     public void Dispose() {
         if (IsDisposed) return;

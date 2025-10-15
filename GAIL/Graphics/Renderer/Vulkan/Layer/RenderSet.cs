@@ -6,7 +6,7 @@ public class RenderSet : IDisposable {
     public VertexBuffer vertexBuffer;
     public RenderSet(VulkanRasterizationLayer layer, Object obj) {
         Object = obj;
-        byte[] bakedMesh = obj.mesh.Bake(layer.settings.Shader);
+        obj.mesh.Bake(layer.settings.Shader, out byte[] bakedMesh);
         vertexBuffer = new(layer, ref bakedMesh);
     }
     public void Dispose() {

@@ -3,8 +3,8 @@ using GAIL.Graphics.Material;
 using GAIL.Graphics.Renderer;
 using GAIL.Graphics.Renderer.Layer;
 using GAIL.Graphics.Renderer.Vulkan.Layer;
-using LambdaKit.Assertion;
 using LambdaKit.Logging;
+using VulkanRenderer = GAIL.Graphics.Renderer.Vulkan.Renderer;
 
 namespace GAIL.Graphics
 {
@@ -46,7 +46,7 @@ namespace GAIL.Graphics
         /// <param name="maxFramesInFlight">The default max frames used.</param>
         /// <param name="clearValue"></param>
         /// <exception cref="APIBackendException"></exception>
-        public void Initialize(Application.Globals globals, ref AppInfo appInfo, uint maxFramesInFlight = 2, Color? clearValue = null) {
+        public void Initialize(Application.Globals globals, AppInfo appInfo, uint maxFramesInFlight = 2, Color? clearValue = null) {
             Logger.LogDebug("Initalizing Graphics.");
             
             RendererSettings<IVulkanLayer> settings = new() { // TODO: Vulkan-specific
@@ -54,7 +54,7 @@ namespace GAIL.Graphics
                 ClearValue = clearValue ?? new Color(0, 0, 0, 0)
             };
 
-            Renderer = new VulkanRenderer(LoggerFactory.CreateSublogger(Logger, "Renderer", "renderer"), globals, ref settings, ref appInfo);
+            Renderer = new VulkanRenderer(LoggerFactory.CreateSublogger(Logger, "Renderer", "renderer"), globals, ref settings, appInfo);
 
             IsDisposed = false;
 

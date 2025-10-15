@@ -1,7 +1,3 @@
-using System.Reflection;
-using GAIL.Serializing;
-using GAIL.Serializing.Formatters;
-using GAIL.Serializing.Streams;
 using LambdaKit.Logging;
 
 namespace GAIL.Networking;
@@ -107,35 +103,5 @@ public static class NetworkRegister {
         return Packets[(int)packetID];
     }
 
-    /// <summary>
-    /// Gets the format of the packet.
-    /// </summary>
-    /// <param name="packetID">The ID of the packet.</param>
-    /// <returns>The format of the packet.</returns>
-    /// <exception cref="ArgumentOutOfRangeException"></exception>
-    public static ISerializable.Info[] GetPacketFormat(uint packetID) {
-        return GetPacketInfo(packetID).Format;
-    }
-    
-    /// <summary>
-    /// Gets the formatter of the packet.
-    /// </summary>
-    /// <param name="packetID">The ID of the packet.</param>
-    /// <returns>The formatter of the packet.</returns>
-    /// <exception cref="ArgumentOutOfRangeException"></exception>
-    public static IFormatter? GetPacketFormatter(uint packetID) {
-        return GetPacketInfo(packetID).formatter;
-    }
-
     #endregion Packet Accessing
-
-    /// <summary>
-    /// Creates a packet.
-    /// </summary>
-    /// <param name="packetID">The id of the packet to create.</param>
-    /// <param name="parser">The parser of the packet data</param>
-    /// <returns>The created packet.</returns>
-    public static Packet CreatePacket(uint packetID, Parser parser) {
-        return GetPacketInfo(packetID).Create(parser);
-    }
 }

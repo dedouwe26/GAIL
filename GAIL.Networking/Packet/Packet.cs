@@ -8,13 +8,13 @@ namespace GAIL.Networking;
 /// <summary>
 /// Packet is an abstract class for parsing and formatting a packet.
 /// </summary>
-public abstract class Packet : IStreamReducer {
+public abstract class Packet : ISerializable {
     /// <summary>
     /// Describes a field in a packet.
     /// </summary>
     /// <param name="Property">The property of the field.</param>
     /// <param name="Info">The serializable info of the field.</param>
-    public record class FieldInfo(PropertyInfo Property, ISerializable.Info Info);
+    public record class FieldInfo(PropertyInfo Property, IRawSerializable.Info Info);
     /// <summary>
     /// Describes a packet.
     /// </summary>
@@ -52,11 +52,6 @@ public abstract class Packet : IStreamReducer {
 
         internal readonly FieldInfo[] fields;
 
-        /// <summary>
-        /// The used formatter.
-        /// </summary>
-        public readonly IFormatter? formatter;
-
         internal Info(Packet packet) {
             Type type = packet.GetType();
             string name = type.Name;
@@ -85,7 +80,6 @@ public abstract class Packet : IStreamReducer {
             
             constructor = c;
             this.fields = fields;
-            formatter = packet.Formatter;
             fullyQualifiedName = type.AssemblyQualifiedName!;
         }
 
@@ -101,12 +95,13 @@ public abstract class Packet : IStreamReducer {
         /// Creates a packet from the parser (the creator of a packet).
         /// </summary>
         /// <param name="parser">The parser from which to read the packet.</param>
+        /// <param name="formatter">The formatter to use.</param>
         /// <returns>The parsed packet.</returns>
-        public Packet Create(Parser parser) {
+        public Packet Create(Parser parser, IFormatter? formatter) {
             if (constructor.Invoke(null) is not Packet packet) {
                 throw new InvalidOperationException($"Failed at creating packet ({fullyQualifiedName})");
             }
-            packet.Parse(parser);
+            packet.Parse(parser, formatter);
             return packet;
         }
     }
@@ -118,12 +113,12 @@ public abstract class Packet : IStreamReducer {
         packetInfo ??= new(this);
         return packetInfo;
     } }
-    private readonly IStreamReducer.Info reducerInfo;
+    private readonly ISerializable.Info<Packet> serializableInfo;
     /// <summary>
-    /// The info of the underlying reducer.
+    /// The info of the underlying serializable.
     /// </summary>
     [SerializingInfo]
-    public IStreamReducer.Info ReducerInfo => reducerInfo;
+    public ISerializable.Info<Packet> SerializableInfo => serializableInfo;
 
     /// <summary>
     /// The formatter used for encoding / decoding this packet.
@@ -133,7 +128,7 @@ public abstract class Packet : IStreamReducer {
     /// Creates a packet (add own data here).
     /// </summary>
     public Packet() {
-        reducerInfo = new(PacketInfo.Create);
+        serializableInfo = new(PacketInfo.Create);
     }
 
     private uint? id;
@@ -145,6 +140,9 @@ public abstract class Packet : IStreamReducer {
         id ??= NetworkRegister.GetPacketID(this) ?? throw new InvalidOperationException($"Packet {GetType().Name} is not registered");
         return id.Value;
     } }
+
+    /// <inheritdoc/>
+    public ISerializable.Info[] Format => PacketInfo.Format;
 
     /// <summary>
     /// Gets called before serializing the packet.
@@ -165,7 +163,7 @@ public abstract class Packet : IStreamReducer {
             } catch (Exception e) {
                 throw new InvalidOperationException($"Failed at getting field {field.Property.Name} in packet ({PacketInfo.fullyQualifiedName})", e);
             }
-            if (gainedValue is not ISerializable serializable) {
+            if (gainedValue is not IRawSerializable serializable) {
                 throw new InvalidOperationException($"Field {field.Property.Name} in {PacketInfo.fullyQualifiedName} is not a serializable");
             }
 
@@ -184,5 +182,48 @@ public abstract class Packet : IStreamReducer {
             }
         }
         OnParse();
+    }
+    /// <summary>
+    /// Encodes data written to the stream using the packet formatter and the global formatter.
+    /// </summary>
+    /// <param name="consumer">he consumer that writes the data that needs encoding.</param>
+    /// <param name="serializer">The serializer to write to.</param>
+    /// <param name="formatter">The formatter to use aside from <see cref="Formatter"/>.</param>
+    protected void Encode(Action<Serializer> consumer, Serializer serializer, IFormatter? formatter) {
+        if (formatter != null && Formatter != null) {
+            serializer.Encode((s) => s.Encode(consumer, Formatter), formatter);
+        } else if (formatter != null) {
+            serializer.Encode(consumer, formatter);
+        } else if (Formatter != null) {
+            serializer.Encode(consumer, Formatter);
+        } else {
+            consumer(serializer);
+        }
+    }
+    /// <summary>
+    /// Decodes data read from the stream using the packet formatter and the global formatter.
+    /// </summary>
+    /// <param name="consumer">he consumer that reads the data that needs encoding.</param>
+    /// <param name="parser">The parser to read from.</param>
+    /// <param name="formatter">The formatter to use aside from <see cref="Formatter"/>.</param>
+    protected void Decode(Action<Parser> consumer, Parser parser, IFormatter? formatter) {
+        if (formatter != null && Formatter != null) {
+            parser.Decode((p) => p.Decode(consumer, formatter), Formatter);
+        } else if (formatter != null) {
+            parser.Decode(consumer, formatter);
+        } else if (Formatter != null) {
+            parser.Decode(consumer, Formatter);
+        } else {
+            consumer(parser);
+        }
+    }
+    /// <inheritdoc/>
+    public void Serialize(Serializer serializer, IFormatter? formatter = null) {
+        Encode(Serialize, serializer, formatter);
+    }
+
+    /// <inheritdoc/>
+    public void Parse(Parser parser, IFormatter? formatter = null) {
+        Decode(Parse, parser, formatter);
     }
 }
