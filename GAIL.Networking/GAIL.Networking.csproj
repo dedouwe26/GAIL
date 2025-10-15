@@ -22,7 +22,8 @@
 
   <ItemGroup>
     <PackageReference Include="LambdaKit.Logging" Version="5.0.0" />
-    <PackageReference Include="LambdaKit.Terminal" Version="5.0.2" />
+    <PackageReference Include="LambdaKit.Terminal" Version="5.0.3" />
+    <PackageReference Include="Microsoft.NET.ILLink.Tasks" Version="9.0.10" />
   </ItemGroup>
 
 </Project>

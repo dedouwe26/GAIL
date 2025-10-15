@@ -1,7 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <PackageReference Include="LambdaKit.Terminal" Version="5.0.2" />
+    <PackageReference Include="LambdaKit.Terminal" Version="5.0.3" />
     <ProjectReference Include="..\..\..\GAIL.Networking\GAIL.Networking.csproj" />
   </ItemGroup>
 
