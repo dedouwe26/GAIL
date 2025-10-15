@@ -3,7 +3,7 @@ using examples.Packets.Shared;
 using GAIL.Networking;
 using GAIL.Networking.Client;
 using GAIL.Serializing;
-using OxDED.Terminal;
+using LambdaKit.Terminal;
 
 // Registers all three packets.
 Packets.RegisterPackets();
