@@ -2,7 +2,6 @@ using GAIL.Serializing;
 using GAIL.Serializing.Formatters;
 using GAIL.Serializing.Streams;
 using GAIL.Storage.Hierarchy;
-using GAIL.Storage.Streams;
 using LambdaKit.Logging;
 
 namespace GAIL.Storage;
@@ -47,7 +46,7 @@ public abstract class BaseStorage : ParentNode, ISerializable {
     /// <returns>True if it succeeded.</returns>
     public virtual bool Load(Stream stream, bool shouldCloseStream = true) {
         try {
-            using StorageParser parser = new(stream, shouldCloseStream);
+            using Serializer parser = new(stream, shouldCloseStream);
             Parse(parser, Formatter);
         } catch (Exception e) {
             Logger.LogError("Failed to load storage file:");
@@ -78,7 +77,7 @@ public abstract class BaseStorage : ParentNode, ISerializable {
     /// <returns>True if it succeeded.</returns>
     public virtual bool Save(Stream stream, bool shouldCloseStream = true) {
         try {
-            using StorageSerializer serializer = new(stream, shouldCloseStream);
+            using Serializer serializer = new(stream, shouldCloseStream);
             Serialize(serializer, Formatter);
         } catch (Exception e) {
             Logger.LogError("Failed to save storage file:");
@@ -103,9 +102,9 @@ public abstract class BaseStorage : ParentNode, ISerializable {
         return Save(fs);
     }
 
-    /// <inheritdoc/>
-    public abstract void Serialize(Serializer serializer, IFormatter? formatter = null);
+	/// <inheritdoc/>
+	public abstract void Serialize(Serializer serializer, IFormatter? formatter = null);
 
-    /// <inheritdoc/>
-    public abstract void Parse(Parser parser, IFormatter? formatter = null);
+	/// <inheritdoc/>
+	public abstract void Parse(Parser parser, IFormatter? formatter = null);
 }

@@ -15,7 +15,7 @@ public class LookupTable : ISerializable {
 
     }
 
-    public Dictionary<string, uint> lookup;
+    public readonly Dictionary<string, uint> lookup;
 
     public LookupTable(Dictionary<string, uint> lookupDictionary) {
         lookup = lookupDictionary;
@@ -23,9 +23,18 @@ public class LookupTable : ISerializable {
     public LookupTable() : this([]) { }
     public LookupTable(LookupStorage storage) : this(GenerateLookupTable(storage)) { }
 
+    private static KeyValuePair<string, uint> ReadPair(Parser p) {
+		return new(p.ReadString(), p.ReadUInt());
+	}
     /// <inheritdoc/>
     public void Parse(Parser parser, IFormatter? formatter = null) {
-        throw new NotImplementedException();
+        if (formatter != null) {
+			parser.Decode((p) => {
+				ReadPair(p);
+			}, formatter);
+		} else {
+			ReadPair(p);
+        }
     }
 
     /// <inheritdoc/>

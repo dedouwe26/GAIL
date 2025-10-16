@@ -163,9 +163,7 @@ public class Parser : IDisposable {
 
         Disposed = true;
 
-        if (!ShouldCloseStream) { return; }
-        
-        BaseStream.Close();
+        if (!ShouldCloseStream) BaseStream.Close();
 
         GC.SuppressFinalize(this);
     }

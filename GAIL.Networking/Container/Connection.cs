@@ -19,7 +19,7 @@ public class Connection : IDisposable {
     }
 
     /// <summary>
-    /// The 6-byte-long ID from the IP and port of the client.
+    /// The ID from the IP and port of the client.
     /// </summary>
     public readonly byte[] ID;
     /// <summary>
@@ -68,7 +68,7 @@ public class Connection : IDisposable {
             throw new ArgumentException("Client is not connected", nameof(client));
         }
         IP = (client.Client.RemoteEndPoint as IPEndPoint)!;
-        ID = CreateID(IP);
+		ID = CreateID(IP);
         TcpClient = client;
         Stream = client.GetStream();
     }

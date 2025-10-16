@@ -1,4 +1,3 @@
-using GAIL.Serializing;
 using GAIL.Serializing.Formatters;
 using GAIL.Serializing.Streams;
 
@@ -39,13 +38,5 @@ public class NetworkSerializer : Serializer {
             WritePacket(this, packet);
         }
         
-    }
-    /// <inheritdoc/>
-    public override void Dispose() {
-        if (Disposed) { return; }
-        
-        base.Dispose();
-        
-        GC.SuppressFinalize(this);
     }
 }

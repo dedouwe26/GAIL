@@ -163,7 +163,7 @@ public abstract class Packet : ISerializable {
             } catch (Exception e) {
                 throw new InvalidOperationException($"Failed at getting field {field.Property.Name} in packet ({PacketInfo.fullyQualifiedName})", e);
             }
-            if (gainedValue is not IRawSerializable serializable) {
+            if (gainedValue is not ISerializable serializable) {
                 throw new InvalidOperationException($"Field {field.Property.Name} in {PacketInfo.fullyQualifiedName} is not a serializable");
             }
 

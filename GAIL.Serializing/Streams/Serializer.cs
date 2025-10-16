@@ -112,12 +112,11 @@ public class Serializer : IDisposable {
     /// </remarks>
     public virtual void Dispose() {
         if (Disposed) { return; }
-        GC.SuppressFinalize(this);
 
         Disposed = true;
 
-        if (!ShouldCloseStream) { return; }
+        if (ShouldCloseStream) BaseStream.Close();
 
-        BaseStream.Close();
+        GC.SuppressFinalize(this);
     }
 }

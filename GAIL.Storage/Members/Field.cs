@@ -1,3 +1,4 @@
+using System.Diagnostics.Contracts;
 using GAIL.Serializing;
 using GAIL.Serializing.Formatters;
 using GAIL.Serializing.Streams;
@@ -7,23 +8,14 @@ namespace GAIL.Storage.Members;
 
 
 /// <summary>
-/// Represents a node in a storage file with actual data.
+/// Represents a node in a storage file with data.
 /// </summary>
 public interface IField : IChildNode, ISerializable {
     /// <summary>
-    /// Creates this class from bytes.
-    /// </summary>
-    /// <param name="parser">The parser to read from.</param>
-    /// <param name="readKey">Whether the key of the field should be read.</param>
-    /// <param name="formatter">The formatter to use.</param>
-    public void Parse(Parser parser, bool readKey = true, IFormatter? formatter = null);
-    /// <summary>
-    /// Turns this class into bytes.
-    /// </summary>
-    /// <param name="serializer">The serializer to write to.</param>
-    /// <param name="writeKey">Whether the key of the field should be written.</param>
-    /// <param name="formatter">The formatter to use.</param>
-    public void Serialize(Serializer serializer, bool writeKey = true, IFormatter? formatter = null);
+	/// The type of this field.
+	/// </summary>
+    [Pure]
+    public MemberType Type { get; }
 }
 /// <summary>
 /// Represents a node in a storage file with an actual value.

@@ -1,4 +1,6 @@
 using GAIL.Serializing.Formatters;
+using GAIL.Serializing.Streams;
+using GAIL.Storage.Hierarchy;
 using GAIL.Storage.Streams;
 
 namespace GAIL.Storage;
@@ -6,41 +8,29 @@ namespace GAIL.Storage;
 /// <summary>
 /// Represents a file containing data.
 /// </summary>
-public sealed class SimpleStorage : BaseStorage {
+public sealed class SimpleStorage : BaseStorage, IParentNode {
     /// <inheritdoc/>
     public SimpleStorage(IFormatter? formatter = null) : base(formatter) { }
 
-    /// <inheritdoc/>
-    public override bool Load(Stream stream) {
-        StorageParser parser;
+	/// <inheritdoc/>
+	public override void Parse(Parser parser, IFormatter? formatter = null) {
+		if (formatter != null) {
+			parser.Decode((p) => {
+				Parse(p, null);
+			}, formatter);
+		} else {
+			children = parser.ReadChildren().ToDictionary(static x => x.Key, static x => x);
+		}
+	}
 
-        try {
-            parser = new(stream, false);
-        } catch (InvalidOperationException) {
-            return false;
+	/// <inheritdoc/>
+	public override void Serialize(Serializer serializer, IFormatter? formatter = null) {
+		if (formatter != null) {
+			serializer.Encode((s) => {
+				Serialize(s, null);
+			}, formatter);
+		} else {
+            serializer.WriteChildren([.. children.Values]);
         }
-
-        try {
-            children = parser.Parse(Formatter);
-        } catch (KeyNotFoundException) {
-            return false;
-        }
-        parser.Dispose();
-
-        return true;
-    }
-
-    /// <inheritdoc/>
-    public override bool Save(Stream stream) {
-        StorageSerializer serializer = new(stream, false);
-
-        try {
-            serializer.Serialize(Children, Formatter);
-        } catch (InvalidOperationException) {
-            return false;
-        }
-        serializer.Dispose();
-
-        return true;
-    }
+	}
 }

@@ -1,3 +1,5 @@
+using GAIL.Serializing.Formatters;
+using GAIL.Serializing.Streams;
 using GAIL.Storage.Hierarchy;
 
 namespace GAIL.Storage.Members;
@@ -5,7 +7,7 @@ namespace GAIL.Storage.Members;
 /// <summary>
 /// A container can contain more members with keys.
 /// </summary>
-public sealed class Container : Node {
+public sealed class Container : Node, IField {
     /// <summary>
     /// Creates a new container.
     /// </summary>
@@ -24,4 +26,14 @@ public sealed class Container : Node {
     public Container(string key, IParentNode parent, Dictionary<string, IChildNode>? members = null) : base(key, parent) {
         children = members??[];
     }
+
+	public void Parse(Parser parser, IFormatter? formatter = null)
+	{
+		throw new NotImplementedException();
+	}
+
+	public void Serialize(Serializer serializer, IFormatter? formatter = null)
+	{
+		throw new NotImplementedException();
+	}
 }
