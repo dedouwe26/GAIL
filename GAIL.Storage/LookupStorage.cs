@@ -11,7 +11,7 @@ namespace GAIL.Storage;
 /// A file containing data and a lookup table.
 /// </summary>
 public class LookupStorage : BaseStorage {
-    public LookupTable LookupTable { get; private set; }
+	public LookupTable LookupTable { get; private set; } = new();
 	/// <inheritdoc/>
 	public override void Parse(Parser parser, IFormatter? formatter = null) {
 		if (formatter != null) {
@@ -19,16 +19,16 @@ public class LookupStorage : BaseStorage {
 				Parse(p, null);
 			}, formatter);
 		} else {
-        	LookupTable = parser.ReadSerializable(LookupTable.Info);
+			LookupTable.Parse(parser, null);
 		}
 		// NOTE: Not parsing the following, because of the lookup table.
     }
-	private void WriteParent(Serializer serializer, IParentNode parent) {
+	private static void WriteParent(Serializer serializer, IParentNode parent) {
 		foreach (IChildNode c in parent.Children.Values) {
 			if (c is IParentNode p) {
 				WriteParent(serializer, p);
 			} else if (c is IField field) {
-				serializer.WriteMember(field, false);
+				serializer.WriteMember(field, false); // TODO:
 			}
 		}
 	}
@@ -39,7 +39,6 @@ public class LookupStorage : BaseStorage {
 				Serialize(s, null);
 			}, formatter);
 		} else {
-			serializer.WriteSerializable(LookupTable);
 			WriteParent(serializer, this);
 		}
     }

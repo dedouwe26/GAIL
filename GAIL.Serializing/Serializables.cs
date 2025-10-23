@@ -507,7 +507,7 @@ public class StringSerializable : RawSerializable<string> {
 /// A list serializable.
 /// </summary>
 /// <typeparam name="T">The serializable list type.</typeparam>
-public class ListSerializable<T> : ISerializable<List<T>> where T : ISerializable {
+public class ListSerializable<T> : ISerializable<IEnumerable<T>> where T : ISerializable {
     /// <summary>
     /// Creates the info for a list.
     /// </summary>
@@ -531,14 +531,14 @@ public class ListSerializable<T> : ISerializable<List<T>> where T : ISerializabl
     } }
 
     /// <inheritdoc/>
-    public List<T> Value { get; set; }
+    public IEnumerable<T> Value { get; set; }
 
     /// <summary>
     /// Creates a new serializable list.
     /// </summary>
     /// <param name="value">The list of the serializables.</param>
     /// <param name="info">The serializable info for the type of the list.</param>
-    public ListSerializable(List<T> value, ISerializable.Info info) {
+    public ListSerializable(IEnumerable<T> value, ISerializable.Info info) {
         Value = value;
         valueInfo = info;
     }
@@ -550,7 +550,7 @@ public class ListSerializable<T> : ISerializable<List<T>> where T : ISerializabl
                 SerializeWithoutCount(s, null);
             }, formatter);
         } else {
-            serializer.WriteUInt((uint)Value.Count);
+            serializer.WriteUInt((uint)Value.Count());
             foreach (T item in Value) {
                 serializer.WriteSerializable(item);
             }
@@ -578,15 +578,16 @@ public class ListSerializable<T> : ISerializable<List<T>> where T : ISerializabl
 
     /// <inheritdoc/>
     public void Parse(Parser parser, IFormatter? formatter = null) {
-        Value.Clear();
-        if (formatter != null) {
+		if (formatter != null) {
             parser.Decode((p) => {
                 ParseWithoutCount(p, null);
             }, formatter);
         } else {
-            uint count = parser.ReadUInt();
-            while (Value.Count < count) {
-                Value.Add(parser.ReadSerializable<T>(valueInfo));
+			uint count = parser.ReadUInt();
+			Value = new T[count];
+			uint actualCount = 0;
+			while (actualCount < count) {
+                ((T[])Value)[actualCount++] = parser.ReadSerializable<T>(valueInfo);
             }
         }
     }
@@ -596,14 +597,16 @@ public class ListSerializable<T> : ISerializable<List<T>> where T : ISerializabl
     /// <param name="parser">The parser to read from.</param>
     /// <param name="formatter">The formatter to use.</param>
     public void ParseWithoutCount(Parser parser, IFormatter? formatter = null) {
-        Value.Clear();
         if (formatter != null) {
             parser.Decode((p) => {
                 ParseWithoutCount(p, null);
             }, formatter);
         } else {
+            uint count = parser.ReadUInt();
+			Value = new T[count];
+			uint actualCount = 0;
             while (parser.BaseStream.Length > parser.BaseStream.Position) {
-                Value.Add(parser.ReadSerializable<T>(valueInfo));
+                ((T[])Value)[actualCount++] = parser.ReadSerializable<T>(valueInfo);
             }
         }
     }
