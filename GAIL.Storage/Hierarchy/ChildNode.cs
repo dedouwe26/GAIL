@@ -7,9 +7,8 @@ public abstract class ChildNode : IChildNode {
     /// <summary>
     /// Create a node with a key, value and a parent.
     /// </summary>
-    /// <param name="key">The key</param>
-    /// <param name="parent"></param>
-    /// <returns></returns>
+    /// <param name="key">The key.</param>
+    /// <param name="parent">The parent of this child.</param>
     public ChildNode(string key, IParentNode parent) {
         Key = key;
         SetParent(parent);
@@ -40,7 +39,6 @@ public abstract class ChildNode : IChildNode {
         if (previousParent?.Children.ContainsKey(Key) ?? false) {
             previousParent.RemoveChild(this);
         }
-        
     }
 
     /// <inheritdoc/>

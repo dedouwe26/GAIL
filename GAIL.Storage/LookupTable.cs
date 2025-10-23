@@ -1,44 +1,49 @@
 using GAIL.Serializing;
 using GAIL.Serializing.Formatters;
 using GAIL.Serializing.Streams;
+using GAIL.Storage.Hierarchy;
+using GAIL.Storage.Members;
+using GAIL.Storage.Streams;
 
 namespace GAIL.Storage;
 
-public class LookupTable : ISerializable {
-    private static ISerializable.Info<LookupTable>? info;
-    public static ISerializable.Info<LookupTable> Info { get {
-        info ??= ISerializable.CreateInfo<LookupTable>();
-        return info;
-    } }
+public class LookupTable {
 
-    private static Dictionary<string, uint> GenerateLookupTable(LookupStorage storage) {
+	public Dictionary<string, IChildNode> lookup;
 
-    }
+	public LookupTable() {
+		lookup = [];
+	}
 
-    public readonly Dictionary<string, uint> lookup;
-
-    public LookupTable(Dictionary<string, uint> lookupDictionary) {
-        lookup = lookupDictionary;
-    }
-    public LookupTable() : this([]) { }
-    public LookupTable(LookupStorage storage) : this(GenerateLookupTable(storage)) { }
-
-    private static KeyValuePair<string, uint> ReadPair(Parser p) {
+	private static KeyValuePair<string, uint> ReadPair(Parser p) {
 		return new(p.ReadString(), p.ReadUInt());
 	}
-    /// <inheritdoc/>
-    public void Parse(Parser parser, IFormatter? formatter = null) {
-        if (formatter != null) {
+	public void Parse(Parser parser, IFormatter? formatter = null) {
+		if (formatter != null) {
 			parser.Decode((p) => {
-				ReadPair(p);
+				Parse(p, null);
 			}, formatter);
 		} else {
-			ReadPair(p);
-        }
-    }
-
-    /// <inheritdoc/>
-    public void Serialize(Serializer serializer, IFormatter? formatter = null) {
-        throw new NotImplementedException();
-    }
+			Lookup = [];
+			MemberType type;
+			do {
+				type = parser.ReadType();
+				if (type == MemberType.LookupTable) {
+					((IDictionary<string, uint>)Lookup).Add(ReadPair(parser));
+				} else if (type != MemberType.End) {
+					throw new InvalidDataException("A lookup table cannot contain any other type than LookupTable and End");
+				}
+			} while (type!=MemberType.End);
+		}
+	}
+	public readonly KeyValuePair<string[], uint>[] lookup;
+	public LookupStorage() {
+		lookup = [];
+	}
+	public void WriteEntry(Serializer serializer, string[] id, uint location) {
+		serializer.WriteSerializable()
+	}
+	public void WriteEnd(Serializer serializer) {
+		serializer.WriteType(MemberType.End);
+	}
 }

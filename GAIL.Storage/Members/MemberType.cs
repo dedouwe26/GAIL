@@ -4,5 +4,6 @@ public enum MemberType : byte {
 	End,
 	Container,
 	List,
-	Serializable
+	LookupTable,
+	Custom
 }

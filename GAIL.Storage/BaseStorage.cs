@@ -46,7 +46,7 @@ public abstract class BaseStorage : ParentNode, ISerializable {
     /// <returns>True if it succeeded.</returns>
     public virtual bool Load(Stream stream, bool shouldCloseStream = true) {
         try {
-            using Serializer parser = new(stream, shouldCloseStream);
+            using Parser parser = new(stream, shouldCloseStream);
             Parse(parser, Formatter);
         } catch (Exception e) {
             Logger.LogError("Failed to load storage file:");

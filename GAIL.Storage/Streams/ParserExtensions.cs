@@ -21,15 +21,12 @@ public static class ParserExtensions {
 	/// </summary>
 	/// <param name="parser">The parser to read from.</param>
 	/// <param name="hasKey">True if there is a key to read.</param>
-	/// <returns>The new parsed member, null if it is an end.</returns>
+	/// <returns>The new parsed member.</returns>
 	public static IChildNode? ReadMember(this Parser parser, bool hasKey = true) {
 		MemberType type = ReadType(parser);
-		string key = "";
-        if (hasKey) {
-            key = parser.ReadString();
-        }
+		// TODO: Create member (MemberInfo?).
 
-		return parser.ReadSerializable(info) as IChildNode;
+		return member;
 	}
 	/// <summary>
 	/// Reads multiple members.

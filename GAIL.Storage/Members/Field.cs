@@ -16,7 +16,42 @@ public interface IField : IChildNode, ISerializable {
 	/// </summary>
     [Pure]
     public MemberType Type { get; }
+
+	/// <summary>
+	/// Turns this class into bytes.
+	/// </summary>
+	/// <param name="serializer">The serializer to write to.</param>
+	/// <param name="hasKey">Whether the key should be written.</param>
+	/// <param name="formatter">The formatter to use.</param>
+	public void Serialize(Serializer serializer, bool hasKey, IFormatter? formatter = null);
+	/// <summary>
+	/// Creates this class from bytes.
+	/// </summary>
+	/// <param name="parser">The parser to read from.</param>
+	/// <param name="hasKey">Whether the key should be read.</param>
+	/// <param name="formatter">The formatter to use.</param>
+	public void Parse(Parser parser, bool hasKey, IFormatter? formatter = null);
 }
+/// <summary>
+/// Implements some common methods of IField.
+/// </summary>
+/// <inheritdoc/>
+public abstract class Field(string key, IParentNode parent) : ChildNode(key, parent), IField {
+	/// <inheritdoc/>
+	public abstract MemberType Type { get; }
+	/// <inheritdoc/>
+	public abstract void Parse(Parser parser, bool hasKey, IFormatter? formatter = null);
+	/// <inheritdoc/>
+	public abstract void Serialize(Serializer serializer, bool hasKey, IFormatter? formatter = null);
+
+	void ISerializable.Parse(Parser parser, IFormatter? formatter) {
+		Parse(parser, true, formatter);
+	}
+	void ISerializable.Serialize(Serializer serializer, IFormatter? formatter) {
+		Serialize(serializer, true, formatter);
+	}
+}
+
 /// <summary>
 /// Represents a node in a storage file with an actual value.
 /// </summary>
@@ -49,36 +84,35 @@ public class SerializableField : Node, IField {
         serializable = baseSerializable;
     }
 
-    /// <inheritdoc/>
-    public void Parse(Parser parser, IFormatter? formatter = null) {
-        Parse(parser, readKey:true, formatter);
+	/// <inheritdoc/>
+	public virtual MemberType Type => MemberType.Custom;
+
+	/// <inheritdoc/>
+	public void Parse(Parser parser, IFormatter? formatter = null) {
+        Parse(parser, true, formatter);
     }
 
     /// <inheritdoc/>
-    public void Parse(Parser parser, bool readKey = true, IFormatter? formatter = null) {
+    public void Parse(Parser parser, bool hasKey, IFormatter? formatter = null) {
         if (formatter != null) {
-            parser.Decode((p) => {
-                Parse(p, readKey, null);
-            }, formatter);
+            parser.Decode(p => Parse(p, hasKey, null), formatter);
         } else {
-            if (readKey) key = parser.ReadString();
+            if (hasKey) key = parser.ReadString();
             serializable.Parse(parser, null);
         }
     }
 
     /// <inheritdoc/>
     public void Serialize(Serializer serializer, IFormatter? formatter = null) {
-        Serialize(serializer, writeKey:true, formatter);
+        Serialize(serializer, true, formatter);
     }
 
     /// <inheritdoc/>
-    public void Serialize(Serializer serializer, bool writeKey = true, IFormatter? formatter = null) {
+    public void Serialize(Serializer serializer, bool hasKey, IFormatter? formatter = null) {
         if (formatter != null) {
-            serializer.Encode((s) => {
-                Serialize(s, writeKey, null);
-            }, formatter);
+            serializer.Encode(s => Serialize(s, hasKey, null), formatter);
         } else {
-            if (writeKey) serializer.WriteString(key);
+            if (hasKey) serializer.WriteString(key);
             serializable.Serialize(serializer, null);
         }
     }
@@ -87,13 +121,11 @@ public class SerializableField : Node, IField {
 /// Represents a basic field implementation using a serializable with a value.
 /// </summary>
 public class SerializableField<T> : SerializableField, IField<T> {
-    private ISerializable<T>? castedSerializable;
     /// <summary>
     /// The underlying serializable.
     /// </summary>
     public ISerializable<T> Serializable { get {
-        castedSerializable ??= (ISerializable<T>)serializable;
-        return castedSerializable;
+        return (ISerializable<T>)serializable;
     } }
     /// <summary>
     /// Creates a new serializable field.

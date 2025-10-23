@@ -2,6 +2,8 @@ using GAIL.Serializing;
 using GAIL.Serializing.Formatters;
 using GAIL.Serializing.Streams;
 using GAIL.Storage.Hierarchy;
+using GAIL.Storage.Members;
+using GAIL.Storage.Streams;
 
 namespace GAIL.Storage;
 
@@ -16,17 +18,18 @@ public class LookupStorage : BaseStorage {
 			parser.Decode((p) => {
 				Parse(p, null);
 			}, formatter);
+		} else {
+        	LookupTable = parser.ReadSerializable(LookupTable.Info);
 		}
-        LookupTable = parser.ReadSerializable(LookupTable.Info);
+		// NOTE: Not parsing the following, because of the lookup table.
     }
-
-	private void WriteChild(Serializer serializer, IChildNode child) {
-		if (child is IParentNode parent) {
-			foreach (IChildNode c in parent.Children.Values) {
-				WriteChild(serializer, c);
+	private void WriteParent(Serializer serializer, IParentNode parent) {
+		foreach (IChildNode c in parent.Children.Values) {
+			if (c is IParentNode p) {
+				WriteParent(serializer, p);
+			} else if (c is IField field) {
+				serializer.WriteMember(field, false);
 			}
-		} else if (child is ISerializable serializable) {
-			serializer.WriteSerializable(serializable);
 		}
 	}
 	/// <inheritdoc/>
@@ -35,10 +38,9 @@ public class LookupStorage : BaseStorage {
 			serializer.Encode((s) => {
 				Serialize(s, null);
 			}, formatter);
-		}
-        serializer.WriteSerializable(LookupTable);
-		foreach (IChildNode child in children.Values) {
-			
+		} else {
+			serializer.WriteSerializable(LookupTable);
+			WriteParent(serializer, this);
 		}
     }
 }

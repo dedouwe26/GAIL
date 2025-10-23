@@ -25,11 +25,8 @@ public static class SerializerExtensions {
 	/// <param name="hasKey">Whether it should write the key.</param>
     public static void WriteMember(this Serializer serializer, IField member, bool hasKey = true) {
 		WriteType(serializer, member.Type);
-		if (hasKey) {
-			serializer.WriteString(member.Key);
-		}
-		serializer.WriteSerializable(member);
-    }
+		member.Serialize(serializer, hasKey, null);
+	}
     
     /// <summary>
 	/// Writes a members to the serializer.

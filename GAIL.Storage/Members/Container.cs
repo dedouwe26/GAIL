@@ -1,6 +1,8 @@
+using GAIL.Serializing;
 using GAIL.Serializing.Formatters;
 using GAIL.Serializing.Streams;
 using GAIL.Storage.Hierarchy;
+using GAIL.Storage.Streams;
 
 namespace GAIL.Storage.Members;
 
@@ -27,13 +29,32 @@ public sealed class Container : Node, IField {
         children = members??[];
     }
 
-	public void Parse(Parser parser, IFormatter? formatter = null)
-	{
-		throw new NotImplementedException();
+    /// <inheritdoc/>
+	public MemberType Type => MemberType.Container;
+
+	/// <inheritdoc/>
+	public void Parse(Parser parser, bool hasKey, IFormatter? formatter = null) {
+        if (formatter != null) {
+			parser.Decode(p => Parse(p, hasKey), formatter);
+		} else {
+            if (hasKey) key = parser.ReadString();
+			children = parser.ReadChildren(hasKey).ToDictionary(static x => x.Key, static x => x);
+        }
+	}
+	/// <inheritdoc/>
+	public void Serialize(Serializer serializer, bool hasKey, IFormatter? formatter = null) {
+        if (formatter != null) {
+			serializer.Encode(s => Serialize(s, hasKey), formatter);
+		} else {
+            if (hasKey) serializer.WriteString(key);
+			serializer.WriteChildren([.. children.Values], hasKey);
+        }
 	}
 
-	public void Serialize(Serializer serializer, IFormatter? formatter = null)
-	{
-		throw new NotImplementedException();
+	void ISerializable.Parse(Parser parser, IFormatter? formatter) {
+		Parse(parser, true, formatter);
+	}
+	void ISerializable.Serialize(Serializer serializer, IFormatter? formatter) {
+		Serialize(serializer, true, formatter);
 	}
 }

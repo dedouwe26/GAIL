@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Security.Cryptography.X509Certificates;
 using GAIL.Serializing;
 using GAIL.Storage.Hierarchy;
 
@@ -35,6 +36,9 @@ public class ListField<T> : SerializableField<List<T>>, IField<List<T>>, IList<T
     /// <param name="info">The info of the values to use.</param>
     /// <param name="parent"></param>
     public ListField(string key, List<T> values, ISerializable.Info info, IParentNode parent) : base(key, new ListSerializable<T>(values, info), parent) { }
+
+    /// <inheritdoc/>
+	public override MemberType Type => MemberType.List;
     /// <inheritdoc/>
     public T this[int index] { get => Serializable.Value[index]; set => Serializable.Value[index] = value; }
     /// <inheritdoc/>
