@@ -369,29 +369,27 @@ public class ServerContainer : IDisposable, IAsyncDisposable {
         connections.Add(connection.ID, connection);
         OnConnect?.Invoke(this, connection);
         try {
-            if (!connection.Parser.Parse(connection.Formatter, () => Closed || connection.Closed, p => {
+            connection.Parser.Parse(connection.Formatter, () => Closed || connection.Closed, p => {
                 OnPacket?.Invoke(this, connection, p);
-                if (p is DisconnectPacket) {
-                    connections.Remove(connection.ID);
-                    connection.Dispose();
-                    OnDisconnect?.Invoke(this, connection, true, (p as DisconnectPacket)!.additionalData);
-                    return true;
-                }
+                if (p is DisconnectPacket disconnect) {
+					HandleDisconnect(connection, disconnect);
+				}
                 return false;
-            })) {
-                string message = $"Unable to start reading from network stream (connection ID: {connection.ToConnectionID()}).";
-                Logger?.LogFatal(message);
-                OnException?.Invoke(new InvalidOperationException(message), connection);
-            }
-        } catch (IOException e) {
-            if (Closed || connection.Closed) {
-                return;
-            }
-            Logger?.LogWarning($"Could not read from network stream (connection ID: {connection.ToConnectionID()}):");
+            });
+        } catch (Exception e) {
+            if (Closed || connection.Closed) return;
+            Logger?.LogWarning($"Failed to read from network stream (connection ID: {connection.ToConnectionID()}):");
             Logger?.LogException(e, Severity.Warning);
-            OnException?.Invoke(e, connection);
+            if (OnException?.Invoke(e, connection) ?? true) {
+				Dispose();
+			}
         }
-        
+    }
+    private bool HandleDisconnect(Connection connection, DisconnectPacket packet) {
+        connections.Remove(connection.ID);
+        connection.Dispose();
+        OnDisconnect?.Invoke(this, connection, true, packet.additionalData);
+        return true;
     }
 
     /// <summary>

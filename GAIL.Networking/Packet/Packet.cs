@@ -14,83 +14,62 @@ public abstract class Packet : ISerializable {
     /// </summary>
     /// <param name="Property">The property of the field.</param>
     /// <param name="Info">The serializable info of the field.</param>
-    public record class FieldInfo(PropertyInfo Property, IRawSerializable.Info Info);
+    public record class FieldInfo(PropertyInfo Property, ISerializable.Info Info);
+
+#pragma warning disable IL2075
     /// <summary>
     /// Describes a packet.
     /// </summary>
-    public class Info {
+    public readonly struct Info {
         private static ConstructorInfo? GetConstructor(ConstructorInfo[] constructors) {
             foreach (ConstructorInfo constructor in constructors) {
-                if (constructor.IsDefined(typeof(PacketConstructorAttribute))) {
-                    if (constructor.GetParameters().Length > 0) {
-                        throw new ArgumentException($"Constructor {constructor.Name} in {constructor.ReflectedType?.Name ?? "packet"} cannot have parameters");
-                    }
-                    return constructor;
+                if (constructor.GetParameters().Length > 0) {
+                    throw new ArgumentException($"Constructor {constructor.Name} in {constructor.ReflectedType?.Name ?? "packet"} cannot have parameters");
                 }
+                return constructor;
             }
             return null;
         }
-        private static FieldInfo[] GetFields(PropertyInfo[] properties, object instance) {
-            List<FieldInfo> f = [];
-            foreach (PropertyInfo property in properties) {
-                PacketFieldAttribute? attribute = property.GetCustomAttribute<PacketFieldAttribute>();
-                if (attribute != null) {
-                    if (!typeof(ISerializable).IsAssignableFrom(property.PropertyType)) {
-                        throw new ArgumentException($"Property {property.Name} in {property.ReflectedType?.Name ?? "packet"} is not a serializable");
-                    }
-                    ISerializable? serializable = property.GetValue(instance) as ISerializable
-                        ?? throw new ArgumentException($"Property {property.Name} in {property.ReflectedType?.Name ?? "packet"} is not a serializable");
-
-                    f.Add(new FieldInfo(property, ISerializable.TryGetInfo(serializable) ?? throw new InvalidOperationException($"Serializable of packet field {property.Name} in {property.ReflectedType?.Name ?? "packet"} does not have a serializable info")));
-                }
-            }
-            return [.. f];
-        }
-        internal readonly string fullyQualifiedName;
-
-        internal readonly ConstructorInfo constructor;
-
-        internal readonly FieldInfo[] fields;
-
-        internal Info(Packet packet) {
-            Type type = packet.GetType();
-            string name = type.Name;
-            
-            ConstructorInfo? c;
-            try {
-                c = GetConstructor(
-                    type.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
-                ));
+        /// <summary>
+		/// Creates the info from a packet. The constructor must make parser-ready packet.
+		/// </summary>
+		/// <returns>The created packet info.</returns>
+        public static Info Create(Packet packet) {
+			Type type = packet.GetType();
+			string name = type.AssemblyQualifiedName ?? type.FullName ?? type.Name;
+			ConstructorInfo? c;
+			try {
+                c = GetConstructor(type.GetConstructors());
             } catch (Exception e) {
                 throw new ArgumentException($"Failed at the getting constructor of packet ({name})", e);
             }
             if (c == null) {
                 throw new ArgumentException($"Could not find the constructor of packet ({name})");
             }
-
-            FieldInfo[] fields;
-            try {
-                fields = GetFields(
-                    type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic),
-                    packet
-                );
-            } catch (Exception e) {
-                throw new ArgumentException($"Failed at getting the format of packet ({name})", e);
-            }
-            
-            constructor = c;
-            this.fields = fields;
-            fullyQualifiedName = type.AssemblyQualifiedName!;
-        }
-
-        private ISerializable.Info[]? format;
+			return new(() => (Packet)c.Invoke(null), type);
+		}
         /// <summary>
-        /// The format of this packet.
-        /// </summary>
-        public ISerializable.Info[] Format { get {
-            format ??= [.. fields.Select(f => f.Info)];
-            return format;
-        } }
+		/// Creates the info from a packet type. The constructor must make parser-ready packet.
+		/// </summary>
+		/// <typeparam name="T">The packet type.</typeparam>
+		/// <returns>The created packet info.</returns>
+        public static Info Create<T>() where T : Packet, new() {
+			return new(() => new T(), typeof(T));
+		}
+        private readonly Func<Packet> constructor;
+        /// <summary>
+		/// The type of the packet used for equality checks.
+		/// </summary>
+		public readonly Type type;
+		/// <summary>
+		/// Creates a new packet info.
+		/// </summary>
+		/// <param name="constructor">The constructor of the packet (must make an parser-ready packet).</param>
+		/// <param name="type">The type used for equality checks.</param>
+		public Info(Func<Packet> constructor, Type type) {
+            this.constructor = constructor;
+			this.type = type;
+		}
         /// <summary>
         /// Creates a packet from the parser (the creator of a packet).
         /// </summary>
@@ -98,27 +77,17 @@ public abstract class Packet : ISerializable {
         /// <param name="formatter">The formatter to use.</param>
         /// <returns>The parsed packet.</returns>
         public Packet Create(Parser parser, IFormatter? formatter) {
-            if (constructor.Invoke(null) is not Packet packet) {
-                throw new InvalidOperationException($"Failed at creating packet ({fullyQualifiedName})");
-            }
-            packet.Parse(parser, formatter);
+			Packet packet = constructor();
+			packet.Parse(parser, formatter);
             return packet;
         }
-    }
-    private Info? packetInfo;
-    /// <summary>
-    /// The info of this packet.
-    /// </summary>
-    public Info PacketInfo { get {
-        packetInfo ??= new(this);
-        return packetInfo;
-    } }
-    private readonly ISerializable.Info<Packet> serializableInfo;
-    /// <summary>
-    /// The info of the underlying serializable.
-    /// </summary>
-    [SerializingInfo]
-    public ISerializable.Info<Packet> SerializableInfo => serializableInfo;
+        /// <summary>
+		/// Converts this packet info to a serializable info.
+		/// </summary>
+		/// <returns>The created serializable info.</returns>
+		public ISerializable.Info<Packet> Convert() => new(Create);
+	}
+#pragma warning restore IL2075
 
     /// <summary>
     /// The formatter used for encoding / decoding this packet.
@@ -127,9 +96,7 @@ public abstract class Packet : ISerializable {
     /// <summary>
     /// Creates a packet (add own data here).
     /// </summary>
-    public Packet() {
-        serializableInfo = new(PacketInfo.Create);
-    }
+    public Packet() { }
 
     private uint? id;
     /// <summary>
@@ -141,63 +108,33 @@ public abstract class Packet : ISerializable {
         return id.Value;
     } }
 
-    /// <inheritdoc/>
-    public ISerializable.Info[] Format => PacketInfo.Format;
+    /// <summary>
+	/// A simplified serialize method, that serializes this packet. 
+	/// </summary>
+	/// <param name="serializer">The serializer to write to.</param>
+	public abstract void Serialize(Serializer serializer);
 
     /// <summary>
-    /// Gets called before serializing the packet.
-    /// </summary>
-    protected virtual void OnSerialize() { }
-    /// <summary>
-    /// Gets called after parsing the packet.
-    /// </summary>
-    protected virtual void OnParse() { }
+	/// A simplified parse method, that parses this packet. 
+	/// </summary>
+	/// <param name="parser">The parser to read from.</param>
+	public abstract void Parse(Parser parser);
 
-    /// <inheritdoc/>
-    public virtual void Serialize(Serializer serializer) {
-        OnSerialize();
-        foreach (FieldInfo field in PacketInfo.fields) {
-            object? gainedValue;
-            try {
-                gainedValue = field.Property.GetValue(this);
-            } catch (Exception e) {
-                throw new InvalidOperationException($"Failed at getting field {field.Property.Name} in packet ({PacketInfo.fullyQualifiedName})", e);
-            }
-            if (gainedValue is not ISerializable serializable) {
-                throw new InvalidOperationException($"Field {field.Property.Name} in {PacketInfo.fullyQualifiedName} is not a serializable");
-            }
-
-            serializer.WriteSerializable(serializable);
-        }
-    }
-
-    /// <inheritdoc/>
-    public virtual void Parse(Parser parser) {
-        for (int i = 0; i < PacketInfo.fields.Length; i++) {
-            FieldInfo field = PacketInfo.fields[i];
-            try {
-                field.Property.SetValue(this, parser.ReadSerializable(field.Info));
-            } catch (Exception e) {
-                throw new InvalidOperationException($"Failed at setting field {field.Property.Name} in packet ({PacketInfo.fullyQualifiedName})", e);
-            }
-        }
-        OnParse();
-    }
-    /// <summary>
-    /// Encodes data written to the stream using the packet formatter and the global formatter.
-    /// </summary>
-    /// <param name="consumer">he consumer that writes the data that needs encoding.</param>
-    /// <param name="serializer">The serializer to write to.</param>
-    /// <param name="formatter">The formatter to use aside from <see cref="Formatter"/>.</param>
-    protected void Encode(Action<Serializer> consumer, Serializer serializer, IFormatter? formatter) {
-        if (formatter != null && Formatter != null) {
-            serializer.Encode((s) => s.Encode(consumer, Formatter), formatter);
-        } else if (formatter != null) {
-            serializer.Encode(consumer, formatter);
-        } else if (Formatter != null) {
-            serializer.Encode(consumer, Formatter);
-        } else {
-            consumer(serializer);
+	/// <summary>
+	/// Encodes data written to the stream using the packet formatter and the global formatter.
+	/// </summary>
+	/// <param name="consumer">he consumer that writes the data that needs encoding.</param>
+	/// <param name="serializer">The serializer to write to.</param>
+	/// <param name="formatter">The formatter to use aside from <see cref="Formatter"/>.</param>
+	protected void Encode(Action<Serializer> consumer, Serializer serializer, IFormatter? formatter) {
+        if (formatter != null) {
+			serializer.Encode((s) => Encode(consumer, s, null), formatter);
+		} else {
+            if (Formatter != null) {
+				serializer.Encode((s) => consumer(s), Formatter);
+			} else {
+				consumer(serializer);
+			}
         }
     }
     /// <summary>
@@ -207,16 +144,17 @@ public abstract class Packet : ISerializable {
     /// <param name="parser">The parser to read from.</param>
     /// <param name="formatter">The formatter to use aside from <see cref="Formatter"/>.</param>
     protected void Decode(Action<Parser> consumer, Parser parser, IFormatter? formatter) {
-        if (formatter != null && Formatter != null) {
-            parser.Decode((p) => p.Decode(consumer, formatter), Formatter);
-        } else if (formatter != null) {
-            parser.Decode(consumer, formatter);
-        } else if (Formatter != null) {
-            parser.Decode(consumer, Formatter);
-        } else {
-            consumer(parser);
+        if (formatter != null) {
+			parser.Decode((p) => Decode(consumer, p, null), formatter);
+		} else {
+            if (Formatter != null) {
+				parser.Decode((p) => consumer(p), Formatter);
+			} else {
+				consumer(parser);
+			}
         }
     }
+
     /// <inheritdoc/>
     public void Serialize(Serializer serializer, IFormatter? formatter = null) {
         Encode(Serialize, serializer, formatter);

@@ -26,50 +26,34 @@ public static class NetworkRegister {
     } }
     static NetworkRegister() {
         // All built-in packets.
-        RegisterPacket<DisconnectPacket>();
+        RegisterPacket(DisconnectPacket.Info);
     }
     private static readonly List<Packet.Info> Packets = [];
 
     #region Packet Registering
 
-    /// <summary>
-    /// Registers a packet where the non-public parts will be checked.
-    /// </summary>
-    /// <typeparam name="T">The type of the packet.</typeparam>
-    /// <returns>The packet ID.</returns>
-    /// <exception cref="ArgumentException"></exception>
-    /// <exception cref="InvalidOperationException"></exception>
-    public static uint RegisterPacket<T>() where T : Packet, new() {
-        return RegisterPacket(new T());
-    }
-    /// <summary>
-    /// Registers a packet where the non-public parts will be checked.
-    /// </summary>
-    /// <param name="packet">The packet to register.</param>
-    /// <returns>The packet ID.</returns>
-    /// <exception cref="ArgumentException"></exception>
-    /// <exception cref="InvalidOperationException"></exception>
-    public static uint RegisterPacket(Packet packet) {
-        Packets.Add(packet.PacketInfo);
+	/// <summary>
+	/// Registers a packet.
+	/// </summary>
+	/// <param name="packetInfo">The packet to register.</param>
+	/// <returns>The packet ID.</returns>
+	public static uint RegisterPacket(Packet.Info packetInfo) {
+        Packets.Add(packetInfo);
         return (uint)(Packets.Count - 1);
     }
-
-    /// <summary>
-    /// Checks if a packet is registered.
-    /// </summary>
     /// <param name="packetType">The type of the packet.</param>
     /// <returns>True if the packet is registered.</returns>
     public static bool IsPacketRegistered(Type packetType) {
-        return Packets.Any((packet) => packet.fullyQualifiedName == packetType.AssemblyQualifiedName);
+        return Packets.Any((packet) => packetType.Equals(packet.type));
     }
-    /// <summary>
-    /// Checks if a packet is registered.
-    /// </summary>
-    /// <typeparam name="T">The type of the packet.</typeparam>
-    /// <returns>True if the packet is registered.</returns>
-    public static bool IsPacketRegistered<T>() where T : Packet {
-        return IsPacketRegistered(typeof(T));
-    }
+	/// <summary>
+	/// Checks if a packet is registered.
+	/// </summary>
+	/// <typeparam name="T">The type of the packet.</typeparam>
+	/// <returns>True if the packet is registered.</returns>
+	public static bool IsPacketRegistered<T>() where T : Packet {
+		return IsPacketRegistered(typeof(T));
+	}
     
     #endregion Packet Registering
 
@@ -83,7 +67,7 @@ public static class NetworkRegister {
     public static uint? GetPacketID(Packet packet) {
         for (int i = 0; i < Packets.Count; i++) {
             Packet.Info packetInfo = Packets[i];
-            if (packetInfo.fullyQualifiedName == packet.GetType().AssemblyQualifiedName!) {
+            if (packetInfo.type.Equals(packet.GetType())) {
                 return (uint)i;
             }
         }

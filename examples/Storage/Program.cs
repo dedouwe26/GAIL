@@ -1,8 +1,14 @@
 ﻿using System.Security.Cryptography;
+using GAIL.Serializing;
 using GAIL.Serializing.Formatters;
 using GAIL.Storage;
+using GAIL.Storage.Hierarchy;
 using GAIL.Storage.Members;
 using LambdaKit.Terminal;
+
+// NOTE: Aliases are used to make the code look better.
+using IntField = GAIL.Storage.Members.BasicField<int>;
+using StringField = GAIL.Storage.Members.BasicField<string>;
 
 // Generate a key and IV for AES encryption.
 byte[] key = new byte[32];
@@ -12,67 +18,82 @@ RandomNumberGenerator.Fill(key);
 RandomNumberGenerator.Fill(iv);
 
 {
-    // Create a new storage with a AES formatter.
-    Storage storage = new(new AESFormatter(key, iv));
+	// There are 2 types of storages:
+	// 1. LookupStorage, uses a lookup table, supports custom fields.
+	// 2. SimpleStorage, is more lightweight, doesn't support custom fields.
 
-    // Creates a new field.
-    _ = new IntField("MyNumber", 1248, storage);
+	// Instantiates an new lookup storage.
+	using LookupStorage storage = new();
 
-    // Creates a new container.
-    Container person = new("person", storage);
+	// Creates an int field and adds it to the storage.
+	storage.AddChild(IntField.Create("MyNumber", MemberType.Int, 1248));
 
-    // Creates a new field in 'person'.
-    _ = new StringField("name", "0xDED", person);
+	// Creates a new container.
+	Container person = new("person", storage);
+	// Containers can contain more fields with keys.
 
-    // Creates a new field.
-    IntField ID = new("id", Random.Shared.Next());
-    // Adds the field to the container.
-    person.AddChild(ID);
-    // ID.SetParent(person);
+	// Creates a string field in the 'person' container.
+	StringField.Create("name", person, MemberType.String, "0xDED");
 
-    // Creates a list.
-    List numbers = new("numbers", storage);
+	// Creates an int field, but without the BasicField.Create utility.
+	IntField id = new(
+		"id", person,
+		MemberType.Int, new IntSerializable(Random.Shared.Next())
+	);
+	// Removes the id.
+	person.RemoveChild(id);
+	// There are a lot of methods you can use to manipulate the hierarchy. 
+	id.SetParent(person);
 
-    // Populates the list.
-    const int amount = 5;
-    for (int i = 0; i < amount; i++) {
-        // Adds a int field to the list (can be anything). Key is ignored.
-        numbers.Add(new IntField("", Random.Shared.Next())); 
-    }
+	// Creates a list of random numbers.
+	IntField[] raw = new IntField[5];
+	for (int i = 0; i < raw.Length; i++) {
+		raw[i] = IntField.Create(MemberType.Int,  Random.Shared.Next());
+	}
+	
+	// Creates an list field based on the previously generated numbers.
+	ListField<IntField>.Create("numbers", storage, MemberType.Int, raw);
+	// List fields can be used when you have multiple fields of the SAME type
+	// and the keys do NOT need to be stored.
 
-    // Saves the storage to a file.
-    if (!storage.Save("./example.dat")) {
-        Terminal.WriteLine("Failed to save to file...");
-        return;
-    }
+	// Storages can use formatters for compression or encryption.
+	storage.Formatter = new AESFormatter(key, iv);
+
+	// Saves the storage to a file.
+	if (!storage.Save("./example.dat")) {
+	    Terminal.WriteErrorLine("Failed to save to file...");
+		Environment.Exit(1);
+		return;
+	}
 }
 {
-    Storage storage = new();
+	using LookupStorage storage = new();
 
-    // Sets the formatter to a AES formatter.
-    storage.Formatter = new AESFormatter(key, iv);
-    
-    // Loads the storage file.
-    if (!storage.Load("./example.dat")) {
-        Terminal.WriteLine("Failed to load from file...");
-        return;
-    }
+	// Sets the formatter to a AES formatter.
+	storage.Formatter = new AESFormatter(key, iv);
 
-    Terminal.WriteLine(storage.Get("MyNumber")?.Type);
-    int myNumber = storage.Get<IntField>("MyNumber")!.Value;
-    Terminal.WriteLine(myNumber);
+	// Loads the storage file.
+	if (!storage.Load("./example.dat")) {
+	    Terminal.WriteErrorLine("Failed to load from file...");
+		Environment.Exit(1);
+	    return;
+	}
 
-    string personName = storage.Get<StringField>("person.name")!.Value;
-    Terminal.WriteLine("Name: "+personName);
+	// Examples of accessing a field.
+	Terminal.WriteLine(((IParentNode)storage).Get<IntField>(["MyNumber"])!.Type);
+	if (storage.TryGetValue(["MyNumber"], out int value)) {
+		Terminal.WriteLine("Value: " + value);
+	}
 
-    int ID = storage.Get<IntField>(["person", "id"])!.Value;
-    Terminal.WriteLine("ID: "+ID);
+	Terminal.WriteLine("Name: " + storage.GetValueOrDefault<string>(["person", "name"])!);
 
-    List numbers = storage.Get<List>("numbers")!;
-    foreach (IChildNode member in numbers) {
-        Terminal.WriteLine(member.Type);
-        if (member is IntField field) {
-            Terminal.WriteLine(field.Value);
-        }
-    }
+	int ID = ((IParentNode)storage).Get<IntField>(["person", "id"])!.Value;
+	Terminal.WriteLine("ID: "+ID);
+
+	ListField<IField<int>> numbers = (ListField<IField<int>>)storage.Get<IField<int>>(["numbers"])!;
+	foreach (IChildNode member in numbers) {
+	    if (member is IntField field) {
+	        Terminal.WriteLine(field.Value);
+	    }
+	}
 }

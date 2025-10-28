@@ -3,7 +3,8 @@ namespace GAIL.Networking.Client {
     /// An callback for when an exception is thrown (only IOException and SocketException).
     /// </summary>
     /// <param name="exception">The exception that is thrown (only IOException and SocketException).</param>
-    public delegate void ExceptionCallback(Exception exception);
+	/// <returns>Whether it should dispose the client (defaults to true).</returns>
+    public delegate bool ExceptionCallback(Exception exception);
     /// <summary>
     /// An callback for when a packet is received.
     /// </summary>
@@ -44,7 +45,8 @@ namespace GAIL.Networking.Server {
     /// </remarks>
     /// <param name="exception">The exception that is thrown (only IOException and SocketException).</param>
     /// <param name="connection">The connection where the exception occured in (if there is one).</param>
-    public delegate void ExceptionCallback(Exception exception, Connection? connection);
+	/// <returns>Whether it should dispose the connection (defaults to true).</returns>
+    public delegate bool ExceptionCallback(Exception exception, Connection? connection);
     /// <summary>
     /// An callback for when a packet is received.
     /// </summary>

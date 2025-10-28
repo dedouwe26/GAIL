@@ -1,4 +1,3 @@
-using GAIL.Serializing;
 using GAIL.Serializing.Streams;
 using GAIL.Storage.Hierarchy;
 using GAIL.Storage.Members;
@@ -17,28 +16,28 @@ public static class SerializerExtensions {
 	public static void WriteType(this Serializer serializer, MemberType type) {
 		serializer.WriteByte((byte)type);
 	}
-    /// <summary>
+	/// <summary>
 	/// Writes a member to the serializer.
 	/// </summary>
 	/// <param name="serializer">The serializer to write to.</param>
 	/// <param name="member">The member to serialize.</param>
 	/// <param name="hasKey">Whether it should write the key.</param>
-    public static void WriteMember(this Serializer serializer, IField member, bool hasKey = true) {
-		WriteType(serializer, member.Type);
+	public static void WriteMember(this Serializer serializer, IField member, bool hasKey = true) {
+		member.WriteType(serializer);
 		member.Serialize(serializer, hasKey, null);
 	}
-    
-    /// <summary>
+	
+	/// <summary>
 	/// Writes a members to the serializer.
 	/// </summary>
 	/// <param name="serializer">The serializer to write to.</param>
 	/// <param name="children">The children to serialize.</param>
-	/// <param name="hasKey">Whether it should write the keys of the children.</param>
-    public static void WriteChildren(this Serializer serializer, IChildNode[] children, bool hasKey = true) {
-        foreach (IChildNode child in children) {
-            if (child is IField member) {
-                WriteMember(serializer, member, hasKey);
-            }
-        }
-    }
+	/// <param name="hasKey">Whether it should write the id of the children.</param>
+	public static void WriteChildren(this Serializer serializer, IChildNode[] children, bool hasKey = true) {
+		foreach (IChildNode child in children) {
+			if (child is IField member) {
+				WriteMember(serializer, member, hasKey);
+			}
+		}
+	}
 }

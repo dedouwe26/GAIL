@@ -4,8 +4,6 @@ using GAIL.Graphics;
 using GAIL.Input;
 using GAIL.Window;
 using LambdaKit.Logging;
-using LambdaKit.Logging.Targets;
-using LambdaKit.Terminal;
 
 // TODO: Add #if DEBUG when using LogDebug(string).
 

@@ -27,18 +27,18 @@ class Program {
         // server.GlobalFormatter = new GZipFormatter();
 
         // Stop when key pressed.
-        Terminal.OnKeyPress+=async (key, ch, alt, shift, control) => {
-            await server.StopAsync();
+        Terminal.OnKeyPress+=(key, ch, alt, shift, control) => {
+            server.Stop();
         };
 
         // Don't forget to start the server.
         Terminal.WriteLine("Started listening...", new Style{ ForegroundColor = (StandardColor)StandardColor.Colors.Green});
 
-        // Starts listening (non-thread blocking).
+        // Starts listening (does not block the thread).
         server.Start();
 
-        Terminal.ListenForKeys = true; // Thread blocking.
-    }
+        Terminal.ListenForKeys = true; // Blocks the tread.
+	}
 
     private static void OnDisconnect(ServerContainer server, Connection connection, bool byClient, byte[] additionalData) {
         string text;

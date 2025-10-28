@@ -64,31 +64,13 @@ public class NetworkParser : Parser {
     /// <param name="isClosed">If it should stop and return.</param>
     /// <param name="onPacket">The callback for when a packet has been received. Returns true if it should stop.</param>
     /// <returns>True if it was successful, otherwise false.</returns>
-    public bool Parse(IFormatter? globalFormatter, Func<bool> isClosed, Func<Packet, bool> onPacket) {
+    public void Parse(IFormatter? globalFormatter, Func<bool> isClosed, Func<Packet, bool> onPacket) {
         Logger.LogDebug("Starting to parse the stream for packets...");
         while (!isClosed()) {
-            try {
-                if (onPacket(ReadPacket(globalFormatter))) {
-                    return true;
-                }
-            } catch (EndOfStreamException e) {
-                if (isClosed()) {
-                    return true;
-                }
-                Logger.LogError("End of stream while parsing:");
-                Logger.LogException(e, Severity.Error);
-                return false;
-            } catch (Exception e) {
-                if (isClosed()) {
-                    return true;
-                }
-                Logger.LogError("Exception while parsing:");
-                Logger.LogException(e, Severity.Error);
-                return false;
-            }
-
+            if (onPacket(ReadPacket(globalFormatter))) {
+				return;
+			}
         }
         Logger.LogDebug("Finished parsing the stream for packets.");
-        return true;
     }
 }

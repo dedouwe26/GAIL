@@ -17,34 +17,40 @@ public static class ParserExtensions {
 		return (MemberType)parser.ReadByte();
 	}
 	/// <summary>
+	/// Retrieves the field info from the written member types.
+	/// </summary>
+	/// <param name="parser">The parser to read the member types from.</param>
+	/// <returns>The retrieved field info.</returns>
+	public static IField.Info ReadFieldInfo<TContent>(this Parser parser) where TContent : IField {
+		return StorageRegister<TContent>.GetInfo(parser, ReadType(parser));
+	}
+	/// <summary>
 	/// Reads any valid member from the stream.
 	/// </summary>
 	/// <param name="parser">The parser to read from.</param>
+	/// <param name="info">The field info used for reading.</param>
 	/// <param name="hasKey">True if there is a key to read.</param>
 	/// <returns>The new parsed member.</returns>
-	public static IChildNode? ReadMember(this Parser parser, bool hasKey = true) {
-		MemberType type = ReadType(parser);
-		// TODO: Create member (MemberInfo?).
-
-		return member;
+	public static IField ReadMember(this Parser parser, IField.Info info, bool hasKey = true) {
+		return info.FieldCreator(parser, hasKey, null);
 	}
 	/// <summary>
 	/// Reads multiple members.
 	/// </summary>
 	/// <param name="parser">The parser to read from.</param>
-	/// <param name="hasKey">If it should read keys.</param>
+	/// <param name="hasKey">If it should read id.</param>
 	/// <returns>A list of parsed members.</returns>
-	public static List<IChildNode> ReadChildren(this Parser parser, bool hasKey = true) {
-        IChildNode? member;
-        try {
-            member = ReadMember(parser, hasKey);
-        } catch (EndOfStreamException) {
-            return [];
-        }
-        if (member==null) {
-            return [];
-        } else {
-            return [member, .. ReadChildren(parser, hasKey)];
-        }
-    }
+	public static List<IField> ReadChildren(this Parser parser, bool hasKey = true) {
+		IField? member;
+		try {
+			member = ReadMember(parser, ReadFieldInfo<IField>(parser), hasKey);
+		} catch (EndOfStreamException) {
+			return [];
+		}
+		if (member==null) {
+			return [];
+		} else {
+			return [member, .. ReadChildren(parser, hasKey)];
+		}
+	}
 }

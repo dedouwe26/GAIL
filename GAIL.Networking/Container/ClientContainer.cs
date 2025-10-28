@@ -3,8 +3,8 @@ using System.Net.Sockets;
 using GAIL.Networking.Streams;
 using GAIL.Serializing.Formatters;
 using LambdaKit.Logging;
-using LambdaKit.Terminal;
 using LambdaKit.Logging.Targets;
+using LambdaKit.Terminal;
 
 namespace GAIL.Networking.Client;
 
@@ -193,7 +193,7 @@ public class ClientContainer : IDisposable {
     private void Listen() {
         NetworkParser parser = new(NetworkStream!);
         try {
-            if (!parser.Parse(GlobalFormatter, () => Closed, p => {
+            parser.Parse(GlobalFormatter, () => Closed, p => {
                 OnPacket?.Invoke(this, p);
                 if (p is DisconnectPacket dp) {
                     OnDisconnect?.Invoke(this, true, dp.additionalData);
@@ -201,18 +201,17 @@ public class ClientContainer : IDisposable {
                     return true;
                 }
                 return false;
-            })) {
-                Logger?.LogFatal("Unable to start reading from network stream.");
-                OnException?.Invoke(new InvalidOperationException("Unable to start reading from network stream."));
-            }
-        } catch (IOException e) {
+            });
+        } catch (Exception e) {
             if (Closed) {
                 return;
             }
-            Logger?.LogError("Could not read from network stream:");
-            Logger?.LogException(e, Severity.Error);
-            OnException?.Invoke(e);
-        }
+            Logger?.LogFatal("Could not read from network stream:");
+            Logger?.LogException(e, Severity.Fatal);
+            if (OnException?.Invoke(e) ?? true) {
+			    Dispose();
+            }
+		}
         
     }
     /// <summary>
