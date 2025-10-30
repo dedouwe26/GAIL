@@ -9,17 +9,17 @@ public static class LoggerFactory {
     public static void ApplySettings(Logger logger) {
         int index = logger.GetTargetIndex<TerminalTarget>();
         if (index > -1) {
-            logger.GetTarget<TerminalTarget>(index)!.Format =
+            logger.GetTarget<TerminalTarget>(index)!.format =
                 new StyleBuilder().Text("<{0}>: (")
                 .Foreground((StandardColor)StandardColor.Colors.Blue).Text("{2}")
                 .Reset().Text(")[{5}").Bold().Text("{3}").Bold(false).ResetForeground()
                 .Text("] : {5}{4}").Reset().ToString();
-            logger.GetTarget<TerminalTarget>(index)!.NameFormat =  "{0} - {1}";
+            logger.GetTarget<TerminalTarget>(index)!.nameFormat =  "{0} - {1}";
         }
         index = logger.GetTargetIndex<FileTarget>();
         if (index > -1) {
-            logger.GetTarget<FileTarget>(index)!.Format = "<{0}>: ({2})[{3}] : {4}";
-            logger.GetTarget<FileTarget>(index)!.NameFormat =  "{0} - {1}";
+            logger.GetTarget<FileTarget>(index)!.format = "<{0}>: ({2})[{3}] : {4}";
+            logger.GetTarget<FileTarget>(index)!.nameFormat =  "{0} - {1}";
         }
     }
     public static Logger Create(string name, Logger? inputtedLogger = null, Severity? severity = null) {

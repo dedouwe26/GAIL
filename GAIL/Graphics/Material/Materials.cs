@@ -1,6 +1,3 @@
-using System.Numerics;
-using GAIL.Core;
-
 namespace GAIL.Graphics.Material
 {
     /// <summary>
