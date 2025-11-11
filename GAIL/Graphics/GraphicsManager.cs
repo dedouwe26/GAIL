@@ -20,10 +20,6 @@ namespace GAIL.Graphics
         /// The renderer of the graphics manager.
         /// </summary>
         public VulkanRenderer? Renderer { get; private set; }
-        /// <summary>
-        /// The settings of the renderer.
-        /// </summary>
-        public IRendererSettings Settings { get => Renderer!.Settings; }
 
         /// <summary>
         /// The logger corresponding to the graphics part of the application.
@@ -43,18 +39,14 @@ namespace GAIL.Graphics
         /// </summary>
         /// <param name="globals">The globals of this application.</param>
         /// <param name="appInfo">The application info for vulkan.</param>
-        /// <param name="maxFramesInFlight">The default max frames used.</param>
-        /// <param name="clearValue"></param>
+        /// <param name="initialSettings">The inital graphical settings to start with. This is useful to set for when you change settings on startup. The default defaults to the default settings.</param> // What the...
         /// <exception cref="APIBackendException"></exception>
-        public void Initialize(Application.Globals globals, AppInfo appInfo, uint maxFramesInFlight = 2, Color? clearValue = null) {
+        public void Initialize(Application.Globals globals, AppInfo appInfo, RendererSettings? initialSettings = null) {
             Logger.LogDebug("Initalizing Graphics.");
-            
-            RendererSettings<IVulkanLayer> settings = new() { // TODO: Vulkan-specific
-                MaxFramesInFlight = maxFramesInFlight,
-                ClearValue = clearValue ?? new Color(0, 0, 0, 0)
-            };
 
-            Renderer = new VulkanRenderer(LoggerFactory.CreateSublogger(Logger, "Renderer", "renderer"), globals, ref settings, appInfo);
+			initialSettings ??= new();
+
+			Renderer = new VulkanRenderer(LoggerFactory.CreateSublogger(Logger, "Renderer", "renderer"), globals, initialSettings, appInfo);
 
             IsDisposed = false;
 

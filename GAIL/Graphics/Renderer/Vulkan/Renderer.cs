@@ -8,46 +8,9 @@ using Silk.NET.Vulkan;
 namespace GAIL.Graphics.Renderer.Vulkan;
 
 /// <summary>
-/// The settings implementation for Vulkan.
-/// </summary>
-public class Settings : RendererSettings<Renderer, IVulkanLayer> {
-	internal IVulkanLayer[] _Layers { set => layers = value; } // TODO: temp
-	/// <summary>
-	/// Creates new a new Vulkan implementation of the rasterization layer settings.
-	/// </summary>
-	/// <param name="renderer">The vulkan implementation of the renderer settings.</param>
-	/// <param name="values">The initial values of these settings.</param>
-	public Settings(Renderer renderer, ref RendererSettings<IVulkanLayer> values) : base(renderer, ref values) { }
-
-	/// <inheritdoc/>
-	public override uint MaxFramesInFlight { get => base.MaxFramesInFlight; set {
-		// TODO: ??? device wait idle at all settings (including layer settings) ???
-		renderer.Syncronization.Dispose();
-		renderer.Commands.Dispose();
-		maxFramesInFlight = value;
-		renderer.Commands = new(renderer);
-		renderer.Syncronization = new(renderer);
-	} }
-	/// <inheritdoc/>
-	public override Color ClearValue { get => base.ClearValue; set => clearValue = value; }
-	/// <inheritdoc/>
-	public override IVulkanLayer[] Layers { get => base.Layers; set {
-		for (uint i = 0; i < value.Length; i++) {
-			value[i].Index = i;
-		}
-
-		renderer.RenderPass?.Dispose();
-		layers = value;
-		renderer.layerDescriptions = LayerDescription.From(value);
-		renderer.RenderPass = new(renderer);
-		renderer.RenderPass.CreateFramebuffers();
-	} }
-}
-
-/// <summary>
 /// Represents a renderer that uses the Vulkan Graphics API.
 /// </summary>
-public class Renderer : IRenderer<IVulkanLayer> {
+public class Renderer : IRenderer {
 	/// <summary>
 	/// If this class is already disposed.
 	/// </summary>
@@ -66,7 +29,7 @@ public class Renderer : IRenderer<IVulkanLayer> {
 	internal LayerDescription[] layerDescriptions;
 	internal Logger Logger;
 
-	# region Utilities
+	#region Utilities
 
 	/// <summary>
 	/// The vulkan devices utility, for custom usage.
@@ -98,12 +61,39 @@ public class Renderer : IRenderer<IVulkanLayer> {
 	/// </summary>
 	public readonly Instance instance;
 
-	# endregion Utilities
+	#endregion Utilities
+
+	#region Settings
+
+	/// <inheritdoc/>
+	public IVulkanLayer[] Layers { get => settings.Layers; set {
+		for (uint i = 0; i < value.Length; i++) {
+			value[i].Index = i;
+		}
+
+		RenderPass?.Dispose();
+		settings.Layers = value;
+		layerDescriptions = LayerDescription.From(value);
+		RenderPass = new(this);
+		RenderPass.CreateFramebuffers();
+	} }
+	/// <inheritdoc/>
+	public Color ClearValue { get => settings.ClearValue; set => settings.ClearValue = value; } // TODO: Only thing to change?
+	/// <inheritdoc/>
+	public uint MaxFramesInFlight { get => settings.MaxFramesInFlight; set {
+		// TODO: ??? device wait idle at all settings (including layer settings) ???
+		Syncronization.Dispose();
+		Commands.Dispose();
+		settings.MaxFramesInFlight = value;
+		Commands = new(this);
+		Syncronization = new(this);
+	} }
+
+	private readonly RendererSettings settings;
+
+	#endregion Settings
 
 	private readonly Application.Globals globals;
-	private readonly Settings settings;
-	/// <inheritdoc/>
-	public IRendererSettings<IVulkanLayer> Settings { get => settings; }
 
 	/// <summary>
 	/// Creates a new Vulkan Renderer.
@@ -112,9 +102,9 @@ public class Renderer : IRenderer<IVulkanLayer> {
 	/// <param name="globals">The globals of the application.</param>
 	/// <param name="settings">The settings of this renderer.</param>
 	/// <param name="appInfo">The information of the application.</param>
-	public Renderer(Logger logger, Application.Globals globals, ref RendererSettings<IVulkanLayer> settings, AppInfo appInfo) {
+	public Renderer(Logger logger, Application.Globals globals, RendererSettings settings, AppInfo appInfo) {
 		this.globals = globals;
-		this.settings = new(this, ref settings);
+		this.settings = settings;
 
 		Logger = logger;
 		if (!API.Glfw.VulkanSupported()) {
@@ -124,16 +114,17 @@ public class Renderer : IRenderer<IVulkanLayer> {
 
 		Logger.LogDebug("Initializing Vulkan");
 
+		// TODO: Ensure that the default layers are IVulkanLayer[]
 
-		layerDescriptions = LayerDescription.From(settings.Layers);
+		layerDescriptions = LayerDescription.From((IVulkanLayer[])settings.Layers);
 		try {
 			instance = new Instance(this, appInfo);
 			surface = new Surface(this, globals.windowManager);
 			device = new Device(this);
 			Swapchain = new Swapchain(this, globals.windowManager);
 
-			// RenderPass = new RenderPass(this); // TODO: Temp
-			// RenderPass.CreateFramebuffers();
+			RenderPass = new RenderPass(this); // TODO: ???
+			RenderPass.CreateFramebuffers();
 			Commands = new Commands(this);
 			Syncronization = new Syncronization(this);
 		} catch (Exception e) { // TODO: Better exception handling.
