@@ -41,10 +41,14 @@ namespace GAIL.Graphics
         /// <param name="appInfo">The application info for vulkan.</param>
         /// <param name="initialSettings">The inital graphical settings to start with. This is useful to set for when you change settings on startup. The default defaults to the default settings.</param> // What the...
         /// <exception cref="APIBackendException"></exception>
-        public void Initialize(Application.Globals globals, AppInfo appInfo, RendererSettings? initialSettings = null) {
+        public void Initialize(Application.Globals globals, AppInfo appInfo, RendererSettings<IBackendLayer>? initialSettings = null) {
             Logger.LogDebug("Initalizing Graphics.");
 
 			initialSettings ??= new();
+
+            // TODO: Convert initial settings.
+            // NOTE: How does one create the initial settings??
+            //       Including layers??
 
 			Renderer = new VulkanRenderer(LoggerFactory.CreateSublogger(Logger, "Renderer", "renderer"), globals, initialSettings, appInfo);
 

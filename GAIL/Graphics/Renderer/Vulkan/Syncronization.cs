@@ -26,9 +26,9 @@ public class Syncronization : IDisposable {
         
         renderer.Logger.LogDebug("Creating Sync-objects.");
         
-        renderFinished = CreateSemaphore(renderer.Settings.MaxFramesInFlight);
-        imageAvailable = CreateSemaphore(renderer.Settings.MaxFramesInFlight);
-        inFlight = CreateFence(renderer.Settings.MaxFramesInFlight, true);
+        renderFinished = CreateSemaphore(renderer.MaxFramesInFlight);
+        imageAvailable = CreateSemaphore(renderer.MaxFramesInFlight);
+        inFlight = CreateFence(renderer.MaxFramesInFlight, true);
     }
     public void WaitForFrame(uint currentFrame) {
         _ = Utils.Check(API.Vk.WaitForFences(device.logicalDevice, 1, in inFlight[currentFrame], true, ulong.MaxValue), Logger, "Failed to wait for in flight fence", true);

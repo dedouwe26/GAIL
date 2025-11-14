@@ -10,7 +10,7 @@ namespace GAIL.Graphics.Renderer.Vulkan;
 /// <summary>
 /// Represents a renderer that uses the Vulkan Graphics API.
 /// </summary>
-public class Renderer : IRenderer {
+public class Renderer : IRenderer<IVulkanLayer> {
 	/// <summary>
 	/// If this class is already disposed.
 	/// </summary>
@@ -19,7 +19,7 @@ public class Renderer : IRenderer {
 	/// The current in flight frame.
 	/// </summary>
 	/// <remarks>
-	/// CurrentFrame cannot be higher than <see cref="IRendererSettings.MaxFramesInFlight"/>.
+	/// CurrentFrame cannot be higher than <see cref="IRendererSettings{TLayer}.MaxFramesInFlight"/>.
 	/// </remarks>
 	public uint CurrentFrame { get; private set; }
 	/// <summary>
@@ -66,7 +66,7 @@ public class Renderer : IRenderer {
 	#region Settings
 
 	/// <inheritdoc/>
-	public IVulkanLayer[] Layers { get => settings.Layers; set {
+	public IVulkanLayer[] Layers { get => settings.Layers; set { // NOTE: Casting because this is garanteed.
 		for (uint i = 0; i < value.Length; i++) {
 			value[i].Index = i;
 		}
@@ -88,8 +88,9 @@ public class Renderer : IRenderer {
 		Commands = new(this);
 		Syncronization = new(this);
 	} }
-
-	private readonly RendererSettings settings;
+	/// <inheritdoc/>
+	public bool ShouldRender { get; set; }
+	private readonly RendererSettings<IVulkanLayer> settings;
 
 	#endregion Settings
 
@@ -102,7 +103,7 @@ public class Renderer : IRenderer {
 	/// <param name="globals">The globals of the application.</param>
 	/// <param name="settings">The settings of this renderer.</param>
 	/// <param name="appInfo">The information of the application.</param>
-	public Renderer(Logger logger, Application.Globals globals, RendererSettings settings, AppInfo appInfo) {
+	public Renderer(Logger logger, Application.Globals globals, RendererSettings<IVulkanLayer> settings, AppInfo appInfo) {
 		this.globals = globals;
 		this.settings = settings;
 
@@ -114,17 +115,17 @@ public class Renderer : IRenderer {
 
 		Logger.LogDebug("Initializing Vulkan");
 
-		// TODO: Ensure that the default layers are IVulkanLayer[]
-
-		layerDescriptions = LayerDescription.From((IVulkanLayer[])settings.Layers);
+		layerDescriptions = LayerDescription.From(settings.Layers);
 		try {
 			instance = new Instance(this, appInfo);
 			surface = new Surface(this, globals.windowManager);
 			device = new Device(this);
 			Swapchain = new Swapchain(this, globals.windowManager);
 
-			RenderPass = new RenderPass(this); // TODO: ???
-			RenderPass.CreateFramebuffers();
+			if (RenderPass != null) {
+				RenderPass = new RenderPass(this); // TODO: Does this work?
+				RenderPass.CreateFramebuffers();   // NOTE: This is here, because creating a rasterization layer also initializes the renderpass.
+			}
 			Commands = new Commands(this);
 			Syncronization = new Syncronization(this);
 		} catch (Exception e) { // TODO: Better exception handling.
@@ -227,7 +228,7 @@ public class Renderer : IRenderer {
 		Commands.Dispose();
 
 		Logger.LogDebug("Terminating Vulkan.");
-		foreach (IVulkanLayer backendLayer in Settings.Layers) {
+		foreach (IVulkanLayer backendLayer in settings.Layers) {
 			backendLayer.Dispose();
 		}
 		
@@ -244,12 +245,12 @@ public class Renderer : IRenderer {
 
 	/// <inheritdoc/>
 	public IRasterizationLayer? CreateRasterizationLayer(RasterizationLayerSettings settings) {
-		RenderPass?.Dispose();
+		RenderPass?.Dispose(); // TODO: Distinct between creating a layer and appending it.
 		layerDescriptions = [.. layerDescriptions, new() { type = PipelineBindPoint.Graphics }];
 		RenderPass = new(this);
 		RenderPass.CreateFramebuffers();
 		VulkanRasterizationLayer layer = new(this, (uint)this.settings.Layers.Length, settings);
-		this.settings._Layers = [.. this.settings.Layers, layer];
+		this.settings.Layers = [.. this.settings.Layers, layer];
 		try {
 			return layer;
 		} catch (APIBackendException) {

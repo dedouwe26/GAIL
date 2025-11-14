@@ -36,13 +36,13 @@ public class Commands : IDisposable {
 
             CommandPool = commandPool,
             Level = CommandBufferLevel.Primary, // NOTE: Primary: Can be submitted to a queue, secondary: can be called from the primary (e.g. reusability).
-            CommandBufferCount = renderer.Settings.MaxFramesInFlight
+            CommandBufferCount = renderer.MaxFramesInFlight
         };
 
         renderer.Logger.LogDebug("Allocating Command Buffers.");
 
-        commandBuffers = new CommandBuffer[renderer.Settings.MaxFramesInFlight];
-        isInitial = new bool[renderer.Settings.MaxFramesInFlight];
+        commandBuffers = new CommandBuffer[renderer.MaxFramesInFlight];
+        isInitial = new bool[renderer.MaxFramesInFlight];
 		MakeInitial();
 		unsafe {
             if (!Utils.Check(API.Vk.AllocateCommandBuffers(renderer.device.logicalDevice, in allocateInfo, Pointer<CommandBuffer>.FromArray(ref commandBuffers)), renderer.Logger, "Failed to allocate command buffer", false)) {
@@ -126,7 +126,7 @@ public class Commands : IDisposable {
         }
         
         { // Command Begin RenderPass
-            ClearValue clearValue = new(new(float32_0:renderer.Settings.ClearValue.R, float32_1:renderer.Settings.ClearValue.G,float32_2:renderer.Settings.ClearValue.B, float32_3: renderer.Settings.ClearValue.A));
+            ClearValue clearValue = new(new(float32_0:renderer.ClearValue.R, float32_1:renderer.ClearValue.G,float32_2:renderer.ClearValue.B, float32_3: renderer.ClearValue.A));
             // NOTE: Clear values for load operation clear.
 
             RenderPassBeginInfo renderPassInfo = new() {

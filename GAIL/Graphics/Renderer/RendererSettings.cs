@@ -6,7 +6,7 @@ namespace GAIL.Graphics.Renderer;
 /// <summary>
 /// The settings of the current renderer.
 /// </summary>
-public interface IRendererSettings {
+public interface IRendererSettings<TLayer> where TLayer : I {
     /// <summary>
     /// If the renderer should render. Defaults to true.
     /// </summary>
@@ -25,13 +25,13 @@ public interface IRendererSettings {
     /// <summary>
     /// The layers used by the renderer. Default is empty.
     /// </summary>
-    public IBackendLayer[] Layers { get; set; }
+    public TLayer[] LayerSettings { get; set; }
 }
 
 /// <summary>
 /// The values of the settings for a renderer.
 /// </summary>
-public class RendererSettings : IRendererSettings {
+public class RendererSettings<TLayer> : IRendererSettings<TLayer> where TLayer : IBackendLayer {
     /// <inheritdoc/>
     public bool ShouldRender { get; set; } = true;
     /// <inheritdoc/>
@@ -39,4 +39,4 @@ public class RendererSettings : IRendererSettings {
     /// <inheritdoc/>
     public uint MaxFramesInFlight { get; set; } = 2;
     /// <inheritdoc/>
-    public IBackendLayer[] Layers { get; set; } = [];}
+    public TLayer[] Layers { get; set; } = [];}

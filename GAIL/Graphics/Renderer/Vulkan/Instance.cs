@@ -1,7 +1,5 @@
 using System.Runtime.InteropServices;
 using GAIL.Core;
-using LambdaKit.Logging;
-using Silk.NET.GLFW;
 using Silk.NET.Vulkan;
 
 namespace GAIL.Graphics.Renderer.Vulkan;

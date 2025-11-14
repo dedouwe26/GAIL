@@ -99,13 +99,23 @@ public enum MSAA {
 #region Rasterization Settings
 
 /// <summary>
-/// Settings for a rasterization layer.
+/// Settings for a layer.
 /// </summary>
-public interface IRasterizationLayerSettings {
+public interface ILayerSettings {
     /// <summary>
     /// If the renderer should render. Defaults to true.
     /// </summary>
     public bool ShouldRender { get; set; }
+    /// <summary>
+    /// The shader stages to use for this layer.
+    /// </summary>
+    public List<Object> RenderList { get; set; }
+}
+
+/// <summary>
+/// Settings for a rasterization layer.
+/// </summary>
+public interface IRasterizationLayerSettings : ILayerSettings {
     /// <summary>
     /// What part of the triangle to render. Defaults to <see cref="FillMode.Face"/>.
     /// </summary>
@@ -122,16 +132,11 @@ public interface IRasterizationLayerSettings {
     /// The shader stages to use for this layer.
     /// </summary>
     public IShader Shader { get; set; }
-    /// <summary>
-    /// The shader stages to use for this layer.
-    /// </summary>
-    public List<Object> RenderList { get; set; }
-
 }
 /// <summary>
 /// The values of the settings for a rasterization layer.
 /// </summary>
-public class RasterizationLayerSettings {
+public class RasterizationLayerSettings : IRasterizationLayerSettings {
     /// <summary>
     /// If the renderer should render. Defaults to true.
     /// </summary>
@@ -162,41 +167,5 @@ public class RasterizationLayerSettings {
     /// </summary>
     public RasterizationLayerSettings() { }
 }
-/// <summary>
-/// Settings for a rasterization layer.
-/// </summary>
-public abstract class RasterizationLayerSettings<TLayer> : IRasterizationLayerSettings where TLayer : IRasterizationLayer {
-    /// <summary>
-    /// The layer of these settings.
-    /// </summary>
-    protected readonly TLayer layer;
-
-	protected RasterizationLayerSettings values;
-	/// <summary>
-	/// Creates new settings for the back-end rasterization layer.
-	/// </summary>
-	/// <param name="layer">The back-end rasterization layer to use for these settings.</param>
-	/// <param name="values">The initial values of these settings.</param>
-	protected RasterizationLayerSettings(TLayer layer, RasterizationLayerSettings values) {
-        this.layer = layer;
-		this.values = values;
-	}
-
-    /// <inheritdoc/>
-    public virtual bool ShouldRender { get => values.ShouldRender; set => values.ShouldRender = value; }
-
-    /// <inheritdoc/>
-    public virtual FillMode FillMode { get => values.FillMode; set => throw new NotImplementedException(); }
-    /// <inheritdoc/>
-    public virtual FrontFaceMode FrontFaceMode { get => values.FrontFaceMode; set => throw new NotImplementedException(); }
-    /// <inheritdoc/>
-    public virtual CullMode CullMode { get => values.CullMode; set => throw new NotImplementedException(); }
-    /// <inheritdoc/>
-    public virtual IShader Shader { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-    /// <inheritdoc/>
-    public virtual List<Object> RenderList { get => values.RenderList; set => throw new NotImplementedException(); }
-}
 
 #endregion Rasterization Settings
-
-// TODO: Raytracing settings
