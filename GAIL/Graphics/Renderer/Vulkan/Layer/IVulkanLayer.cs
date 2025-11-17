@@ -19,7 +19,7 @@ public interface IVulkanLayer : IBackendLayer {
 	/// <summary>
 	/// The vulkan pipeline utility, for custom usage.
 	/// </summary>
-	public Pipeline Pipeline { get; internal set; }
+	public Pipeline Pipeline { get; }
     /// <summary>
     /// Updates the index of the layer in the renderer.
     /// </summary>

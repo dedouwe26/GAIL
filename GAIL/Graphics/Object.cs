@@ -1,5 +1,3 @@
-using GAIL.Graphics.Mesh;
-
 namespace GAIL.Graphics;
 
 /// <summary>

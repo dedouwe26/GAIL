@@ -7,12 +7,12 @@ namespace GAIL.Graphics.Renderer;
 /// <summary>
 /// Represents a class that can render stuff.
 /// </summary>
-public interface IRenderer<TLayer> : IDisposable, IRendererSettings<TLayer> where TLayer : ILayerSettings {
+public interface IRenderer : IDisposable, IRendererSettings {
 	public void MoveLayer(int layerIndex, int newIndex);
 	public void RemoveLayerAt(int index);
 	public bool TryGetLayer(int index, [NotNullWhen(true)] out IBackendLayer? layer);
-	public IRasterizationLayer? AddRasterizationLayer(RasterizationLayerSettings settings);
-	public IRasterizationLayer? InsertRasterizationLayer(int index, RasterizationLayerSettings settings);
+	public IRasterizationLayer? AddRasterizationLayer(in RasterizationLayerSettings settings);
+	public IRasterizationLayer? InsertRasterizationLayer(int index, in RasterizationLayerSettings settings);
 
 	/// <summary>
 	/// Renders the current frame.

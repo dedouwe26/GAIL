@@ -1,10 +1,9 @@
 using Silk.NET.Vulkan;
 
-namespace GAIL.Graphics.Renderer.Vulkan.Layer;
+namespace GAIL.Graphics.Renderer;
 
-// NOTE: Struct because of size.
 public struct LayerDescription {
-	public static LayerDescription[] From(IVulkanLayer[] layers) {
+	public static LayerDescription[] From() {
 		return [.. layers.Select((l) => new LayerDescription() { type = l.Pipeline.Type })];
 	}
 	public PipelineBindPoint type;

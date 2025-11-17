@@ -8,7 +8,7 @@ namespace GAIL.Graphics.Layer;
 /// </summary>
 public class Layer2D : ILayer {
     public static Layer2D Create(GraphicsManager manager, Object[] initialRenderList, IShader shader) {
-        return new(manager.CreateRasterizationLayer(new() { Shaders = shader, RenderList = [.. initialRenderList] }));
+        return new(manager.CreateRasterizationLayer(new() { Shader = shader, RenderList = [.. initialRenderList] }));
     }
     /// <summary>
     /// If this 2D layer is disposed.

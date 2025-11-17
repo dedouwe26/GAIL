@@ -6,58 +6,6 @@ using LambdaKit.Logging;
 namespace GAIL.Graphics.Renderer.Vulkan.Layer;
 
 /// <summary>
-/// Vulkan implementation of the rasterization layer settings.
-/// </summary>
-public class VulkanRasterizationLayerSettings : RasterizationLayerSettings<VulkanRasterizationLayer> {
-    /// <summary>
-    /// Creates new a new Vulkan implementation of the rasterization layer settings.
-    /// </summary>
-    /// <param name="layer">The vulkan implementation of the rasterization layer.</param>
-    /// <param name="values">The initial values of these settings.</param>
-    public VulkanRasterizationLayerSettings(VulkanRasterizationLayer layer, RasterizationLayerSettings values) : base(layer, values) {
-        if (values.Shaders is not Shader shader) {
-            throw new InvalidOperationException("The given shader is no Vulkan shader.");
-        }
-        this.shader = shader;
-    }
-    
-    /// <inheritdoc/>
-    public override CullMode CullMode { get => base.CullMode; set {
-        layer.Pipeline.Dispose();
-        values.CullMode = value;
-        layer.Pipeline = new Pipeline(layer);
-    } }
-    /// <inheritdoc/>
-    public override FillMode FillMode { get => base.FillMode; set {
-        layer.Pipeline.Dispose();
-        values.FillMode = value;
-        layer.Pipeline = new Pipeline(layer);
-    } }
-    /// <inheritdoc/>
-    public override FrontFaceMode FrontFaceMode { get => base.FrontFaceMode; set {
-        layer.Pipeline.Dispose();
-        values.FrontFaceMode = value;
-        layer.Pipeline = new Pipeline(layer);
-    } }
-    /// <inheritdoc/>
-    public override IShader Shader { get => shader; set {
-        layer.Pipeline.Dispose();
-        if (value is not Shader shader) {
-            throw new InvalidOperationException("The given shader is no Vulkan shader.");
-        }
-        this.shader = shader;
-        layer.Pipeline = new Pipeline(layer);
-    } }
-    internal Shader shader;
-    /// <inheritdoc/>
-    public override List<Object> RenderList { get => base.RenderList; set {
-        layer.UnloadObjects(); // TODO: FIXME: This is inefficient when a new object is added.
-        values.RenderList = value;    // NOTE: For the above: maybe use INotifyCollectionChanged.
-        layer.LoadObjects(); 
-    } }
-}
-
-/// <summary>
 /// The Vulkan implementation of the back-end rasterization layer.
 /// </summary>
 public class VulkanRasterizationLayer : IVulkanLayer, IRasterizationLayer {
@@ -65,8 +13,8 @@ public class VulkanRasterizationLayer : IVulkanLayer, IRasterizationLayer {
         Logger = LoggerFactory.CreateSublogger(renderer.Logger, "Layer "+index, "layer"+index);
         Renderer = renderer;
         Index = index;
-        this.settings = new(this, settings);
-        Logger.LogDebug("Creating a Vulkan rasterization back-end layer.");
+        this.settings = settings;
+        Logger.LogDebug("Creating a Vulkan rasterization back-end.");
 		try {
             Pipeline = new Pipeline(this);
 
@@ -86,23 +34,54 @@ public class VulkanRasterizationLayer : IVulkanLayer, IRasterizationLayer {
     public Pipeline Pipeline { get; internal set; }
 
     /// <summary>
-    /// The renderer corresponding to this back-end layer.
+    /// The renderer corresponding to this back-end 
     /// </summary>
     public readonly Renderer Renderer;
     /// <summary>
-    /// The logger of this back-end layer.
+    /// The logger of this back-end 
     /// </summary>
     public readonly Logger Logger;
-    internal readonly VulkanRasterizationLayerSettings settings;
+
+    #region Settings
+
     /// <inheritdoc/>
-    public IRasterizationLayerSettings Settings => settings;
-    internal uint Index;
-    Pipeline IVulkanLayer.Pipeline { get => Pipeline; set => Pipeline = value; }
-    uint IVulkanLayer.Index { set {
+    public CullMode CullMode { get => settings.CullMode; set {
         Pipeline.Dispose();
-        Index = value;
-        Pipeline = new(this);
+        settings.CullMode = value;
+        Pipeline = new Pipeline(this);
     } }
+    /// <inheritdoc/>
+    public FillMode FillMode { get => settings.FillMode; set {
+        Pipeline.Dispose();
+        settings.FillMode = value;
+        Pipeline = new Pipeline(this);
+    } }
+    /// <inheritdoc/>
+    public FrontFaceMode FrontFaceMode { get => settings.FrontFaceMode; set {
+        Pipeline.Dispose();
+        settings.FrontFaceMode = value;
+        Pipeline = new Pipeline(this);
+    } }
+    /// <inheritdoc/>
+    public IShader Shader { get => settings.Shader; set {
+        Pipeline.Dispose();
+        if (value is not Shader shader) {
+            throw new InvalidOperationException("The given shader is no Vulkan shader.");
+        }
+        settings.Shader = shader;
+        Pipeline = new Pipeline(this);
+    } }
+    public bool ShouldRender { get => settings.ShouldRender; set {
+        if (settings.ShouldRender != value) {
+            settings.ShouldRender = value;
+			shouldRecord = true;
+		}
+    } }
+	private readonly RasterizationLayerSettings settings;
+
+	#endregion Settings
+
+	internal uint Index { get; set; }
 
 	private bool shouldRecord;
 	public bool ShouldRecord => shouldRecord;
@@ -147,8 +126,8 @@ public class VulkanRasterizationLayer : IVulkanLayer, IRasterizationLayer {
         commands.Draw(vertexCount:3); // TODO: Temporary...
     }
 
-    void IVulkanLayer.Recreate() {
-		Logger.LogDebug("Recreating a Vulkan rasterization back-end layer.");
+    void IVulkanRecreate() {
+		Logger.LogDebug("Recreating a Vulkan rasterization back-end ");
 		try {
             Pipeline = new Pipeline(this);
 

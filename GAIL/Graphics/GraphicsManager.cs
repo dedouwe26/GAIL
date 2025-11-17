@@ -2,7 +2,6 @@ using GAIL.Core;
 using GAIL.Graphics.Material;
 using GAIL.Graphics.Renderer;
 using GAIL.Graphics.Renderer.Layer;
-using GAIL.Graphics.Renderer.Vulkan.Layer;
 using LambdaKit.Logging;
 using VulkanRenderer = GAIL.Graphics.Renderer.Vulkan.Renderer;
 
@@ -41,7 +40,7 @@ namespace GAIL.Graphics
         /// <param name="appInfo">The application info for vulkan.</param>
         /// <param name="initialSettings">The inital graphical settings to start with. This is useful to set for when you change settings on startup. The default defaults to the default settings.</param> // What the...
         /// <exception cref="APIBackendException"></exception>
-        public void Initialize(Application.Globals globals, AppInfo appInfo, RendererSettings<IBackendLayer>? initialSettings = null) {
+        public void Initialize(Application.Globals globals, AppInfo appInfo, RendererSettings<ILayerSettings>? initialSettings = null) {
             Logger.LogDebug("Initalizing Graphics.");
 
 			initialSettings ??= new();
@@ -49,7 +48,6 @@ namespace GAIL.Graphics
             // TODO: Convert initial settings.
             // NOTE: How does one create the initial settings??
             //       Including layers??
-
 			Renderer = new VulkanRenderer(LoggerFactory.CreateSublogger(Logger, "Renderer", "renderer"), globals, initialSettings, appInfo);
 
             IsDisposed = false;
@@ -57,6 +55,9 @@ namespace GAIL.Graphics
             globals.windowManager.OnFramebufferResize += (width, height) => {
                 Renderer.Resize(width, height);
             };
+        }
+        private IRenderer CreateRenderer() {
+            return new VulkanRenderer(LoggerFactory.CreateSublogger(Logger, "Renderer", "renderer"), )
         }
         /// <summary>
         /// Updates the graphics on the screen.

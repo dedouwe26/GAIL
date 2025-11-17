@@ -25,6 +25,7 @@ public enum FillMode {
 /// <summary>
 /// Specifies the type of face culling.
 /// </summary>
+[Flags]
 public enum CullMode {
     /// <summary>
     /// Culls the back face (won't render the back face).
@@ -65,7 +66,7 @@ public enum FrontFaceMode {
 /// </summary>
 public enum MSAA {
     /// <summary>
-    /// No MSAA (off).
+    /// No MSAA (1).
     /// </summary>
     MSAAx1 = SampleCountFlags.Count1Bit,
     /// <summary>
@@ -106,10 +107,6 @@ public interface ILayerSettings {
     /// If the renderer should render. Defaults to true.
     /// </summary>
     public bool ShouldRender { get; set; }
-    /// <summary>
-    /// The shader stages to use for this layer.
-    /// </summary>
-    public List<Object> RenderList { get; set; }
 }
 
 /// <summary>
@@ -140,27 +137,27 @@ public class RasterizationLayerSettings : IRasterizationLayerSettings {
     /// <summary>
     /// If the renderer should render. Defaults to true.
     /// </summary>
-    public bool ShouldRender = true;
+    public bool ShouldRender { get; set; } = true;
     /// <summary>
     /// What part of the triangle to render. Defaults to <see cref="FillMode.Face"/>.
     /// </summary>
-    public FillMode FillMode = FillMode.Face;
+    public FillMode FillMode { get; set; } = FillMode.Face;
     /// <summary>
     /// How the front face is determined. Defaults to <see cref="FrontFaceMode.Clockwise"/>.
     /// </summary>
-    public FrontFaceMode FrontFaceMode = FrontFaceMode.Clockwise;
+    public FrontFaceMode FrontFaceMode { get; set; } = FrontFaceMode.Clockwise;
     /// <summary>
     /// The type of face culling. Defaults to <see cref="CullMode.BackFace"/>.
     /// </summary>
-    public CullMode CullMode = CullMode.BackFace;
+    public CullMode CullMode { get; set; } = CullMode.BackFace;
     /// <summary>
     /// The shader stages to use for this layer.
     /// </summary>
-    public required IShader Shaders;
+    public required IShader Shader { get; set; }
     /// <summary>
     /// The shader stages to use for this layer.
     /// </summary>
-    public required List<Object> RenderList;
+    public required List<Object> RenderList { get; set; }
 
     /// <summary>
     /// Creates new values of the rasterization layer settings.

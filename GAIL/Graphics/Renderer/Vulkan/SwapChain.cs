@@ -39,29 +39,28 @@ namespace GAIL.Graphics.Renderer.Vulkan
         private readonly Logger Logger;
         private readonly Instance instance;
 
-        public Swapchain(Renderer renderer, WindowManager windowManager) {
+        public Swapchain(Renderer renderer) {
             Logger = renderer.Logger;
             instance = renderer.instance;
             surface = renderer.surface;
             device = renderer.device;
-            window = windowManager;
+            window = renderer.windowManager;
 
             CreateSwapChain();
 
             imageViews = CreateImageViews();
         }
 
-        public uint? AcquireNextImage(Renderer renderer) {
-            uint index = default;
-            Result result = Extension.AcquireNextImage(device.logicalDevice, swapchain, ulong.MaxValue, renderer.Syncronization.imageAvailable[renderer.CurrentFrame], default, ref index);
+        public bool AcquireNextImage(Renderer renderer, out uint nextIndex) {
+            nextIndex = default;
+            Result result = Extension.AcquireNextImage(device.logicalDevice, swapchain, ulong.MaxValue, renderer.Syncronization.imageAvailable[renderer.CurrentFrame], default, ref nextIndex);
             
             if (result == Result.ErrorOutOfDateKhr) {
-                return null;
+				return false;
             } else if (result != Result.SuboptimalKhr) {
                 _ = Utils.Check(result, Logger, "Failed to acquire next image", true);
             }
-            
-            return index;
+            return true;
         }
 
         public ImageView[] CreateImageViews() {

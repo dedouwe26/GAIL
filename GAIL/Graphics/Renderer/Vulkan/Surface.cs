@@ -27,7 +27,7 @@ namespace GAIL.Graphics.Renderer.Vulkan
         public readonly SurfaceKHR surface;
         private readonly Instance instance;
         private readonly Logger Logger;
-        public Surface(Renderer renderer, WindowManager window) {
+        public Surface(Renderer renderer) {
             Logger = renderer.Logger;
             renderer.Logger.LogDebug("Creating Surface.");
 
@@ -36,7 +36,7 @@ namespace GAIL.Graphics.Renderer.Vulkan
             unsafe {
                 VkNonDispatchableHandle* surfacePtr = stackalloc VkNonDispatchableHandle[1];
 
-                _ = Utils.Check((Result)API.Glfw.CreateWindowSurface(((Silk.NET.Vulkan.Instance)instance).ToHandle(), window.Window, Allocator.allocatorPtr, surfacePtr), Logger, "Failed to create window surface", true);
+                _ = Utils.Check((Result)API.Glfw.CreateWindowSurface(((Silk.NET.Vulkan.Instance)instance).ToHandle(), renderer.windowManager.Window, Allocator.allocatorPtr, surfacePtr), Logger, "Failed to create window surface", true);
                 
                 Glfw.ThrowExceptions();
                 

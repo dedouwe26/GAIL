@@ -2,6 +2,7 @@ using GAIL.Core;
 using GAIL.Graphics.Material;
 using GAIL.Graphics.Renderer.Layer;
 using GAIL.Graphics.Renderer.Vulkan.Layer;
+using GAIL.Window;
 using LambdaKit.Logging;
 using Silk.NET.Vulkan;
 
@@ -10,7 +11,7 @@ namespace GAIL.Graphics.Renderer.Vulkan;
 /// <summary>
 /// Represents a renderer that uses the Vulkan Graphics API.
 /// </summary>
-public class Renderer : IRenderer<IVulkanLayer> {
+public class Renderer : IRenderer {
 	/// <summary>
 	/// If this class is already disposed.
 	/// </summary>
@@ -19,7 +20,7 @@ public class Renderer : IRenderer<IVulkanLayer> {
 	/// The current in flight frame.
 	/// </summary>
 	/// <remarks>
-	/// CurrentFrame cannot be higher than <see cref="IRendererSettings{TLayer}.MaxFramesInFlight"/>.
+	/// CurrentFrame cannot be higher than <see cref="IRendererSettings.MaxFramesInFlight"/>.
 	/// </remarks>
 	public uint CurrentFrame { get; private set; }
 	/// <summary>
@@ -27,6 +28,7 @@ public class Renderer : IRenderer<IVulkanLayer> {
 	/// </summary>
 	public uint ImageIndex { get; private set; }
 	internal LayerDescription[] layerDescriptions;
+	private IVulkanLayer[] layers;
 	internal Logger Logger;
 
 	#region Utilities
@@ -90,21 +92,21 @@ public class Renderer : IRenderer<IVulkanLayer> {
 	} }
 	/// <inheritdoc/>
 	public bool ShouldRender { get; set; }
-	private readonly RendererSettings<IVulkanLayer> settings;
+	private readonly RendererSettings settings;
 
 	#endregion Settings
 
-	private readonly Application.Globals globals;
+	internal readonly WindowManager windowManager;
 
 	/// <summary>
 	/// Creates a new Vulkan Renderer.
 	/// </summary>
 	/// <param name="logger">The logger to use.</param>
-	/// <param name="globals">The globals of the application.</param>
-	/// <param name="settings">The settings of this renderer.</param>
+	/// <param name="windowManager">The window manager to use.</param>
+	/// <param name="settings">The initial settings of this renderer.</param>
 	/// <param name="appInfo">The information of the application.</param>
-	public Renderer(Logger logger, Application.Globals globals, RendererSettings<IVulkanLayer> settings, AppInfo appInfo) {
-		this.globals = globals;
+	public Renderer(Logger logger, WindowManager windowManager, RendererSettings settings, AppInfo appInfo) {
+		this.windowManager = windowManager;
 		this.settings = settings;
 
 		Logger = logger;
@@ -115,17 +117,20 @@ public class Renderer : IRenderer<IVulkanLayer> {
 
 		Logger.LogDebug("Initializing Vulkan");
 
-		layerDescriptions = LayerDescription.From(settings.Layers);
+		layerDescriptions = LayerDescription.From(settings.LayerSettings);
 		try {
 			instance = new Instance(this, appInfo);
-			surface = new Surface(this, globals.windowManager);
+			surface = new Surface(this);
 			device = new Device(this);
-			Swapchain = new Swapchain(this, globals.windowManager);
+			Swapchain = new Swapchain(this);
 
 			if (RenderPass != null) {
 				RenderPass = new RenderPass(this); // TODO: Does this work?
 				RenderPass.CreateFramebuffers();   // NOTE: This is here, because creating a rasterization layer also initializes the renderpass.
 			}
+
+			// TODO: CreateLayers
+
 			Commands = new Commands(this);
 			Syncronization = new Syncronization(this);
 		} catch (Exception e) { // TODO: Better exception handling.
@@ -142,15 +147,9 @@ public class Renderer : IRenderer<IVulkanLayer> {
 
 		Syncronization.WaitForFrame(CurrentFrame);
 
-		uint imageIndex; {
-			uint? val;
-
-			if ((val = Swapchain.AcquireNextImage(this)) == null) {
-				RecreateSwapchain();
-				return;
-			} else {
-				imageIndex = val.Value;
-			}
+		if (!Swapchain.AcquireNextImage(this, out uint imageIndex)) {
+			RecreateSwapchain();
+			return;
 		}
 
 		Syncronization.Reset(CurrentFrame);
