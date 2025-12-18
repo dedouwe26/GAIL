@@ -23,15 +23,15 @@ public interface IRendererSettings {
     /// </summary>
     public uint MaxFramesInFlight { get; set; }
     /// <summary>
-    /// The settings of the layers used by the renderer. Default is empty.
+    /// The current layers in use. Default is empty.
     /// </summary>
-    public ILayerSettings[] LayerSettings { get; set; }
+    public IBackendLayer[] Layers { get; set; }
 }
 
 /// <summary>
 /// The values of the settings for a renderer.
 /// </summary>
-public class RendererSettings : IRendererSettings {
+public class RendererSettings {
     /// <inheritdoc/>
     public bool ShouldRender { get; set; } = true;
     /// <inheritdoc/>
