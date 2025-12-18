@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using GAIL.Core;
 using GAIL.Graphics.Material;
 using GAIL.Graphics.Renderer.Layer;
@@ -27,7 +28,13 @@ public class Renderer : IRenderer {
 	/// The image index in the swap chain.
 	/// </summary>
 	public uint ImageIndex { get; private set; }
+	/// <summary>
+	/// The current layer descriptions in use.
+	/// </summary>
 	internal LayerDescription[] layerDescriptions;
+	/// <summary>
+	/// The current layers in use.
+	/// </summary>
 	private IVulkanLayer[] layers;
 	internal Logger Logger;
 
@@ -68,7 +75,7 @@ public class Renderer : IRenderer {
 	#region Settings
 
 	/// <inheritdoc/>
-	public IVulkanLayer[] Layers { get => settings.Layers; set { // NOTE: Casting because this is garanteed.
+	public IVulkanLayer[] Layers { get => settings.Layers; set {
 		for (uint i = 0; i < value.Length; i++) {
 			value[i].Index = i;
 		}
@@ -92,6 +99,8 @@ public class Renderer : IRenderer {
 	} }
 	/// <inheritdoc/>
 	public bool ShouldRender { get; set; }
+	IBackendLayer[] IRendererSettings.Layers { get => Layers; set => throw new NotImplementedException(); }
+
 	private readonly RendererSettings settings;
 
 	#endregion Settings
@@ -266,6 +275,29 @@ public class Renderer : IRenderer {
 			Logger.LogError("Failed to create a shader.");
 			return default;
 		}
+	}
+
+	public void MoveLayer(int layerIndex, int newIndex) {
+	}
+
+	public void RemoveLayerAt(int index)
+	{
+		throw new NotImplementedException();
+	}
+
+	public bool TryGetLayer(int index, [NotNullWhen(true)] out IBackendLayer? layer)
+	{
+		throw new NotImplementedException();
+	}
+
+	public IRasterizationLayer? AddRasterizationLayer(in RasterizationLayerSettings settings)
+	{
+		throw new NotImplementedException();
+	}
+
+	public IRasterizationLayer? InsertRasterizationLayer(int index, in RasterizationLayerSettings settings)
+	{
+		throw new NotImplementedException();
 	}
 
 	#endregion API
