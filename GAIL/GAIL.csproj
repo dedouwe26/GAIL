@@ -31,7 +31,7 @@
     <PackageReference Include="Silk.NET.Assimp" Version="2.22.0" /> <!-- is this used? -->
     <PackageReference Include="Silk.NET.OpenAL.Extensions.EXT" Version="2.22.0" />
     <PackageReference Include="Silk.NET.OpenAL.Soft.Native" Version="1.23.1" />
-    <PackageReference Include="Silk.NET.Vulkan.Extensions.EXT" Version="2.22.0" />
+    <PackageReference Include="Silk.NET.Vulkan.Extensions.EXT" Version="2.23.0" />
   </ItemGroup>
 
 </Project>
